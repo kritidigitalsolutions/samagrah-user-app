@@ -1,0 +1,336 @@
+import 'package:flutter/material.dart';
+import 'package:samagrah/main.dart';
+import 'package:samagrah/res/app_colors.dart';
+import 'package:samagrah/routes/app_routes.dart';
+import 'package:samagrah/utils/custom_button.dart';
+import 'package:samagrah/utils/textstyle.dart';
+
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        title: Text(
+          'My Profile',
+          style: text18(color: Colors.black87, fontWeight: FontWeight.w600),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+
+              // Profile Section
+              _buildProfileHeader(),
+
+              const SizedBox(height: 30),
+
+              // User Menu Section
+              _buildSectionTitle('User Menu'),
+              const SizedBox(height: 15),
+              _buildMenuCard([
+                _MenuItem(Icons.shopping_bag_outlined, 'My Orders', () {
+                  Navigator.pushNamed(context, AppRoutes.myOrder);
+                }),
+
+                _MenuItem(Icons.favorite_border, 'Wishlist', () {
+                  print("my booking kjsa =======================");
+                  Navigator.pushNamed(context, AppRoutes.favProduct);
+                }),
+
+                _MenuItem(Icons.shopping_cart_outlined, 'My Cart', () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => MyHomeScreen(index: 3)),
+                  );
+                }),
+
+                _MenuItem(Icons.card_giftcard_outlined, 'Book my Pandit', () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => MyHomeScreen(index: 1)),
+                  );
+                }),
+                _MenuItem(
+                  Icons.festival_outlined,
+                  'Special Kit for Festivals',
+                  () {
+                    Navigator.pushNamed(context, AppRoutes.festivalKit);
+                  },
+                ),
+
+                _MenuItem(Icons.help_outline, 'Customer and Kit', () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => MyHomeScreen(index: 2)),
+                  );
+                }),
+
+                _MenuItem(Icons.bookmark_border, 'My Bookings', () {
+                  Navigator.pushNamed(context, AppRoutes.myBooking);
+                }),
+              ]),
+
+              const SizedBox(height: 30),
+
+              // Settings Section
+              _buildSectionTitle(''),
+              const SizedBox(height: 15),
+              _buildMenuCard([
+                _MenuItem(Icons.location_on_outlined, 'Saved Address', () {
+                  Navigator.pushNamed(context, AppRoutes.savedAddress);
+                }),
+                _MenuItem(Icons.info_outline, 'About US', () {}),
+                _MenuItem(Icons.privacy_tip_outlined, 'Terms & Privacy', () {}),
+              ]),
+
+              const SizedBox(height: 30),
+
+              // Logout Button
+              CustomElevatedButton(
+                title: "Logout",
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                      contentPadding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 24, 24),
+                      title: Row(
+                        children: [
+                          const Icon(
+                            Icons.logout_rounded,
+                            color: Color(
+                              0xFFE91E63,
+                            ), // Pink color matching your app
+                            size: 28,
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Logout',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      content: const Text(
+                        'Are you sure you want to logout?\nYou will need to login again to continue.',
+                        style: TextStyle(
+                          fontSize: 16,
+                          height: 1.5,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            // TODO: Handle your logout logic here
+                            // e.g., clear storage, navigate to login screen
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.button,
+                            foregroundColor: AppColors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 28,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            'Logout',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 50),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileHeader() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Profile Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Ashish Sonkar',
+                  style: text15(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text('XXXXXXXXXX', style: text13(color: Colors.black45)),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.button,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Edit',
+                    style: text12(
+                      color: AppColors.white,
+
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Profile Image
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFE91E63), width: 2),
+              image: const DecorationImage(
+                image: NetworkImage('https://i.pravatar.cc/150?img=12'),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    if (title.isEmpty) return const SizedBox.shrink();
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(title, style: text16(fontWeight: FontWeight.w600)),
+    );
+  }
+
+  Widget _buildMenuCard(List<_MenuItem> items) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: List.generate(items.length, (index) {
+          final item = items[index];
+          final isLast = index == items.length - 1;
+
+          return Column(
+            children: [
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 4,
+                ),
+                leading: Icon(item.icon, color: Colors.black54, size: 22),
+                title: Text(
+                  item.title,
+                  style: text14(fontWeight: FontWeight.w500),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  color: Colors.black26,
+                  size: 20,
+                ),
+                onTap: item.onTap,
+              ),
+              if (!isLast)
+                Padding(
+                  padding: const EdgeInsets.only(left: 70),
+                  child: Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Colors.grey.shade100,
+                  ),
+                ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _MenuItem {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+
+  _MenuItem(this.icon, this.title, this.onTap);
+}
