@@ -333,7 +333,7 @@ class BookingConfirmedScreen extends StatelessWidget {
                 buildRecommendationCard(
                   'Keep this required',
                   'Pooja Samagri',
-                  'Pooja Kits for the Griha Pravesh pooja',
+                  'ready before the pandit ji arrives',
                   true,
                   () {
                     Navigator.pushNamed(context, AppRoutes.panditRecKit);
@@ -380,11 +380,6 @@ Widget buildRecommendationCard(
           decoration: BoxDecoration(
             gradient: AppColors.primaryGradient,
             borderRadius: BorderRadius.circular(12),
-            // image: const DecorationImage(
-            //   image: AssetImage('assets/pooja_bg.jpg'),
-            //   fit: BoxFit.cover,
-            //   opacity: 0.3,
-            // ),
           ),
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -428,7 +423,13 @@ Widget buildRecommendationCard(
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(description, style: text12(color: Colors.white70)),
+                    Text(
+                      description,
+                      style: text12(
+                        color: AppColors.grey300,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -457,7 +458,12 @@ Widget buildRecommendationCard(
         Positioned(
           bottom: 0,
           right: 0,
-          child: Image.asset("assets/icon/plate.png"),
+          child: Image.asset(
+            "assets/icon/plate.png",
+            width: 130,
+            height: 130,
+            fit: BoxFit.contain,
+          ),
         ),
       ],
     ),

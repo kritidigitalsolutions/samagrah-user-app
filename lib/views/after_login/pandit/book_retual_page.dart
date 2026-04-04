@@ -125,7 +125,7 @@ class _BookRitualViewState extends State<BookRetualPage> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
+                            color: AppColors.white,
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Row(

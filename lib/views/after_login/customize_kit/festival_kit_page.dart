@@ -41,28 +41,26 @@ class FestivalKitPage extends StatelessWidget {
               SizedBox(height: 10),
 
               /// Search Bar
-              Container(
-                height: 42,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 5,
+              TextField(
+                style: text14(
+                  fontWeight: FontWeight.normal,
+                  color: AppColors.black,
                 ),
-                decoration: BoxDecoration(
-                  color: AppColors.grey100,
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                child: Row(
-                  children: const [
-                    Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: "Search festival kit...",
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    Icon(Icons.search, color: AppColors.grey),
-                  ],
+                cursorColor: AppColors.black,
+                decoration: InputDecoration(
+                  hintText: 'Search festival kit...',
+                  hintStyle: text14(color: AppColors.grey),
+                  prefixIcon: const Icon(Icons.search, color: AppColors.grey),
+                  filled: true,
+                  fillColor: AppColors.white,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
 

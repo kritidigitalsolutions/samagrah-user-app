@@ -36,10 +36,10 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 900),
     );
     _logoFade = Tween<double>(
-      begin: 0.0,
+      begin: 0.9,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _logoController, curve: Curves.easeIn));
-    _logoScale = Tween<double>(begin: 0.7, end: 1.0).animate(
+    _logoScale = Tween<double>(begin: 1.0, end: 1.1).animate(
       CurvedAnimation(parent: _logoController, curve: Curves.easeOutBack),
     );
 
@@ -52,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _startSequence() async {
     await Future.delayed(const Duration(milliseconds: 300));
     _logoController.forward();
-    await Future.delayed(const Duration(milliseconds: 2200));
+    await Future.delayed(const Duration(milliseconds: 2500));
     if (mounted) {
       Navigator.pushReplacementNamed(context, AppRoutes.register);
     }

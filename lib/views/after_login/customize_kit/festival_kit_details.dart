@@ -54,12 +54,7 @@ class FestivalKitDetails extends StatelessWidget {
                   final item = items[index];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.panditRecKit2);
-                      },
-                      child: _buildItemCard(item),
-                    ),
+                    child: _buildItemCard(item),
                   );
                 },
               ),
@@ -84,7 +79,7 @@ class FestivalKitDetails extends StatelessWidget {
                   ),
                   Spacer(),
                   Text(
-                    "250",
+                    "₹250",
                     style: text15(
                       color: AppColors.white,
                       fontWeight: FontWeight.bold,
@@ -174,7 +169,7 @@ class FestivalKitDetails extends StatelessWidget {
           ),
 
           /// ARROW
-          Text("75", style: text18(color: AppColors.button)),
+          Text("₹75", style: text18(color: AppColors.button)),
         ],
       ),
     );

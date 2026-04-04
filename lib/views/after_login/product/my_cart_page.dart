@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
+import 'package:samagrah/utils/custom_button.dart';
+import 'package:samagrah/utils/textstyle.dart';
 
 class MyCartPage extends StatefulWidget {
   const MyCartPage({super.key});
@@ -190,37 +192,42 @@ class _MyCartPageState extends State<MyCartPage> {
             ),
 
             // Add More Items Button
-            Container(
-              color: AppColors.white,
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.button,
-                    foregroundColor: AppColors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 8,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: CustomElevatedIconButton(
+                      text: "Add more items",
+                      icon: Icons.add_shopping_cart_outlined,
+                      onPressed: () {
+                        Navigator.pushNamed(context, AppRoutes.comparisionPage);
+                      },
+                      iconSize: 18,
+                      textStyle: text13(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.add, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'Add more items to your cart',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: AppButton(
+                      title: "Place Order",
+                      onTap: () {
+                        Navigator.pushNamed(context, AppRoutes.orderSummary);
+                      },
+
+                      textStyle: text13(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ],
@@ -409,7 +416,11 @@ class _MyCartPageState extends State<MyCartPage> {
           child: CircleAvatar(
             radius: 12,
             backgroundColor: AppColors.button.withAlpha(20),
-            child: Icon(Icons.remove, size: 20, color: AppColors.button),
+            child: Icon(
+              Icons.delete_outline,
+              size: 20,
+              color: AppColors.button,
+            ),
           ),
         ),
       ],

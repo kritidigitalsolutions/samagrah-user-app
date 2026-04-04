@@ -17,6 +17,12 @@ class _MyFavProductsState extends State<MyFavProducts> {
     CartItem('Clay Diyas', 'Pack of 100', 2, 100, 79),
     CartItem('Clay Diyas', 'Pack of 100', 2, 100, 79),
     CartItem('Clay Diyas', 'Pack of 100', 2, 100, 79),
+    CartItem('Clay Diyas', 'Pack of 100', 2, 100, 79),
+    CartItem('Clay Diyas', 'Pack of 100', 2, 100, 79),
+    CartItem('Clay Diyas', 'Pack of 100', 2, 100, 79),
+    CartItem('Clay Diyas', 'Pack of 100', 2, 100, 79),
+    CartItem('Clay Diyas', 'Pack of 100', 2, 100, 79),
+    CartItem('Clay Diyas', 'Pack of 100', 2, 100, 79),
   ];
 
   @override
@@ -69,119 +75,119 @@ class _MyFavProductsState extends State<MyFavProducts> {
               ),
 
               // Promotional Offers
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 15,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.black.withAlpha(50),
-                      offset: Offset(0, -3), // 🔥 negative = top shadow
-                      blurRadius: 6,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    // First Offer
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFEBEE),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.local_offer,
-                              color: AppColors.button,
-                              size: 18,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Get 5% Off on your first',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Text(
-                                  'pooja package order',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+              // Container(
+              //   padding: const EdgeInsets.symmetric(
+              //     horizontal: 20,
+              //     vertical: 15,
+              //   ),
+              //   decoration: BoxDecoration(
+              //     color: AppColors.white,
+              //     boxShadow: [
+              //       BoxShadow(
+              //         color: AppColors.black.withAlpha(50),
+              //         offset: Offset(0, -3), // 🔥 negative = top shadow
+              //         blurRadius: 6,
+              //         spreadRadius: 1,
+              //       ),
+              //     ],
+              //   ),
+              //   child: Row(
+              //     children: [
+              //       // First Offer
+              //       Expanded(
+              //         child: Row(
+              //           children: [
+              //             Container(
+              //               padding: const EdgeInsets.all(8),
+              //               decoration: BoxDecoration(
+              //                 color: const Color(0xFFFFEBEE),
+              //                 shape: BoxShape.circle,
+              //               ),
+              //               child: const Icon(
+              //                 Icons.local_offer,
+              //                 color: AppColors.button,
+              //                 size: 18,
+              //               ),
+              //             ),
+              //             const SizedBox(width: 10),
+              //             Expanded(
+              //               child: Column(
+              //                 crossAxisAlignment: CrossAxisAlignment.start,
+              //                 children: [
+              //                   const Text(
+              //                     'Get 5% Off on your first',
+              //                     style: TextStyle(
+              //                       fontSize: 11,
+              //                       color: Colors.black87,
+              //                       fontWeight: FontWeight.w500,
+              //                     ),
+              //                   ),
+              //                   Text(
+              //                     'pooja package order',
+              //                     style: TextStyle(
+              //                       fontSize: 11,
+              //                       color: Colors.grey.shade600,
+              //                     ),
+              //                   ),
+              //                 ],
+              //               ),
+              //             ),
+              //           ],
+              //         ),
+              //       ),
 
-                    Container(
-                      width: 1,
-                      height: 40,
-                      color: Colors.grey.shade200,
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                    ),
+              //       Container(
+              //         width: 1,
+              //         height: 40,
+              //         color: Colors.grey.shade200,
+              //         margin: const EdgeInsets.symmetric(horizontal: 10),
+              //       ),
 
-                    // Second Offer
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFEBEE),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.delivery_dining,
-                              color: AppColors.button,
-                              size: 18,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Free Delivery on Puja Essentials',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Text(
-                                  'On orders above ₹499',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              //       // Second Offer
+              //       Expanded(
+              //         child: Row(
+              //           children: [
+              //             Container(
+              //               padding: const EdgeInsets.all(8),
+              //               decoration: BoxDecoration(
+              //                 color: const Color(0xFFFFEBEE),
+              //                 shape: BoxShape.circle,
+              //               ),
+              //               child: const Icon(
+              //                 Icons.delivery_dining,
+              //                 color: AppColors.button,
+              //                 size: 18,
+              //               ),
+              //             ),
+              //             const SizedBox(width: 10),
+              //             Expanded(
+              //               child: Column(
+              //                 crossAxisAlignment: CrossAxisAlignment.start,
+              //                 children: [
+              //                   const Text(
+              //                     'Free Delivery on Puja Essentials',
+              //                     style: TextStyle(
+              //                       fontSize: 11,
+              //                       color: Colors.black87,
+              //                       fontWeight: FontWeight.w500,
+              //                     ),
+              //                   ),
+              //                   Text(
+              //                     'On orders above ₹499',
+              //                     style: TextStyle(
+              //                       fontSize: 11,
+              //                       color: Colors.grey.shade600,
+              //                     ),
+              //                   ),
+              //                 ],
+              //               ),
+              //             ),
+              //           ],
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
             ],
           ),
         ),
@@ -311,7 +317,11 @@ class _MyFavProductsState extends State<MyFavProducts> {
           child: CircleAvatar(
             radius: 12,
             backgroundColor: AppColors.button.withAlpha(20),
-            child: Icon(Icons.remove, size: 20, color: AppColors.button),
+            child: Icon(
+              Icons.delete_outline,
+              size: 20,
+              color: AppColors.button,
+            ),
           ),
         ),
       ],

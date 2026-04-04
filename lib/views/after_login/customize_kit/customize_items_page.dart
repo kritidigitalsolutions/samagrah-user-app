@@ -16,12 +16,12 @@ class _CustomizeItemsPageState extends State<CustomizeItemsPage> {
   int selectedTab = 0;
 
   final List<TabItem> tabs = [
-    TabItem('All', Icons.grid_view),
-    TabItem('Agarbatti', Icons.local_fire_department),
-    TabItem('Wax', Icons.light_mode),
-    TabItem('Kumkum', Icons.spa),
-    TabItem('Flowers', Icons.local_florist),
-    TabItem('Haldi', Icons.circle),
+    TabItem('All', "assets/home/select-all.png"),
+    TabItem('Agarbatti', "assets/home/incense.png"),
+    TabItem('Diya', "assets/home/lamp.png"),
+    TabItem('Fruits', "assets/home/fruit.png"),
+    TabItem('Flowers', "assets/home/flower.png"),
+    TabItem('Mala(Gralands)', "assets/home/mala.png"),
   ];
 
   final products = [
@@ -53,45 +53,39 @@ class _CustomizeItemsPageState extends State<CustomizeItemsPage> {
       body: Column(
         children: [
           // Search Bar
-          Container(
-            color: AppColors.white,
-            padding: const EdgeInsets.all(15),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: TextField(
+              style: text14(
+                fontWeight: FontWeight.normal,
+                color: AppColors.black,
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'diya, puja thali...',
-                        hintStyle: TextStyle(
-                          color: Colors.grey.shade400,
-                          fontSize: 13,
-                        ),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                  Icon(Icons.search, color: Colors.grey.shade600),
-                ],
+              cursorColor: AppColors.black,
+              decoration: InputDecoration(
+                hintText: 'diya, puja thali...',
+                hintStyle: text14(color: AppColors.grey),
+                prefixIcon: const Icon(Icons.search, color: AppColors.grey),
+                filled: true,
+                fillColor: AppColors.white,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
           ),
 
           // Tabs
-          Container(
-            height: 45,
-            color: Colors.white,
-            padding: const EdgeInsets.only(bottom: 10),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              itemCount: tabs.length,
-              itemBuilder: (context, index) {
+          SingleChildScrollView(
+            padding: EdgeInsets.only(left: 12, right: 12),
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              spacing: 10,
+              children: List.generate(tabs.length, (index) {
                 final isSelected = selectedTab == index;
                 return GestureDetector(
                   onTap: () {
@@ -100,45 +94,45 @@ class _CustomizeItemsPageState extends State<CustomizeItemsPage> {
                     });
                   },
                   child: Container(
-                    margin: const EdgeInsets.only(right: 8),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.button
-                          : Colors.grey.shade200,
+                          ? AppColors.button.withAlpha(30)
+                          : AppColors.grey200,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          tabs[index].icon,
-                          size: 14,
-                          color: isSelected ? Colors.white : Colors.black54,
+                        Image.asset(
+                          tabs[index].img,
+                          width: 18,
+                          height: 18,
+                          fit: BoxFit.cover,
                         ),
                         const SizedBox(width: 5),
                         Text(
                           tabs[index].title,
-                          style: TextStyle(
-                            fontSize: 12,
+                          style: text11(
                             fontWeight: FontWeight.w600,
-                            color: isSelected ? Colors.white : Colors.black54,
+                            color: isSelected
+                                ? AppColors.button
+                                : Colors.black54,
                           ),
                         ),
                       ],
                     ),
                   ),
                 );
-              },
+              }),
             ),
           ),
 
           // Promotional Banners
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12.0, 10, 12, 0),
             child: Row(
               children: [
                 Expanded(
@@ -198,7 +192,7 @@ class _CustomizeItemsPageState extends State<CustomizeItemsPage> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFEBEE),
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -314,7 +308,7 @@ class KitProduct {
 
 class TabItem {
   final String title;
-  final IconData icon;
+  final String img;
 
-  TabItem(this.title, this.icon);
+  TabItem(this.title, this.img);
 }

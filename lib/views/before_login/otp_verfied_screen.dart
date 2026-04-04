@@ -73,92 +73,112 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
-      body: Stack(
-        children: [
-          // Mandala background
-          Positioned(
-            bottom: -40,
-            left: 0,
-            right: 0,
-            child: Center(child: _MandalaBg()),
-          ),
-
-          // Back button
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 8, top: 4),
-              child: IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: AppColors.textPrimary,
-                  size: 20,
+      body: Container(
+        decoration: BoxDecoration(color: AppColors.white),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -180,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: Image.asset(
+                  "assets/auth/rangoli.png",
+                  color: AppColors.grey200,
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
-          ),
 
-          // Content
-          SafeArea(
-            child: Center(
+            Positioned(
+              bottom: -180,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: Image.asset(
+                  "assets/auth/rangoli.png",
+                  color: AppColors.grey200,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            // Back button
+            SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 40),
+                padding: const EdgeInsets.only(left: 8, top: 4),
+                child: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: AppColors.textPrimary,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
 
-                    // Title
-                    Text('Verify OTP', style: text26()),
+            // Content
+            SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 40),
 
-                    const SizedBox(height: 40),
+                      // Title
+                      Text('Verify OTP', style: text26()),
 
-                    // OTP boxes
-                    _buildOtpRow(),
+                      const SizedBox(height: 40),
 
-                    const SizedBox(height: 20),
+                      // OTP boxes
+                      _buildOtpRow(),
 
-                    // Helper text
-                    Text(
-                      'Enter the 4-digit code sent to\nyour mobile number',
-                      textAlign: TextAlign.center,
-                      style: text13(),
-                    ),
+                      const SizedBox(height: 20),
 
-                    const SizedBox(height: 40),
+                      // Helper text
+                      Text(
+                        'Enter the 4-digit code sent to\nyour mobile number',
+                        textAlign: TextAlign.center,
+                        style: text13(),
+                      ),
 
-                    // Continue button
-                    _buildContinueButton(),
+                      const SizedBox(height: 40),
 
-                    const SizedBox(height: 30),
+                      // Continue button
+                      _buildContinueButton(),
 
-                    // Resend
-                    GestureDetector(
-                      onTap: () {},
-                      child: RichText(
-                        text: TextSpan(
-                          text: "Didn't receive code? ",
-                          style: text13(),
-                          children: [
-                            TextSpan(
-                              text: 'Resend',
-                              style: TextStyle(
-                                color: AppColors.button,
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.underline,
-                                decorationColor: AppColors.button,
+                      const SizedBox(height: 30),
+
+                      // Resend
+                      GestureDetector(
+                        onTap: () {},
+                        child: RichText(
+                          text: TextSpan(
+                            text: "Didn't receive code? ",
+                            style: text13(),
+                            children: [
+                              TextSpan(
+                                text: 'Resend',
+                                style: TextStyle(
+                                  color: AppColors.button,
+                                  fontWeight: FontWeight.w600,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: AppColors.button,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -240,75 +260,3 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
 }
 
 // ── Mandala Background ────────────────────────────
-class _MandalaBg extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Opacity(
-      opacity: 0.06,
-      child: SizedBox(
-        width: 380,
-        height: 380,
-        child: CustomPaint(painter: _MandalaCustomPainter()),
-      ),
-    );
-  }
-}
-
-class _MandalaCustomPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF7B1535)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-
-    for (int i = 1; i <= 8; i++) {
-      canvas.drawCircle(Offset(cx, cy), i * 22.0, paint);
-    }
-
-    for (int i = 0; i < 24; i++) {
-      final angle = i * 15 * 3.14159 / 180;
-      final cos = _mathCos(angle);
-      final sin = _mathSin(angle);
-      canvas.drawLine(
-        Offset(cx + 22 * cos, cy + 22 * sin),
-        Offset(cx + 176 * cos, cy + 176 * sin),
-        paint,
-      );
-    }
-
-    for (int i = 0; i < 12; i++) {
-      final angle = i * 30 * 3.14159 / 180;
-      final px = cx + 55 * _mathCos(angle);
-      final py = cy + 55 * _mathSin(angle);
-      canvas.drawOval(
-        Rect.fromCenter(center: Offset(px, py), width: 20, height: 36),
-        paint,
-      );
-    }
-  }
-
-  double _mathCos(double a) {
-    double r = 1, t = 1;
-    for (int i = 1; i <= 10; i++) {
-      t *= -a * a / ((2 * i - 1) * (2 * i));
-      r += t;
-    }
-    return r;
-  }
-
-  double _mathSin(double a) {
-    double r = a, t = a;
-    for (int i = 1; i <= 10; i++) {
-      t *= -a * a / ((2 * i) * (2 * i + 1));
-      r += t;
-    }
-    return r;
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}

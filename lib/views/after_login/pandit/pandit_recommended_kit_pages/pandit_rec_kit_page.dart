@@ -14,7 +14,7 @@ class PanditRecKitPage extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
         title: 'Samagri Kit',
-        subtitle: 'Pandit Recommended',
+        subtitle: 'Pandit Ji Recommended',
 
         actions: [
           Padding(

@@ -34,9 +34,19 @@ class ComparisionPage extends StatelessWidget {
                           'Pooja today',
                           style: text15(fontWeight: FontWeight.bold),
                         ),
-                        Text(
-                          'a phenomenal pooja budget buster',
-                          style: text10(),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 14,
+                              color: AppColors.grey,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Meerut, UP', // 👈 dynamic bhi kar sakte ho
+                              style: text12(fontWeight: FontWeight.w500),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -63,10 +73,18 @@ class ComparisionPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
               child: TextField(
+                style: text14(
+                  fontWeight: FontWeight.normal,
+                  color: AppColors.white,
+                ),
+                cursorColor: AppColors.white,
                 decoration: InputDecoration(
                   hintText: 'diya, agarbatti thali...',
-                  hintStyle: text14(color: AppColors.grey400),
-                  prefixIcon: const Icon(Icons.search),
+                  hintStyle: text14(color: AppColors.grey100),
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    color: AppColors.grey100,
+                  ),
                   filled: true,
                   fillColor: AppColors.primary,
                   contentPadding: EdgeInsets.symmetric(

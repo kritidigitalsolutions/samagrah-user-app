@@ -36,75 +36,78 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
-      body: Stack(
-        children: [
-          // Mandala watermark background
-          Positioned(
-            bottom: -40,
-            left: 0,
-            right: 0,
-            child: Center(child: _MandalaPainter()),
-          ),
-
-          // Content
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 28),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 48),
-
-                    // Title
-                    Text(
-                      'Set up\nyour profile',
-                      textAlign: TextAlign.center,
-                      style: text26(),
-                    ),
-
-                    const SizedBox(height: 28),
-
-                    // Profile image picker
-                    ProfileImagePicker(),
-
-                    const SizedBox(height: 32),
-
-                    // Name field
-                    AppTextField(controller: _nameCtrl, hintText: 'Name'),
-                    const SizedBox(height: 14),
-
-                    // Email field
-                    AppTextField(
-                      controller: _emailCtrl,
-                      hintText: 'Email',
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Address field
-                    AppTextField(controller: _addressCtrl, hintText: 'Address'),
-                    const SizedBox(height: 14),
-
-                    // Mobile field
-                    NumberTextField(
-                      controller: _mobileCtrl,
-                      hintText: 'Mobile Number',
-                      maxLength: 10,
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Continue button
-                    _buildContinueButton(),
-
-                    const SizedBox(height: 40),
-                  ],
+      body: Container(
+        height: double.infinity,
+        decoration: BoxDecoration(color: AppColors.white),
+        child: Stack(
+          children: [
+            // 🔥 Background Images (behind everything)
+            Positioned(
+              top: -180,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: Image.asset(
+                  "assets/auth/rangoli.png",
+                  color: AppColors.grey200,
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
-          ),
-        ],
+
+            Positioned(
+              bottom: -180,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: Image.asset(
+                  "assets/auth/rangoli.png",
+                  color: AppColors.grey200,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+
+            // ✅ Main Content
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 28),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 48),
+                      Text(
+                        'Set up\nyour profile',
+                        textAlign: TextAlign.center,
+                        style: text26(),
+                      ),
+                      const SizedBox(height: 28),
+                      ProfileImagePicker(),
+                      const SizedBox(height: 32),
+                      AppTextField(controller: _nameCtrl, hintText: 'Name'),
+                      const SizedBox(height: 14),
+                      AppTextField(controller: _emailCtrl, hintText: 'Email'),
+                      const SizedBox(height: 14),
+                      AppTextField(
+                        controller: _addressCtrl,
+                        hintText: 'Address',
+                      ),
+                      const SizedBox(height: 14),
+                      NumberTextField(
+                        controller: _mobileCtrl,
+                        hintText: 'Mobile Number',
+                        maxLength: 10,
+                      ),
+                      const SizedBox(height: 32),
+                      _buildContinueButton(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -181,91 +184,91 @@ class ProfileImagePicker extends ConsumerWidget {
 }
 
 // ── Mandala Background Painter ────────────────────
-class _MandalaPainter extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Opacity(
-      opacity: 0.06,
-      child: SizedBox(
-        width: 380,
-        height: 380,
-        child: CustomPaint(painter: _MandalaCustomPainter()),
-      ),
-    );
-  }
-}
+// class _MandalaPainter extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Opacity(
+//       opacity: 0.06,
+//       child: SizedBox(
+//         width: 380,
+//         height: 380,
+//         child: CustomPaint(painter: _MandalaCustomPainter()),
+//       ),
+//     );
+//   }
+// }
 
-class _MandalaCustomPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF7B1535)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
+// class _MandalaCustomPainter extends CustomPainter {
+//   @override
+//   void paint(Canvas canvas, Size size) {
+//     final paint = Paint()
+//       ..color = const Color(0xFF7B1535)
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 1.0;
 
-    final cx = size.width / 2;
-    final cy = size.height / 2;
+//     final cx = size.width / 2;
+//     final cy = size.height / 2;
 
-    // Draw concentric circles
-    for (int i = 1; i <= 8; i++) {
-      canvas.drawCircle(Offset(cx, cy), i * 22.0, paint);
-    }
+//     // Draw concentric circles
+//     for (int i = 1; i <= 8; i++) {
+//       canvas.drawCircle(Offset(cx, cy), i * 22.0, paint);
+//     }
 
-    // Draw radial lines
-    for (int i = 0; i < 24; i++) {
-      final angle = (i * 15) * (3.14159 / 180);
-      final x1 = cx + 22 * _cos(angle);
-      final y1 = cy + 22 * _sin(angle);
-      final x2 = cx + 176 * _cos(angle);
-      final y2 = cy + 176 * _sin(angle);
-      canvas.drawLine(Offset(x1, y1), Offset(x2, y2), paint);
-    }
+//     // Draw radial lines
+//     for (int i = 0; i < 24; i++) {
+//       final angle = (i * 15) * (3.14159 / 180);
+//       final x1 = cx + 22 * _cos(angle);
+//       final y1 = cy + 22 * _sin(angle);
+//       final x2 = cx + 176 * _cos(angle);
+//       final y2 = cy + 176 * _sin(angle);
+//       canvas.drawLine(Offset(x1, y1), Offset(x2, y2), paint);
+//     }
 
-    // Draw petal shapes
-    for (int i = 0; i < 12; i++) {
-      final angle = (i * 30) * (3.14159 / 180);
-      final petalPath = Path();
-      final px = cx + 55 * _cos(angle);
-      final py = cy + 55 * _sin(angle);
-      petalPath.addOval(
-        Rect.fromCenter(center: Offset(px, py), width: 20, height: 36),
-      );
-      canvas.drawPath(petalPath, paint);
-    }
-  }
+//     // Draw petal shapes
+//     for (int i = 0; i < 12; i++) {
+//       final angle = (i * 30) * (3.14159 / 180);
+//       final petalPath = Path();
+//       final px = cx + 55 * _cos(angle);
+//       final py = cy + 55 * _sin(angle);
+//       petalPath.addOval(
+//         Rect.fromCenter(center: Offset(px, py), width: 20, height: 36),
+//       );
+//       canvas.drawPath(petalPath, paint);
+//     }
+//   }
 
-  double _cos(double angle) => (angle == 0)
-      ? 1
-      : (angle == 1.5708)
-      ? 0
-      : (angle == 3.14159)
-      ? -1
-      : (angle == 4.71239)
-      ? 0
-      : _cosCalc(angle);
+//   double _cos(double angle) => (angle == 0)
+//       ? 1
+//       : (angle == 1.5708)
+//       ? 0
+//       : (angle == 3.14159)
+//       ? -1
+//       : (angle == 4.71239)
+//       ? 0
+//       : _cosCalc(angle);
 
-  double _sin(double angle) => _sinCalc(angle);
+//   double _sin(double angle) => _sinCalc(angle);
 
-  double _cosCalc(double a) {
-    double result = 1;
-    double term = 1;
-    for (int i = 1; i <= 10; i++) {
-      term *= -a * a / ((2 * i - 1) * (2 * i));
-      result += term;
-    }
-    return result;
-  }
+//   double _cosCalc(double a) {
+//     double result = 1;
+//     double term = 1;
+//     for (int i = 1; i <= 10; i++) {
+//       term *= -a * a / ((2 * i - 1) * (2 * i));
+//       result += term;
+//     }
+//     return result;
+//   }
 
-  double _sinCalc(double a) {
-    double result = a;
-    double term = a;
-    for (int i = 1; i <= 10; i++) {
-      term *= -a * a / ((2 * i) * (2 * i + 1));
-      result += term;
-    }
-    return result;
-  }
+//   double _sinCalc(double a) {
+//     double result = a;
+//     double term = a;
+//     for (int i = 1; i <= 10; i++) {
+//       term *= -a * a / ((2 * i) * (2 * i + 1));
+//       result += term;
+//     }
+//     return result;
+//   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
+//   @override
+//   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+// }

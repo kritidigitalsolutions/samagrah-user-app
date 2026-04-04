@@ -1,3 +1,4 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
@@ -35,9 +36,19 @@ class HomeScreen extends StatelessWidget {
                             'Pooja today',
                             style: text15(fontWeight: FontWeight.bold),
                           ),
-                          Text(
-                            'a phenomenal pooja budget buster',
-                            style: text10(),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.location_on_outlined,
+                                size: 14,
+                                color: AppColors.grey,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Meerut, UP', // 👈 dynamic bhi kar sakte ho
+                                style: text12(fontWeight: FontWeight.w500),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -70,10 +81,18 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: TextField(
+                        style: text14(
+                          fontWeight: FontWeight.normal,
+                          color: AppColors.white,
+                        ),
+                        cursorColor: AppColors.white,
                         decoration: InputDecoration(
                           hintText: 'diya, agarbatti thali...',
-                          hintStyle: text14(color: AppColors.grey400),
-                          prefixIcon: const Icon(Icons.search),
+                          hintStyle: text14(color: AppColors.grey100),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: AppColors.grey100,
+                          ),
                           filled: true,
                           fillColor: AppColors.primary,
                           contentPadding: EdgeInsets.symmetric(
@@ -89,9 +108,9 @@ class HomeScreen extends StatelessWidget {
                     ),
                     SizedBox(width: 8),
                     _buildFeature(
-                      "assets/icon/c.png",
+                      "assets/icon/category.png",
                       AppColors.button.withAlpha(20),
-                      "Comparision",
+                      "Categories",
                       () {
                         Navigator.pushNamed(context, AppRoutes.comparisionPage);
                       },
@@ -127,15 +146,11 @@ class HomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    _buildChip('All', Icons.grid_view, true),
-                    _buildChip(
-                      'Agri batti',
-                      Icons.local_fire_department,
-                      false,
-                    ),
-                    _buildChip('Fruits', Icons.apple, false),
-                    _buildChip('Flowers', Icons.local_florist, false),
-                    _buildChip('Dhoop', Icons.whatshot, false),
+                    _buildChip('All', "assets/home/select-all.png", true),
+                    _buildChip('Agri batti', "assets/home/incense.png", false),
+                    _buildChip('Fruits', "assets/home/fruit.png", false),
+                    _buildChip('Flowers', "assets/home/flower.png", false),
+                    _buildChip('Mala(Gralands)', "assets/home/mala.png", false),
                   ],
                 ),
               ),
@@ -145,7 +160,20 @@ class HomeScreen extends StatelessWidget {
                   padding: EdgeInsets.only(top: 8),
                   children: [
                     // Promotional Banner
-                    poojaOfferBanner(),
+                    CarouselSlider(
+                      options: CarouselOptions(
+                        height: 120,
+                        autoPlay: true,
+                        enlargeCenterPage: true,
+                        viewportFraction: 1,
+                        autoPlayInterval: Duration(seconds: 3),
+                      ),
+                      items: [
+                        poojaOfferBanner(),
+                        poojaOfferBanner(),
+                        poojaOfferBanner(),
+                      ],
+                    ),
 
                     const SizedBox(height: 16),
 
@@ -279,7 +307,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
 
-        // Replace your old Positioned + rainbowButton() with this:
+        // // Replace your old Positioned + rainbowButton() with this:
         Positioned(
           bottom: 20,
           left: 0,
@@ -318,31 +346,6 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Positioned(
-                      //   left: 5,
-                      //   child: CircleAvatar(
-                      //     backgroundColor: AppColors.button,
-                      //     radius: 20,
-                      //     child: Center(
-                      //       child: Image.asset(
-                      //         "assets/icon/diya2.png",
-                      //         width: 20,
-                      //         height: 20,
-                      //       ),
-                      //     ),
-                      //   ),
-                      // ),
-                      // CircleAvatar(
-                      //   backgroundColor: AppColors.button,
-                      //   radius: 20,
-                      //   child: Center(
-                      //     child: Image.asset(
-                      //       "assets/icon/diya2.png",
-                      //       width: 20,
-                      //       height: 20,
-                      //     ),
-                      //   ),
-                      // ),
                     ],
                   ),
                   SizedBox(width: 8),
@@ -390,20 +393,19 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildChip(String label, IconData icon, bool selected) {
+  Widget _buildChip(String label, String img, bool selected) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: Chip(
-        avatar: Icon(
-          icon,
-          size: 16,
-          color: selected ? AppColors.white : Colors.black54,
-        ),
+        avatar: Image.asset(img, width: 18, height: 18, fit: BoxFit.cover),
         label: Text(
           label,
-          style: text13(color: selected ? AppColors.white : AppColors.black),
+          style: text13(color: selected ? AppColors.button : AppColors.black),
         ),
-        backgroundColor: selected ? AppColors.button : AppColors.white,
+        backgroundColor: selected
+            ? AppColors.button.withAlpha(30)
+            : AppColors.white,
+        side: BorderSide(color: selected ? AppColors.button : AppColors.grey),
 
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
@@ -633,30 +635,12 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
 
-          // Positioned(
-          //   top: 0,
-          //   right: 8,
-
-          //   child: Image.asset(
-          //     'assets/icon/mala.png', // 👈 tum image dena
-          //     fit: BoxFit.cover,
-          //     height: 40,
-          //   ),
-          // ),
-
-          // Positioned(
-          //   child: Image.asset(
-          //     'assets/icon/mala.png', // 👈 tum image dena
-          //     fit: BoxFit.cover,
-          //     height: 40,
-          //   ),
-          // ),
-
           // 🔻 Content
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 30, 16, 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
               children: [
                 // Left Text
                 Expanded(
@@ -694,7 +678,7 @@ class HomeScreen extends StatelessWidget {
 
                 // Right Section
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     RichText(
                       text: TextSpan(

@@ -5,6 +5,7 @@ import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/pandit_details_provider.dart';
+import 'package:samagrah/views/after_login/pandit/checkout_pandit/booking_confirmed_page.dart';
 
 class PanditDetailsPage extends ConsumerWidget {
   const PanditDetailsPage({super.key});
@@ -86,21 +87,21 @@ class PanditDetailsPage extends ConsumerWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.circle, size: 6, color: Colors.green),
+                            Icon(Icons.circle, size: 6, color: AppColors.green),
                             SizedBox(width: 6),
                             Text("Home Puja", style: text12()),
                           ],
                         ),
                         Row(
                           children: [
-                            Icon(Icons.circle, size: 6, color: Colors.green),
+                            Icon(Icons.circle, size: 6, color: AppColors.green),
                             SizedBox(width: 6),
                             Text("Online Puja", style: text12()),
                           ],
                         ),
                         Row(
                           children: [
-                            Icon(Icons.circle, size: 6, color: Colors.green),
+                            Icon(Icons.circle, size: 6, color: AppColors.green),
                             SizedBox(width: 6),
                             Text("Video Call Ritual", style: text12()),
                           ],
@@ -109,6 +110,25 @@ class PanditDetailsPage extends ConsumerWidget {
                     ),
                   ],
                 ),
+              ),
+
+              const SizedBox(height: 15),
+
+              Text(
+                "Recommended Pooja Kit",
+                style: text15(fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 10),
+
+              buildRecommendationCard(
+                'Keep this required',
+                'Pooja Samagri',
+                'ready before the pandit arrives',
+                true,
+                () {
+                  Navigator.pushNamed(context, AppRoutes.panditRecKit);
+                },
               ),
 
               const SizedBox(height: 15),

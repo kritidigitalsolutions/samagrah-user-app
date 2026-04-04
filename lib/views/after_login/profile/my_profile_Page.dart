@@ -38,60 +38,60 @@ class ProfilePage extends StatelessWidget {
               // User Menu Section
               _buildSectionTitle('User Menu'),
               const SizedBox(height: 15),
+
               _buildMenuCard([
-                _MenuItem(Icons.shopping_bag_outlined, 'My Orders', () {
+                _MenuItem("assets/profile/bag.png", 'My Orders', () {
                   Navigator.pushNamed(context, AppRoutes.myOrder);
                 }),
 
-                _MenuItem(Icons.favorite_border, 'Wishlist', () {
+                _MenuItem("assets/profile/wishlist.png", 'Wishlist', () {
                   print("my booking kjsa =======================");
                   Navigator.pushNamed(context, AppRoutes.favProduct);
                 }),
 
-                _MenuItem(Icons.shopping_cart_outlined, 'My Cart', () {
+                _MenuItem("assets/profile/trolley.png", 'My Cart', () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => MyHomeScreen(index: 3)),
                   );
                 }),
 
-                _MenuItem(Icons.card_giftcard_outlined, 'Book my Pandit', () {
+                _MenuItem("assets/profile/pray.png", 'Book my Pandit', () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => MyHomeScreen(index: 1)),
                   );
                 }),
                 _MenuItem(
-                  Icons.festival_outlined,
+                  "assets/profile/fireworks.png",
                   'Special Kit for Festivals',
                   () {
                     Navigator.pushNamed(context, AppRoutes.festivalKit);
                   },
                 ),
 
-                _MenuItem(Icons.help_outline, 'Customer and Kit', () {
+                _MenuItem("assets/profile/box.png", 'Customer and Kit', () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => MyHomeScreen(index: 2)),
                   );
                 }),
 
-                _MenuItem(Icons.bookmark_border, 'My Bookings', () {
+                _MenuItem("assets/profile/booking.png", 'My Bookings', () {
                   Navigator.pushNamed(context, AppRoutes.myBooking);
                 }),
               ]),
-
               const SizedBox(height: 30),
 
               // Settings Section
               _buildSectionTitle(''),
               const SizedBox(height: 15),
               _buildMenuCard([
-                _MenuItem(Icons.location_on_outlined, 'Saved Address', () {
+                _MenuItem("assets/profile/loc.png", 'Saved Address', () {
                   Navigator.pushNamed(context, AppRoutes.savedAddress);
                 }),
-                _MenuItem(Icons.info_outline, 'About US', () {}),
-                _MenuItem(Icons.privacy_tip_outlined, 'Terms & Privacy', () {}),
+                _MenuItem("assets/profile/info.png", 'About US', () {}),
+                _MenuItem("assets/profile/term.png", 'Terms & Privacy', () {}),
               ]),
 
               const SizedBox(height: 30),
@@ -298,27 +298,20 @@ class ProfilePage extends StatelessWidget {
                   horizontal: 20,
                   vertical: 4,
                 ),
-                leading: Icon(item.icon, color: Colors.black54, size: 22),
+                leading: Image.asset(item.img, width: 22, height: 22),
                 title: Text(
                   item.title,
                   style: text14(fontWeight: FontWeight.w500),
                 ),
                 trailing: const Icon(
                   Icons.chevron_right,
-                  color: Colors.black26,
+                  color: AppColors.black26,
                   size: 20,
                 ),
                 onTap: item.onTap,
               ),
               if (!isLast)
-                Padding(
-                  padding: const EdgeInsets.only(left: 70),
-                  child: Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: Colors.grey.shade100,
-                  ),
-                ),
+                Divider(height: 1, thickness: 1, color: AppColors.grey100),
             ],
           );
         }),
@@ -328,9 +321,9 @@ class ProfilePage extends StatelessWidget {
 }
 
 class _MenuItem {
-  final IconData icon;
+  final String img;
   final String title;
   final VoidCallback onTap;
 
-  _MenuItem(this.icon, this.title, this.onTap);
+  _MenuItem(this.img, this.title, this.onTap);
 }
