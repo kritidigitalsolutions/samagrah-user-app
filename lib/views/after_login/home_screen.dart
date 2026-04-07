@@ -107,14 +107,14 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: 8),
-                    _buildFeature(
-                      "assets/icon/category.png",
-                      AppColors.button.withAlpha(20),
-                      "Categories",
-                      () {
-                        Navigator.pushNamed(context, AppRoutes.comparisionPage);
-                      },
-                    ),
+                    // _buildFeature(
+                    //   "assets/icon/category.png",
+                    //   AppColors.button.withAlpha(20),
+                    //   "Categories",
+                    //   () {
+                    //     Navigator.pushNamed(context, AppRoutes.comparisionPage);
+                    //   },
+                    // ),
                     SizedBox(width: 8),
                     _buildFeature(
                       "assets/icon/purse.png",

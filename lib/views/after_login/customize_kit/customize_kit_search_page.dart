@@ -14,8 +14,6 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedPooja = ref.watch(selectedPoojaProvider);
-
     final poojas = [
       'Satyanarayan Pooja',
       'Griha Provesh Pooja',
@@ -37,12 +35,9 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Customize\nYour Pooja Kit',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: text18(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -100,121 +95,117 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
 
                         const SizedBox(height: 30),
 
-                        /// ✅ STEP 2 (Dropdown)
+                        /// ✅ SEARCH AUTOCOMPLETE
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(
                             color: AppColors.button,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: selectedPooja,
-                              isExpanded: true,
-                              dropdownColor: AppColors.button,
-                              icon: const Icon(
-                                Icons.keyboard_arrow_down,
-                                color: AppColors.white,
-                              ),
+                          child: Autocomplete<String>(
+                            optionsBuilder:
+                                (TextEditingValue textEditingValue) {
+                                  if (textEditingValue.text.isEmpty) {
+                                    return const Iterable<String>.empty();
+                                  }
+                                  return poojas.where(
+                                    (pooja) => pooja.toLowerCase().contains(
+                                      textEditingValue.text.toLowerCase(),
+                                    ),
+                                  );
+                                },
 
-                              hint: const Text(
-                                "Search Kit",
-                                style: TextStyle(color: AppColors.white),
-                              ),
-
-                              items: poojas.map((pooja) {
-                                return DropdownMenuItem<String>(
-                                  value: pooja,
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          pooja,
-                                          style: text14(
-                                            color: AppColors.white,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      Container(
-                                        margin: EdgeInsets.only(
-                                          bottom: 5,
-                                          top: 5,
-                                        ),
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 5,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.white,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                          child: Image.asset(
-                                            "assets/god.png",
-                                            width: 50,
-                                            height: 50,
-                                          ),
-                                        ),
-                                      ),
-                                      IconButton(
-                                        onPressed: () {
-                                          ref
-                                                  .read(
-                                                    selectedPoojaProvider
-                                                        .notifier,
-                                                  )
-                                                  .state =
-                                              null;
-                                        },
-                                        icon: Icon(
-                                          Icons.close,
-                                          color: AppColors.white,
-                                          size: 20,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
-
-                              onChanged: (value) {
-                                ref.read(selectedPoojaProvider.notifier).state =
-                                    value;
-
-                                Navigator.pushNamed(
+                            fieldViewBuilder:
+                                (
                                   context,
-                                  AppRoutes.festivalKitDetails,
-                                );
-                              },
-                            ),
+                                  controller,
+                                  focusNode,
+                                  onEditingComplete,
+                                ) {
+                                  return TextField(
+                                    controller: controller,
+                                    focusNode: focusNode,
+                                    cursorColor: AppColors.white,
+                                    style: const TextStyle(
+                                      color: AppColors.white,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      hintText: "Search Kit",
+
+                                      hintStyle: TextStyle(
+                                        color: AppColors.white,
+                                      ),
+                                      border: InputBorder.none,
+                                    ),
+                                  );
+                                },
+
+                            optionsViewBuilder: (context, onSelected, options) {
+                              return Align(
+                                alignment: Alignment.topLeft,
+                                child: Material(
+                                  elevation: 4,
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.8,
+                                    color: AppColors.white,
+                                    child: ListView.builder(
+                                      padding: EdgeInsets.zero,
+                                      shrinkWrap: true,
+                                      itemCount: options.length,
+                                      itemBuilder: (context, index) {
+                                        final option = options.elementAt(index);
+
+                                        return ListTile(
+                                          title: Text(option),
+                                          leading: Image.asset(
+                                            "assets/god.png",
+                                            width: 40,
+                                          ),
+                                          onTap: () {
+                                            onSelected(option);
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+
+                            onSelected: (value) {
+                              ref.read(selectedPoojaProvider.notifier).state =
+                                  value;
+                              ref.read(isFestivalProvider.notifier).state =
+                                  false;
+
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.festivalKitDetails,
+                              );
+                            },
                           ),
                         ),
 
                         const SizedBox(height: 15),
 
-                        if (selectedPooja == null || selectedPooja.isEmpty) ...[
-                          AppTextField(
-                            radius: 8,
-                            controller: nameKitCtr,
-                            hintText: "Name your Kit",
-                          ),
+                        AppTextField(
+                          radius: 8,
+                          controller: nameKitCtr,
+                          hintText: "Name your Kit",
+                        ),
 
-                          const SizedBox(height: 15),
+                        const SizedBox(height: 15),
 
-                          AppButton(
-                            radius: 8,
-                            height: 45,
-                            title: "+ Start Adding Items",
-                            onTap: () {
-                              Navigator.pushNamed(context, AppRoutes.kitItems);
-                            },
-                          ),
-                        ],
+                        AppButton(
+                          radius: 8,
+                          height: 45,
+                          title: "+ Start Adding Items",
+                          onTap: () {
+                            Navigator.pushNamed(context, AppRoutes.kitItems);
+                          },
+                        ),
                       ],
                     ),
                   ),

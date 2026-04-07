@@ -6,6 +6,7 @@ import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/booking_provider.dart';
+import 'package:samagrah/views/after_login/pandit/checkout_pandit/booking_confirmed_page.dart';
 
 class MyBookingDetails extends ConsumerWidget {
   const MyBookingDetails({super.key});
@@ -19,6 +20,7 @@ class MyBookingDetails extends ConsumerWidget {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               /// TOP CARD
               Container(
@@ -272,6 +274,25 @@ class MyBookingDetails extends ConsumerWidget {
                     ),
                   ],
                 ),
+              ),
+
+              const SizedBox(height: 15),
+
+              Text(
+                "Recommended Pooja Kit",
+                style: text15(fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 10),
+
+              buildRecommendationCard(
+                'Keep this required',
+                'Pooja Samagri',
+                'ready before the pandit arrives',
+                true,
+                () {
+                  Navigator.pushNamed(context, AppRoutes.panditRecKit);
+                },
               ),
 
               if (type == "temple") ...[

@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
 
-class FestivalKitDetails extends StatelessWidget {
+class FestivalKitDetails extends ConsumerWidget {
   const FestivalKitDetails({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFestival = ref.watch(isFestivalProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
@@ -54,7 +58,18 @@ class FestivalKitDetails extends StatelessWidget {
                   final item = items[index];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: _buildItemCard(item),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: isFestival
+                          ? null
+                          : () {
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.panditRecKit2,
+                              );
+                            },
+                      child: _buildItemCard(item),
+                    ),
                   );
                 },
               ),

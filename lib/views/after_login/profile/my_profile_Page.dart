@@ -50,10 +50,7 @@ class ProfilePage extends StatelessWidget {
                 }),
 
                 _MenuItem("assets/profile/trolley.png", 'My Cart', () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => MyHomeScreen(index: 3)),
-                  );
+                  Navigator.pushNamed(context, AppRoutes.myCart);
                 }),
 
                 _MenuItem("assets/profile/pray.png", 'Book my Pandit', () {

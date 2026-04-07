@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider.dart';
-import 'package:samagrah/views/after_login/comparision_Page.dart';
+import 'package:samagrah/views/after_login/category_page.dart';
 import 'package:samagrah/views/after_login/customize_kit/customize_items_page.dart';
 import 'package:samagrah/views/after_login/customize_kit/customize_kit_search_page.dart';
 import 'package:samagrah/views/after_login/customize_kit/festival_kit_details.dart';
@@ -71,7 +71,7 @@ class MyApp extends StatelessWidget {
           scrolledUnderElevation: 0,
         ),
       ),
-      initialRoute: AppRoutes.splash,
+      initialRoute: AppRoutes.home,
       routes: {
         AppRoutes.splash: (context) => const SplashScreen(),
         AppRoutes.register: (context) => const RegisterScreen(),
@@ -79,7 +79,7 @@ class MyApp extends StatelessWidget {
 
         AppRoutes.home: (context) => const MyHomeScreen(),
         AppRoutes.notification: (context) => const NotificationPage(),
-        AppRoutes.comparisionPage: (context) => const ComparisionPage(),
+        AppRoutes.comparisionPage: (context) => const CategoryPage(),
         AppRoutes.myWallet: (context) => const MyWalletScreen(),
 
         AppRoutes.productDetails: (context) => const ProductDetails(),
@@ -88,6 +88,7 @@ class MyApp extends StatelessWidget {
         AppRoutes.paymentPage: (context) => const PaymentPage(),
         AppRoutes.successPage: (context) => const SuccessPage(),
         AppRoutes.dalityPujaE: (context) => DailyPujaEssentialsScreen(),
+        AppRoutes.myCart: (context) => MyCartPage(),
 
         AppRoutes.profile: (context) => const ProfilePage(),
         AppRoutes.savedAddress: (context) => const SavedAddressesScreen(),
@@ -145,7 +146,7 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
     const HomeScreen(), // Main screen
     const BookRetualPage(),
     CustomizePoojaKitScreen(),
-    const MyCartPage(),
+    const CategoryPage(),
   ];
 
   @override
@@ -154,7 +155,9 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.headerCard,
-      body: IndexedStack(index: currentIndex, children: _screens),
+      body: SafeArea(
+        child: IndexedStack(index: currentIndex, children: _screens),
+      ),
       bottomNavigationBar: _customBottomBar(currentIndex),
     );
   }
@@ -175,14 +178,9 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
         child: Row(
           children: [
             _navItem('assets/nav/home.png', 'Home', 0, currentIndex),
-            _navItem('assets/nav/p.png', 'Book Your Pandit', 1, currentIndex),
-            _navItem(
-              'assets/nav/k.png',
-              'Customize your Pooja Kit',
-              2,
-              currentIndex,
-            ),
-            _navItem('assets/nav/cart.png', 'My Cart', 3, currentIndex),
+            _navItem('assets/nav/p.png', 'Book Pandit', 1, currentIndex),
+            _navItem('assets/nav/k.png', 'Customize Kit', 2, currentIndex),
+            _navItem('assets/nav/category.png', 'Categories', 3, currentIndex),
           ],
         ),
       ),
@@ -209,6 +207,7 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
                   path,
                   width: isSelected ? 26 : 24,
                   height: isSelected ? 26 : 24,
+                  fit: BoxFit.cover,
                 ),
               ),
               const SizedBox(height: 4),
@@ -220,7 +219,7 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
                 style: TextStyle(
                   fontSize: 11,
                   height: 1.2,
-                  color: isSelected ? const Color(0xFFB71C1C) : Colors.grey,
+                  color: isSelected ? AppColors.button : AppColors.grey,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),

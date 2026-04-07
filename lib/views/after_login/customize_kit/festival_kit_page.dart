@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
 
-class FestivalKitPage extends StatelessWidget {
+class FestivalKitPage extends ConsumerWidget {
   const FestivalKitPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
@@ -112,7 +114,7 @@ class FestivalKitPage extends StatelessWidget {
   }
 }
 
-class FestivalCard extends StatelessWidget {
+class FestivalCard extends ConsumerWidget {
   final String title;
   final String subtitle;
   final String image;
@@ -125,9 +127,10 @@ class FestivalCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       onTap: () {
+        ref.read(isFestivalProvider.notifier).state = true;
         Navigator.pushNamed(context, AppRoutes.festivalKitDetails);
       },
       child: Container(

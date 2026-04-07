@@ -36,201 +36,213 @@ class _MyCartPageState extends State<MyCartPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        decoration: BoxDecoration(color: AppColors.background),
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.fromLTRB(16, 10, 16, 0),
-              decoration: BoxDecoration(color: AppColors.headerCard),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'My Cart',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Image.asset(
-                    'assets/nav/cart.png',
-                    width: 60,
-                    height: 60,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, exception, stackTrace) {
-                      return Container(
-                        width: 65,
-                        height: 65,
-                        decoration: BoxDecoration(color: AppColors.grey500),
-                        child: Center(child: Icon(Icons.image)),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(15),
-                itemCount: cartItems.length,
-                itemBuilder: (context, index) {
-                  return _buildCartItem(cartItems[index], index);
-                },
-              ),
-            ),
-
-            // Promotional Offers
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.black.withAlpha(50),
-                    offset: Offset(0, -3), // 🔥 negative = top shadow
-                    blurRadius: 6,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  // First Offer
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFEBEE),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.local_offer,
-                            color: Color(0xFFE91E63),
-                            size: 18,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Get 5% Off on your first',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.black87,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                'pooja package order',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.grey.shade200,
-                    margin: const EdgeInsets.symmetric(horizontal: 10),
-                  ),
-
-                  // Second Offer
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFEBEE),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.delivery_dining,
-                            color: Color(0xFFE91E63),
-                            size: 18,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Free Delivery on Puja Essentials',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.black87,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                'On orders above ₹499',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Add More Items Button
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12.0,
-                vertical: 8,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: CustomElevatedIconButton(
-                      text: "Add more items",
-                      icon: Icons.add_shopping_cart_outlined,
-                      onPressed: () {
-                        Navigator.pushNamed(context, AppRoutes.comparisionPage);
-                      },
-                      iconSize: 18,
-                      textStyle: text13(
-                        color: AppColors.white,
+    return Scaffold(
+      backgroundColor: AppColors.headerCard,
+      body: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(color: AppColors.background),
+          child: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.fromLTRB(16, 10, 16, 0),
+                decoration: BoxDecoration(color: AppColors.headerCard),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'My Cart',
+                      style: TextStyle(
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: AppButton(
-                      title: "Place Order",
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.orderSummary);
+                    Image.asset(
+                      'assets/nav/cart.png',
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, exception, stackTrace) {
+                        return Container(
+                          width: 65,
+                          height: 65,
+                          decoration: BoxDecoration(color: AppColors.grey500),
+                          child: Center(child: Icon(Icons.image)),
+                        );
                       },
+                    ),
+                  ],
+                ),
+              ),
 
-                      textStyle: text13(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.bold,
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(15),
+                  itemCount: cartItems.length,
+                  itemBuilder: (context, index) {
+                    return _buildCartItem(cartItems[index], index);
+                  },
+                ),
+              ),
+
+              // Promotional Offers
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 15,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.black.withAlpha(50),
+                      offset: Offset(0, -3), // 🔥 negative = top shadow
+                      blurRadius: 6,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // First Offer
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFEBEE),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.local_offer,
+                              color: Color(0xFFE91E63),
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Get 5% Off on your first',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.black87,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  'pooja package order',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+
+                    Container(
+                      width: 1,
+                      height: 40,
+                      color: Colors.grey.shade200,
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+
+                    // Second Offer
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFEBEE),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.delivery_dining,
+                              color: Color(0xFFE91E63),
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Free Delivery on Puja Essentials',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.black87,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  'On orders above ₹499',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+
+              // Add More Items Button
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: CustomElevatedIconButton(
+                        text: "Add more items",
+                        icon: Icons.add_shopping_cart_outlined,
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.comparisionPage,
+                          );
+                        },
+                        iconSize: 18,
+                        textStyle: text13(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: AppButton(
+                        title: "Place Order",
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRoutes.orderSummary);
+                        },
+
+                        textStyle: text13(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

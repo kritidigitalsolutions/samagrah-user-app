@@ -31,6 +31,7 @@ class AppRoutes {
   static const paymentPage = "/paymentPage";
   static const successPage = "/successPage";
   static const dalityPujaE = "/dalityPujaE";
+  static const myCart = "/myCart";
 
   //==============================================
   // Profile
