@@ -1,11 +1,14 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
+import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/textstyle.dart';
-import 'package:samagrah/view_model/before_login_provider/otp_provider.dart';
+import 'package:samagrah/view_model/before_login_provider/auth_provider.dart';
+import 'package:samagrah/view_model/before_login_provider/auth_state.dart';
 
 class VerifyOtpScreen extends ConsumerStatefulWidget {
   const VerifyOtpScreen({super.key});
@@ -15,7 +18,9 @@ class VerifyOtpScreen extends ConsumerStatefulWidget {
 }
 
 class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
-  static const int _otpLength = 4;
+  static const int _otpLength = 6;
+
+   late TapGestureRecognizer _resendRecognizer;
 
   final List<TextEditingController> _controllers = List.generate(
     _otpLength,
@@ -34,8 +39,21 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
     for (final f in _focusNodes) {
       f.dispose();
     }
+     _resendRecognizer.dispose();
     super.dispose();
   }
+
+ 
+
+@override
+void initState() {
+  super.initState();
+  _resendRecognizer = TapGestureRecognizer()
+    ..onTap = () {
+      print("Resend clicked");
+    };
+}
+
 
   void _onOtpChanged(int index, String value) {
     final otpList = [...ref.read(otpProvider)];
@@ -71,6 +89,27 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<AuthState>>(authProvider, (previous, next) {
+      next.whenOrNull(
+        data: (data) {
+          final res = data.verifyModel;
+
+          if (res != null && res.success == true) {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              AppRoutes.home,
+              (route) => false,
+            );
+          } else if (res != null && res.success == false) {
+            AppSnackbar.show(
+              context,
+              message: res.message ?? "OTP Failed",
+              type: SnackBarType.error,
+            );
+          }
+        },
+      );
+    });
     return Scaffold(
       backgroundColor: AppColors.white,
       body: Container(
@@ -120,60 +159,59 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
             // Content
             SafeArea(
               child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 40),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 40),
 
-                      // Title
-                      Text('Verify OTP', style: text26()),
+                    // Title
+                    Text('Verify OTP', style: text26()),
 
-                      const SizedBox(height: 40),
+                    const SizedBox(height: 40),
 
-                      // OTP boxes
-                      _buildOtpRow(),
+                    // OTP boxes
+                    _buildOtpRow(),
 
-                      const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                      // Helper text
-                      Text(
-                        'Enter the 4-digit code sent to\nyour mobile number',
-                        textAlign: TextAlign.center,
-                        style: text13(),
-                      ),
+                    // Helper text
+                    Text(
+                      'Enter the 4-digit code sent to\nyour mobile number',
+                      textAlign: TextAlign.center,
+                      style: text13(),
+                    ),
 
-                      const SizedBox(height: 40),
+                    const SizedBox(height: 40),
 
-                      // Continue button
-                      _buildContinueButton(),
+                    // Continue button
+                    _buildContinueButton(),
 
-                      const SizedBox(height: 30),
+                    const SizedBox(height: 30),
 
-                      // Resend
-                      GestureDetector(
-                        onTap: () {},
-                        child: RichText(
-                          text: TextSpan(
-                            text: "Didn't receive code? ",
-                            style: text13(),
-                            children: [
-                              TextSpan(
-                                text: 'Resend',
-                                style: TextStyle(
-                                  color: AppColors.button,
-                                  fontWeight: FontWeight.w600,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: AppColors.button,
-                                ),
+                    // Resend
+                    GestureDetector(
+                      onTap: () {},
+                      child: RichText(
+                        text: TextSpan(
+                          text: "Didn't receive code? ",
+                          style: text13(),
+                          children: [
+                            TextSpan(
+                              text: 'Resend',
+                              style: TextStyle(
+                                color: AppColors.button,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                                decorationColor: AppColors.button,
+                              
                               ),
-                            ],
-                          ),
+                              recognizer: _resendRecognizer
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -186,14 +224,14 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
   Widget _buildOtpRow() {
     final otpList = ref.watch(otpProvider); // 👈 ADD THIS
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(_otpLength, (index) {
-        final isFilled = otpList[index].isNotEmpty; // 👈 FIX
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: List.generate(_otpLength, (index) {
+          final isFilled = otpList[index].isNotEmpty; // 👈 FIX
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: KeyboardListener(
+          return KeyboardListener(
             focusNode: FocusNode(),
             onKeyEvent: (event) => _onKeyEvent(index, event),
             child: SizedBox(
@@ -202,13 +240,15 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
               child: TextFormField(
                 controller: _controllers[index],
                 focusNode: _focusNodes[index],
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 textAlign: TextAlign.center,
                 maxLength: 1,
                 onChanged: (val) => _onOtpChanged(index, val), // 👈 FIX
                 decoration: InputDecoration(
                   counterText: '',
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.7),
+                  fillColor: AppColors.white.withValues(alpha: 0.7),
                   contentPadding: EdgeInsets.zero,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -234,9 +274,9 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                 ),
               ),
             ),
-          ),
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 
@@ -244,16 +284,20 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
     final otpList = ref.watch(otpProvider);
     final otp = otpList.join();
 
+    final authState = ref.watch(authProvider);
+
     return SizedBox(
       width: 160,
       height: 44,
       child: AppButton(
-        onTap: () {
-          Navigator.pushNamed(context, AppRoutes.home);
-          print("OTP: $otp");
-        },
-
         title: "Continue",
+        isLoading: authState.isLoading,
+        onTap: () {
+          final phone = ref.read(phoneProvider.notifier).state;
+          print(otp);
+          print(phone);
+          ref.read(authProvider.notifier).verifyOtp(mobile: phone, otp: otp);
+        },
       ),
     );
   }

@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/main.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
+import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userAsync = ref.watch(userProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -31,7 +35,11 @@ class ProfilePage extends StatelessWidget {
               const SizedBox(height: 20),
 
               // Profile Section
-              _buildProfileHeader(),
+             userAsync.when(
+  data: (user) => _buildProfileHeader(user),
+  loading: () => const CircularProgressIndicator(),
+  error: (e, _) => const Text("Error loading user"),
+),
 
               const SizedBox(height: 30),
 
@@ -155,10 +163,12 @@ class ProfilePage extends StatelessWidget {
                           ),
                         ),
                         ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            // TODO: Handle your logout logic here
-                            // e.g., clear storage, navigate to login screen
+                          onPressed: () async {
+                            await AuthLocalstorageService.clear();
+                            Navigator.pushReplacementNamed(
+                              context,
+                              AppRoutes.register,
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.button,
@@ -194,7 +204,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader() {
+ Widget _buildProfileHeader(Map<String, dynamic>? user) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -215,12 +225,15 @@ class ProfilePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Ashish Sonkar',
-                  style: text15(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text('XXXXXXXXXX', style: text13(color: Colors.black45)),
+               Text(
+  user?['name'] ?? 'No Name',
+  style: text15(fontWeight: FontWeight.bold),
+),
+const SizedBox(height: 4),
+Text(
+  user?['phone'] ?? 'No Phone',
+  style: text13(color: Colors.black45),
+),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(

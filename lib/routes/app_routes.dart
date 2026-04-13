@@ -5,6 +5,7 @@ class AppRoutes {
 
   static const splash = '/splash';
   static const register = '/register';
+  static const loginPage = "/loginPage";
   static const otp = "/otp";
 
   //==============================================

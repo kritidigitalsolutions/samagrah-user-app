@@ -43,6 +43,8 @@ dependencies:
   dotted_line: ^3.2.3
   font_awesome_flutter: ^11.0.0
   carousel_slider: ^5.1.2
+  dio: ^5.9.2
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:

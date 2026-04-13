@@ -41,6 +41,7 @@ import 'package:samagrah/views/after_login/profile/my_fav_products.dart';
 import 'package:samagrah/views/after_login/profile/my_profile_Page.dart';
 import 'package:samagrah/views/after_login/profile/saved_address_page.dart';
 import 'package:samagrah/views/after_login/wallet/my_wallet_screen.dart';
+import 'package:samagrah/views/before_login/login_page.dart';
 import 'package:samagrah/views/before_login/otp_verfied_screen.dart';
 import 'package:samagrah/views/before_login/register_screen.dart';
 import 'package:samagrah/views/before_login/splash_screen.dart';
@@ -71,11 +72,12 @@ class MyApp extends StatelessWidget {
           scrolledUnderElevation: 0,
         ),
       ),
-      initialRoute: AppRoutes.home,
+      initialRoute: AppRoutes.splash,
       routes: {
         AppRoutes.splash: (context) => const SplashScreen(),
         AppRoutes.register: (context) => const RegisterScreen(),
         AppRoutes.otp: (context) => const VerifyOtpScreen(),
+        AppRoutes.loginPage: (context) => const LoginPage(),
 
         AppRoutes.home: (context) => const MyHomeScreen(),
         AppRoutes.notification: (context) => const NotificationPage(),
@@ -155,10 +157,8 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.headerCard,
-      body: SafeArea(
-        child: IndexedStack(index: currentIndex, children: _screens),
-      ),
-      bottomNavigationBar: _customBottomBar(currentIndex),
+      body: IndexedStack(index: currentIndex, children: _screens),
+      bottomNavigationBar: SafeArea(child: _customBottomBar(currentIndex)),
     );
   }
 

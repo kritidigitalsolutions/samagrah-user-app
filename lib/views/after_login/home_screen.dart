@@ -175,16 +175,8 @@ class HomeScreen extends StatelessWidget {
                       ],
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
 
-                    // Khatak Products Grid
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        'Khatak',
-                        style: text15(fontWeight: FontWeight.bold),
-                      ),
-                    ),
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),

@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:samagrah/model/request/auth_models/user_request_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
@@ -12,25 +11,19 @@ import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/before_login_provider/auth_provider.dart';
 import 'package:samagrah/view_model/before_login_provider/profile_provider.dart';
 
-class RegisterScreen extends ConsumerStatefulWidget {
-  const RegisterScreen({super.key});
+class LoginPage extends ConsumerStatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  final _nameCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
-  final _addressCtrl = TextEditingController();
+class _LoginPageState extends ConsumerState<LoginPage> {
   final _mobileCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
-    _nameCtrl.dispose();
-    _emailCtrl.dispose();
-    _addressCtrl.dispose();
     _mobileCtrl.dispose();
     super.dispose();
   }
@@ -50,28 +43,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             // ✅ NEW USER
             AppSnackbar.show(
               context,
+              message: "This number is not registered. Please sign up first.",
+              type: SnackBarType.warning,
+            );
+          } else {
+            AppSnackbar.show(
+              context,
               message: "OTP Sent Successfully",
               type: SnackBarType.success,
             );
-
             Navigator.pushNamed(context, AppRoutes.otp);
-          } else {
-            // ❌ ALREADY REGISTERED
-            AppSnackbar.show(
-              context,
-              message:
-                  "This number is already registered. Please login or try another number",
-              type: SnackBarType.error,
-            );
           }
-        },
-
-        error: (e, _) {
-          AppSnackbar.show(
-            context,
-            message: e.toString(),
-            type: SnackBarType.error,
-          );
         },
       );
     });
@@ -112,30 +94,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
             // ✅ Main Content
             SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: Form(
-                  key: _formKey,
+              child: Form(
+                key: _formKey,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 48),
                       Text(
-                        'Set up\nyour profile',
+                        'Login In',
                         textAlign: TextAlign.center,
                         style: text26(),
                       ),
                       const SizedBox(height: 28),
-                      ProfileImagePicker(),
-                      const SizedBox(height: 32),
-                      AppTextField(controller: _nameCtrl, hintText: 'Name'),
-                      const SizedBox(height: 14),
-                      AppTextField(controller: _emailCtrl, hintText: 'Email'),
-                      const SizedBox(height: 14),
-                      AppTextField(
-                        controller: _addressCtrl,
-                        hintText: 'Address',
-                      ),
-                      const SizedBox(height: 14),
+
                       NumberTextField(
                         controller: _mobileCtrl,
                         hintText: 'Mobile Number',
@@ -147,12 +121,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text("Already have an account?"),
+                          Text("Don't have an account?"),
                           SizedBox(width: 2),
                           CustomTextButton(
-                            title: "Log in",
+                            title: "Sign up",
                             onTap: () {
-                              Navigator.pushNamed(context, AppRoutes.loginPage);
+                              Navigator.pop(context);
                             },
                           ),
                         ],
@@ -169,32 +143,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Widget _buildContinueButton() {
-    final authState = ref.watch(authProvider);
-    return SizedBox(
-      width: 160,
-      height: 44,
-      child: AppButton(
-        title: 'Continue',
-        isLoading: authState.isLoading,
-        onTap: () {
-          if (!_formKey.currentState!.validate()) return;
+    return Consumer(
+      builder: (context, ref, _) {
+        final authState = ref.watch(authProvider);
 
-          final imageFile = ref.read(profileImageProvider);
+        return SizedBox(
+          width: 160,
+          height: 44,
+          child: AppButton(
+            title: 'Continue',
+            isLoading: authState.isLoading,
+            onTap: () {
+              if (!_formKey.currentState!.validate()) return;
 
-          final model = UserRequestModel(
-            name: _nameCtrl.text.trim(),
-            phone: _mobileCtrl.text.trim(),
-            email: _emailCtrl.text.trim(),
-            address: _addressCtrl.text.trim(),
-            profileImage: imageFile?.path
-          );
+              ref.read(phoneProvider.notifier).state = _mobileCtrl.text;
 
-          ref.read(phoneProvider.notifier).state = _mobileCtrl.text;
-
-          // 👉 ONLY API CALL
-          ref.read(authProvider.notifier).register(model: model);
-        },
-      ),
+              // 👉 ONLY API CALL
+              ref
+                  .read(authProvider.notifier)
+                  .login(mobile: _mobileCtrl.text.trim());
+            },
+          ),
+        );
+      },
     );
   }
 }

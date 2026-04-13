@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
+import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -52,8 +53,18 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _startSequence() async {
     await Future.delayed(const Duration(milliseconds: 300));
     _logoController.forward();
+
     await Future.delayed(const Duration(milliseconds: 2500));
-    if (mounted) {
+
+    if (!mounted) return;
+
+    final token = await AuthLocalstorageService.getToken(); // 👈 GET TOKEN
+
+    if (token != null && token.isNotEmpty) {
+      // ✅ USER LOGGED IN
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } else {
+      // ❌ NEW USER
       Navigator.pushReplacementNamed(context, AppRoutes.register);
     }
   }

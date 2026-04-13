@@ -4,7 +4,6 @@ import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
-import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 
 // Service Selection Screen
@@ -84,12 +83,12 @@ class ServiceSelectionScreen extends StatelessWidget {
                     title: "Next",
                     onTap: () {
                       if (selectedIndex == null) {
-                        CustomSnackbar.showCustomSnackBar(
-                          context,
-                          message: "Please Select one option",
-                          backgroundColor: AppColors.error,
-                          icon: Icons.error_outline,
-                        );
+                        // CustomSnackbar.showCustomSnackBar(
+                        //   context,
+                        //   message: "Please Select one option",
+                        //   backgroundColor: AppColors.error,
+                        //   icon: Icons.error_outline,
+                        // );
                         return;
                       }
                       final selected = serviceList[selectedIndex];

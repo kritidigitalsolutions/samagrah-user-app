@@ -35,16 +35,19 @@ class AppButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(radius),
         ),
         child: isLoading
-            ? const CircularProgressIndicator(color: Colors.white)
+            ? SizedBox(
+                width: 22,
+                height: 22,
+                child: const CircularProgressIndicator(
+                  strokeWidth: 1,
+                  color: AppColors.white,
+                ),
+              )
             : Text(
                 title,
                 style:
                     textStyle ??
-                    const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    text15(color: AppColors.white, fontWeight: FontWeight.w600),
               ),
       ),
     );
@@ -224,6 +227,44 @@ class CustomElevatedIconButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(borderRadius),
           ),
           elevation: 2,
+        ),
+      ),
+    );
+  }
+}
+
+class CustomTextButton extends StatelessWidget {
+  final String title;
+  final VoidCallback onTap;
+  final TextStyle? textStyle;
+  // 🧱 Layout options
+  final EdgeInsetsGeometry padding;
+  final Alignment alignment;
+
+  const CustomTextButton({
+    super.key,
+    required this.title,
+    required this.onTap,
+    this.textStyle,
+    this.padding = const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    this.alignment = Alignment.center,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: alignment,
+      child: TextButton(
+        onPressed: onTap,
+        style: TextButton.styleFrom(
+          padding: padding,
+          splashFactory: InkRipple.splashFactory,
+        ),
+        child: Text(
+          title,
+          style:
+              textStyle ??
+              text14(color: AppColors.button, fontWeight: FontWeight.w600),
         ),
       ),
     );
