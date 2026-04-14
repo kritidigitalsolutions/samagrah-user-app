@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/res/app_colors.dart';
@@ -5,12 +7,35 @@ import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/festival_kit_provider.dart';
 
-class FestivalKitPage extends ConsumerWidget {
+class FestivalKitPage extends ConsumerStatefulWidget {
   const FestivalKitPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FestivalKitPage> createState() => _FestivalKitPageState();
+}
+
+class _FestivalKitPageState extends ConsumerState<FestivalKitPage> {
+  Timer? _debounce;
+
+  void _onSearchChanged(String value) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      ref.read(festivalProvider.notifier).searchFestival(value);
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final festivalAsync = ref.watch(festivalProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
@@ -48,6 +73,7 @@ class FestivalKitPage extends ConsumerWidget {
                   fontWeight: FontWeight.normal,
                   color: AppColors.black,
                 ),
+                onChanged: _onSearchChanged,
                 cursorColor: AppColors.black,
                 decoration: InputDecoration(
                   hintText: 'Search festival kit...',
@@ -70,40 +96,41 @@ class FestivalKitPage extends ConsumerWidget {
 
               /// List
               Expanded(
-                child: ListView(
-                  children: const [
-                    FestivalCard(
-                      title: "Diwali Pooja Kit",
-                      subtitle:
-                          "Complete kit for Lakshmi\nPooja and Diwali rituals",
-                      image: "assets/god.png",
-                    ),
-                    FestivalCard(
-                      title: "Ganesh Chaturthi Kit",
-                      subtitle: "Essential pooja items for\nGanesh worship",
-                      image: "assets/god.png",
-                    ),
-                    FestivalCard(
-                      title: "Diwali Pooja Kit",
-                      subtitle:
-                          "Complete kit for Lakshmi\nPooja and Diwali rituals",
-                      image: "assets/god.png",
-                    ),
-                    FestivalCard(
-                      title: "Ganesh Chaturthi Kit",
-                      subtitle: "Essential pooja items for\nGanesh worship",
-                      image: "assets/god.png",
-                    ),
-
-                    SizedBox(height: 10),
-
-                    Center(
-                      child: Text(
-                        "View More",
-                        style: TextStyle(fontSize: 12, color: Colors.black54),
+                child: festivalAsync.when(
+                  loading: () => ListView.builder(
+                    itemCount: 4,
+                    itemBuilder: (_, __) => Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      height: 140,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                  ],
+                  ),
+
+                  error: (e, _) => Center(child: Text("Something went wrong")),
+
+                  data: (state) {
+                    final list = state.festivalKit?.data ?? [];
+
+                    if (list.isEmpty) {
+                      return const Center(child: Text("No Data Found"));
+                    }
+
+                    return ListView.builder(
+                      itemCount: list.length,
+                      itemBuilder: (context, index) {
+                        final item = list[index];
+
+                        return FestivalCard(
+                          title: item.name ?? "",
+                          subtitle: item.description ?? "",
+                          image: item.image ?? "", // 👈 from API
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ],
@@ -182,7 +209,14 @@ class FestivalCard extends ConsumerWidget {
             const SizedBox(width: 10),
 
             /// Image
-            Image.asset(image, height: 110, fit: BoxFit.contain),
+            Image.network(
+              "http://192.168.1.40:8000$image",
+              height: 110,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return Icon(Icons.image, size: 80);
+              },
+            ),
           ],
         ),
       ),

@@ -1,4 +1,3 @@
-import 'package:samagrah/model/response/auth_response/Auth_response.dart';
 import 'package:samagrah/model/response/kit_response/festival_kit_response.dart';
 
 class FestivalkitState {
@@ -6,11 +5,7 @@ class FestivalkitState {
   final bool isLoading;
   final String? error;
 
-  FestivalkitState({
-    this.festivalKit,
-    this.isLoading = false,
-    this.error,
-  });
+  FestivalkitState({this.festivalKit, this.isLoading = false, this.error});
 
   FestivalkitState copyWith({
     FestivalKitResponse? festivalKit,

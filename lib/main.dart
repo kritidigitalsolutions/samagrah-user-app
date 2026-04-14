@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
-import 'package:samagrah/view_model/after_login_provider/home_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/views/after_login/category_page.dart';
 import 'package:samagrah/views/after_login/customize_kit/customize_items_page.dart';
 import 'package:samagrah/views/after_login/customize_kit/customize_kit_search_page.dart';

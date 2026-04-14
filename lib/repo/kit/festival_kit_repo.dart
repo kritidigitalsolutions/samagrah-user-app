@@ -5,10 +5,22 @@ import 'package:samagrah/res/app_urls.dart';
 class FestivalKitRepo {
   final _api = NetworkApiService();
 
-  // ✅ REGISTER
+  // ✅ Get festival
   Future<FestivalKitResponse> getFestivalKits() async {
     try {
-      final res = await _api.getApi(AppUrls.registerUser,);
+      final res = await _api.getApi(AppUrls.festivalKit);
+      return FestivalKitResponse.fromJson(res);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // search kit
+
+  Future<FestivalKitResponse> searchFestivalKits(String type) async {
+    try {
+      final uri = "${AppUrls.festivalKit}?search=$type";
+      final res = await _api.getApi(uri);
       return FestivalKitResponse.fromJson(res);
     } catch (e) {
       rethrow;

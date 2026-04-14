@@ -1,5 +1,5 @@
 class AppUrls {
-  static const String baseUrl = "http://192.168.1.19:8000/api";
+  static const String baseUrl = "http://192.168.1.40:8000/api";
 
   // ================ Auth =====================================
 
@@ -11,4 +11,8 @@ class AppUrls {
   // ======================= Kit===================================
 
   static const String festivalKit = "$baseUrl/user/kits";
+
+  // ======================= product===================================
+
+  static const String getProduct = "$baseUrl/user/items";
 }

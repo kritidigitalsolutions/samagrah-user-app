@@ -1,15 +1,20 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final productState = ref.watch(productProvider);
+    final selectedCategory = productState.value?.selectedCategory ?? "All";
     return Stack(
       children: [
         Container(
@@ -146,153 +151,197 @@ class HomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    _buildChip('All', "assets/home/select-all.png", true),
-                    _buildChip('Agri batti', "assets/home/incense.png", false),
-                    _buildChip('Fruits', "assets/home/fruit.png", false),
-                    _buildChip('Flowers', "assets/home/flower.png", false),
-                    _buildChip('Mala(Gralands)', "assets/home/mala.png", false),
+                    _buildChip(
+                      'All',
+                      "All",
+                      "assets/home/select-all.png",
+                      selectedCategory == "All",
+                      ref,
+                    ),
+                    _buildChip(
+                      'Agri batti',
+                      "agarbatti",
+                      "assets/home/incense.png",
+                      selectedCategory == "agarbatti",
+                      ref,
+                    ),
+                    _buildChip(
+                      'Fruits',
+                      "fruits",
+                      "assets/home/fruit.png",
+                      selectedCategory == "fruits",
+                      ref,
+                    ),
+                    _buildChip(
+                      'Flowers',
+                      "flowes",
+                      "assets/home/flower.png",
+                      selectedCategory == "flowes",
+                      ref,
+                    ),
+                    _buildChip(
+                      'Mala(Gralands)',
+                      "mala",
+                      "assets/home/mala.png",
+                      selectedCategory == "mala",
+                      ref,
+                    ),
                   ],
                 ),
               ),
-
               Expanded(
-                child: ListView(
-                  padding: EdgeInsets.only(top: 8),
-                  children: [
-                    // Promotional Banner
-                    CarouselSlider(
-                      options: CarouselOptions(
-                        height: 120,
-                        autoPlay: true,
-                        enlargeCenterPage: true,
-                        viewportFraction: 1,
-                        autoPlayInterval: Duration(seconds: 3),
-                      ),
-                      items: [
-                        poojaOfferBanner(),
-                        poojaOfferBanner(),
-                        poojaOfferBanner(),
-                      ],
-                    ),
+                child: productState.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
 
-                    const SizedBox(height: 10),
+                  error: (e, _) =>
+                      const Center(child: Text("Something went wrong")),
 
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(12),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            childAspectRatio: 0.75,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
+                  data: (state) {
+                    final products = state.categoryProducts;
+                    final dailyEss = state.dailyEssentials;
+
+                    if (products.isEmpty) {
+                      return const Center(child: Text("No Products Found"));
+                    }
+                    return ListView(
+                      padding: EdgeInsets.only(top: 8),
+                      children: [
+                        // Promotional Banner
+                        CarouselSlider(
+                          options: CarouselOptions(
+                            height: 120,
+                            autoPlay: true,
+                            enlargeCenterPage: true,
+                            viewportFraction: 1,
+                            autoPlayInterval: Duration(seconds: 3),
                           ),
-                      itemCount: 6,
-                      itemBuilder: (context, index) {
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.productDetails,
+                          items: [
+                            poojaOfferBanner(),
+                            poojaOfferBanner(),
+                            poojaOfferBanner(),
+                          ],
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(12),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                childAspectRatio: 0.75,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                              ),
+                          itemCount: products.length,
+                          itemBuilder: (context, index) {
+                            final product = products[index];
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.productDetails,
+                                );
+                              },
+                              child: _buildProductCard(
+                                product, // Replace with your image or use NetworkImage
+                              ),
                             );
                           },
-                          child: _buildProductCard(
-                            'Khatak',
+                        ),
 
-                            'assets/icon/kalash.png', // Replace with your image or use NetworkImage
-                          ),
-                        );
-                      },
-                    ),
-
-                    // Daily Pooja Essentials
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Daily Pooja Essentials',
-                            style: text15(fontWeight: FontWeight.bold),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.dalityPujaE,
-                              );
-                            },
-                            child: Text(
-                              'View all >',
-                              style: text13(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.warningDark,
+                        // Daily Pooja Essentials
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Daily Pooja Essentials',
+                                style: text15(fontWeight: FontWeight.bold),
                               ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.dalityPujaE,
+                                  );
+                                },
+                                child: Text(
+                                  'View all >',
+                                  style: text13(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.warningDark,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          height: 140,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            itemCount: 3,
+                            itemBuilder: (context, index) => GestureDetector(
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.productDetails,
+                                );
+                              },
+                              child: _buildDiyaCard(),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 140,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        itemCount: 3,
-                        itemBuilder: (context, index) => GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.productDetails,
-                            );
-                          },
-                          child: _buildDiyaCard(),
                         ),
-                      ),
-                    ),
 
-                    const SizedBox(height: 20),
+                        const SizedBox(height: 20),
 
-                    // Most Used Items
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Most Used Items in Pooja',
-                            style: text15(fontWeight: FontWeight.bold),
+                        // Most Used Items
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Most Used Items in Pooja',
+                                style: text15(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                'View all >',
+                                style: text13(color: AppColors.warningDark),
+                              ),
+                            ],
                           ),
-                          Text(
-                            'View all >',
-                            style: text13(color: AppColors.warningDark),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 140,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: 3,
-                        itemBuilder: (context, index) => GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.productDetails,
-                            );
-                          },
-                          child: _buildIncenseCard(),
                         ),
-                      ),
-                    ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          height: 140,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: 3,
+                            itemBuilder: (context, index) => GestureDetector(
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.productDetails,
+                                );
+                              },
+                              child: _buildIncenseCard(),
+                            ),
+                          ),
+                        ),
 
-                    const SizedBox(height: 100),
-                  ],
+                        const SizedBox(height: 100),
+                      ],
+                    );
+                  },
                 ),
               ), // Space for bottom nav
             ],
@@ -385,26 +434,38 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildChip(String label, String img, bool selected) {
+  Widget _buildChip(
+    String label,
+    String type,
+    String img,
+    bool selected,
+    WidgetRef ref,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: Chip(
-        avatar: Image.asset(img, width: 18, height: 18, fit: BoxFit.cover),
-        label: Text(
-          label,
-          style: text13(color: selected ? AppColors.button : AppColors.black),
+      child: GestureDetector(
+        onTap: () {
+          ref.read(productProvider.notifier).filterByCategory(type);
+        },
+        child: Chip(
+          avatar: Image.asset(img, width: 18, height: 18),
+          label: Text(
+            label,
+            style: text13(color: selected ? AppColors.button : AppColors.black),
+          ),
+          backgroundColor: selected
+              ? AppColors.button.withAlpha(30)
+              : AppColors.white,
+          side: BorderSide(color: selected ? AppColors.button : AppColors.grey),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
         ),
-        backgroundColor: selected
-            ? AppColors.button.withAlpha(30)
-            : AppColors.white,
-        side: BorderSide(color: selected ? AppColors.button : AppColors.grey),
-
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
     );
   }
 
-  Widget _buildProductCard(String name, String image) {
+  Widget _buildProductCard(Product product) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -418,7 +479,12 @@ class HomeScreen extends StatelessWidget {
           Expanded(
             child: Stack(
               children: [
-                Center(child: Image.asset(image, height: 90)),
+                Center(
+                  child: Image.network(
+                    "http://192.168.1.40:8000/${product.thumbnail}",
+                    height: 90,
+                  ),
+                ),
                 Positioned(
                   top: 6,
                   right: 6,
@@ -445,8 +511,17 @@ class HomeScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(name, style: text12(fontWeight: FontWeight.w500)),
-                    Text('65% off', style: text10(color: AppColors.grey500)),
+                    Expanded(
+                      child: Text(
+                        product.title ?? 'N/A',
+                        overflow: TextOverflow.ellipsis,
+                        style: text11(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                    Text(
+                      '${product.discountPercent}% off',
+                      style: text10(color: AppColors.grey500),
+                    ),
                   ],
                 ),
 
@@ -457,7 +532,7 @@ class HomeScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Rs. 149/-',
+                      'Rs. ${product.oldPrice}/-',
                       style: TextStyle(
                         fontSize: 8,
                         color: Colors.grey,
@@ -465,7 +540,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Rs. 100/-',
+                      'Rs. ${product.price}/-',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
