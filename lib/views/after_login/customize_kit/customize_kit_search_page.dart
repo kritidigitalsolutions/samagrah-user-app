@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:samagrah/model/response/kit_response/user_draft_kit_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
+import 'package:samagrah/utils/components.dart';
+import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/custom_textfields.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
@@ -13,6 +17,7 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final userDraftKit = ref.watch(userDraftKits);
     final poojas = [
       'Satyanarayan Pooja',
       'Griha Provesh Pooja',
@@ -28,7 +33,7 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
             end: Alignment.bottomCenter,
             colors: [
               AppColors.background,
-              AppColors.background.withOpacity(0.95),
+              AppColors.background.withValues(alpha: 0.95),
             ],
           ),
         ),
@@ -74,182 +79,183 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
                 physics: const BouncingScrollPhysics(),
                 child: Column(
                   children: [
-                    const SizedBox(height: 32),
-
                     // ✅ Floating premium card
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(28),
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Colors.white, Colors.grey.shade50],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.orange.withOpacity(0.15),
-                              blurRadius: 30,
-                              offset: const Offset(0, 10),
-                              spreadRadius: -5,
-                            ),
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
-                              blurRadius: 20,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(28),
-                          child: Stack(
-                            children: [
-                              // ✅ Decorative circles
-                              Positioned(
-                                top: -50,
-                                right: -50,
-                                child: Container(
-                                  width: 150,
-                                  height: 150,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: Stack(
+                        children: [
+                          // ✅ Main content
+                          Padding(
+                            padding: const EdgeInsets.all(28),
+                            child: Column(
+                              children: [
+                                // ✅ Premium icon with animation-ready design
+                                Container(
+                                  width: 90,
+                                  height: 90,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    gradient: RadialGradient(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
                                       colors: [
-                                        Colors.orange.withOpacity(0.1),
-                                        Colors.transparent,
+                                        Colors.orange.shade300,
+                                        Colors.deepOrange.shade400,
                                       ],
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.orange.withValues(
+                                          alpha: 0.4,
+                                        ),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Container(
+                                    margin: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white,
+                                    ),
+                                    child: Center(
+                                      child: Image.asset(
+                                        "assets/nav/cart.png",
+                                        width: 42,
+                                        height: 42,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              Positioned(
-                                bottom: -30,
-                                left: -30,
-                                child: Container(
-                                  width: 120,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: RadialGradient(
-                                      colors: [
-                                        Colors.pink.withOpacity(0.08),
-                                        Colors.transparent,
-                                      ],
+
+                                const SizedBox(height: 24),
+
+                                // ✅ Modern heading
+                                ShaderMask(
+                                  shaderCallback: (bounds) => LinearGradient(
+                                    colors: [
+                                      Colors.orange.shade700,
+                                      Colors.deepOrange.shade600,
+                                    ],
+                                  ).createShader(bounds),
+                                  child: const Text(
+                                    'Create Your Custom Kit',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      letterSpacing: -0.5,
                                     ),
                                   ),
                                 ),
-                              ),
 
-                              // ✅ Main content
-                              Padding(
-                                padding: const EdgeInsets.all(28),
-                                child: Column(
-                                  children: [
-                                    // ✅ Premium icon with animation-ready design
-                                    Container(
-                                      width: 90,
-                                      height: 90,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            Colors.orange.shade300,
-                                            Colors.deepOrange.shade400,
-                                          ],
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.orange.withOpacity(
-                                              0.4,
-                                            ),
-                                            blurRadius: 20,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Container(
-                                        margin: const EdgeInsets.all(3),
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.white,
-                                        ),
-                                        child: Center(
-                                          child: Image.asset(
-                                            "assets/nav/cart.png",
-                                            width: 42,
-                                            height: 42,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                                const SizedBox(height: 12),
 
-                                    const SizedBox(height: 24),
-
-                                    // ✅ Modern heading
-                                    ShaderMask(
-                                      shaderCallback: (bounds) =>
-                                          LinearGradient(
-                                            colors: [
-                                              Colors.orange.shade700,
-                                              Colors.deepOrange.shade600,
-                                            ],
-                                          ).createShader(bounds),
-                                      child: const Text(
-                                        'Create Your Custom Kit',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                          letterSpacing: -0.5,
-                                        ),
-                                      ),
-                                    ),
-
-                                    const SizedBox(height: 12),
-
-                                    Text(
-                                      'Handpick sacred items for your\npersonalized pooja ceremony',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        color: Colors.grey.shade600,
-                                        height: 1.6,
-                                        letterSpacing: 0.2,
-                                      ),
-                                    ),
-
-                                    const SizedBox(height: 36),
-
-                                    // ✅ Premium search field
-                                    _buildPremiumSearchField(
-                                      context,
-                                      ref,
-                                      poojas,
-                                    ),
-
-                                    const SizedBox(height: 20),
-
-                                    // ✅ Premium name field
-                                    _buildPremiumTextField(),
-
-                                    const SizedBox(height: 28),
-
-                                    // ✅ Premium button
-                                    _buildPremiumButton(context),
-                                  ],
+                                Text(
+                                  'Handpick sacred items for your\npersonalized pooja ceremony',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.grey.shade600,
+                                    height: 1.6,
+                                    letterSpacing: 0.2,
+                                  ),
                                 ),
-                              ),
-                            ],
+
+                                const SizedBox(height: 36),
+
+                                // ✅ Premium search field
+                                _buildPremiumSearchField(context, ref, poojas),
+
+                                const SizedBox(height: 20),
+
+                                // ✅ Premium name field
+                                _buildPremiumTextField(),
+
+                                const SizedBox(height: 28),
+
+                                // ✅ Premium button
+                                _buildPremiumButton(context, ref),
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
 
                     const SizedBox(height: 28),
+
+                    userDraftKit.when(
+                      loading: () => const SizedBox(),
+                      error: (e, _) => const SizedBox(),
+                      data: (kitState) {
+                        final kits = kitState.userKit?.data ?? [];
+
+                        /// ❌ Empty → kuch nahi dikhana
+                        if (kits.isEmpty) return const SizedBox();
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              child: Text(
+                                "Your Draft Kits",
+                                style: text15(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            AnimationLimiter(
+                              key: ValueKey(
+                                "draft_${kits.length}",
+                              ), // 🔥 re-animation
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                itemCount: kits.length,
+                                itemBuilder: (context, index) {
+                                  final kit = kits[index];
+
+                                  return AnimationConfiguration.staggeredList(
+                                    position: index,
+                                    duration: Duration(milliseconds: 400),
+                                    child: SlideAnimation(
+                                      horizontalOffset:
+                                          50, // 👉 right se aayega
+                                      child: FadeInAnimation(
+                                        child: ScaleAnimation(
+                                          scale: 0.9, // 🔥 premium zoom
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              // 👉 open edit kit screen
+                                            },
+                                            child: _buildDraftKitCard(
+                                              context,
+                                              kit,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+
+                            const SizedBox(height: 20),
+                          ],
+                        );
+                      },
+                    ),
 
                     // ✅ Feature cards
                     Padding(
@@ -294,6 +300,386 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildDraftKitCard(BuildContext context, Datum kit) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// 🔹 All Product Images (Horizontal List)
+          SizedBox(
+            height: 110,
+
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: kit.items.length,
+              itemBuilder: (context, index) {
+                final item = kit.items[index];
+                final image = item.product?.media?.image.isNotEmpty == true
+                    ? item.product!.media!.image.first
+                    : null;
+
+                return Container(
+                  width: 110,
+
+                  margin: const EdgeInsets.only(right: 8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: CustomCachedImage(
+                      imageUrl: image != null
+                          ? "http://192.168.1.40:8000/$image"
+                          : "https://via.placeholder.com/150",
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          /// 🔹 Content Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                /// 🔸 Kit Name + Actions
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        kit.name ?? "My Custom Kit",
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: text16(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+
+                    /// ✏️ Edit
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () {
+                        // TODO: Edit Kit
+                      },
+                    ),
+
+                    /// 🗑 Delete
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        // TODO: Delete Kit
+                      },
+                    ),
+                  ],
+                ),
+
+                /// 🔸 Total Items
+                Text(
+                  "${kit.items.length} items",
+                  style: text12(color: AppColors.grey),
+                ),
+
+                /// 🔸 Price
+                if (kit.totalPrice != null)
+                  Text(
+                    "₹${kit.totalPrice}",
+                    style: text18(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+
+                const SizedBox(height: 12),
+
+                /// 🔸 Product List (Names)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: kit.items.take(3).map((item) {
+                    return Text(
+                      "• ${item.product?.title ?? "Product"}",
+                      style: text12(color: Colors.black87),
+                    );
+                  }).toList(),
+                ),
+
+                if (kit.items.length > 3)
+                  Text(
+                    "+${kit.items.length - 3} more items",
+                    style: text12(color: Colors.blue),
+                  ),
+
+                const SizedBox(height: 12),
+
+                /// 🔸 Buttons Row
+                Row(
+                  children: [
+                    /// View All
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          _showKitProductsBottomSheet(context, kit);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(
+                            child: Text(
+                              "View All",
+                              style: text12(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 10),
+
+                    /// Buy Now
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          // TODO: Buy Now API / Checkout
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              "Buy Now",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showKitProductsBottomSheet(BuildContext context, Datum kit) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.65,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                children: [
+                  /// 🔹 Drag Handle
+                  const SizedBox(height: 10),
+                  Container(
+                    height: 4,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+
+                  /// 🔹 Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        /// Kit Name
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                kit.name ?? "Custom Kit",
+                                style: text18(fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "${kit.items.length} items",
+                                style: text13(color: AppColors.grey600),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        /// Total Price (Highlighted)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            "₹${kit.totalPrice ?? 0}",
+                            style: text16(
+                              fontWeight: FontWeight.w700,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Divider(height: 1),
+
+                  /// 🔹 Product List
+                  Expanded(
+                    child: ListView.separated(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(14),
+                      itemCount: kit.items.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final item = kit.items[index];
+                        final product = item.product;
+
+                        return Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              /// 🔹 Product Image + Qty Badge
+                              Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: CustomCachedImage(
+                                      imageUrl:
+                                          product?.media?.image.isNotEmpty ==
+                                              true
+                                          ? "http://192.168.1.40:8000/${product!.media!.image.first}"
+                                          : "https://via.placeholder.com/100",
+                                      height: 70,
+                                      width: 70,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+
+                                  /// Qty Badge
+                                  Positioned(
+                                    right: -2,
+                                    bottom: -2,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black87,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        "x${item.quantity}",
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(width: 12),
+
+                              /// 🔹 Product Info
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      product?.title ?? "Unknown Product",
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: text14(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      "₹${item.priceAtTime} per item",
+                                      style: text12(color: AppColors.grey600),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              /// 🔹 Total Price
+                              Text(
+                                "₹${(item.quantity ?? 0) * (item.priceAtTime ?? 0)}",
+                                style: text15(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   // ✅ Premium search field builder
   Widget _buildPremiumSearchField(
     BuildContext context,
@@ -334,11 +720,14 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
-              colors: [AppColors.button, AppColors.button.withOpacity(0.9)],
+              colors: [
+                AppColors.button,
+                AppColors.button.withValues(alpha: 0.9),
+              ],
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.button.withOpacity(0.4),
+                color: AppColors.button.withValues(alpha: 0.4),
                 blurRadius: 15,
                 offset: const Offset(0, 6),
               ),
@@ -369,17 +758,17 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
                     decoration: InputDecoration(
                       hintText: "Search for pooja kit...",
                       hintStyle: TextStyle(
-                        color: AppColors.white.withOpacity(0.65),
+                        color: AppColors.white.withValues(alpha: 0.65),
                         fontSize: 15,
                       ),
                       prefixIcon: Icon(
                         Icons.search_rounded,
-                        color: AppColors.white.withOpacity(0.9),
+                        color: AppColors.white.withValues(alpha: 0.9),
                         size: 24,
                       ),
                       suffixIcon: Icon(
                         Icons.arrow_drop_down_rounded,
-                        color: AppColors.white.withOpacity(0.9),
+                        color: AppColors.white.withValues(alpha: 0.9),
                       ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
@@ -394,7 +783,7 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
                 alignment: Alignment.topLeft,
                 child: Material(
                   elevation: 12,
-                  shadowColor: Colors.black.withOpacity(0.2),
+                  shadowColor: Colors.black.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     width: MediaQuery.of(context).size.width * 0.85,
@@ -426,8 +815,8 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    Colors.orange.withOpacity(0.15),
-                                    Colors.deepOrange.withOpacity(0.1),
+                                    Colors.orange.withValues(alpha: 0.15),
+                                    Colors.deepOrange.withValues(alpha: 0.1),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(12),
@@ -451,7 +840,7 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
                             trailing: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.1),
+                                color: Colors.orange.withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -519,7 +908,7 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -536,7 +925,7 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
   }
 
   // ✅ Premium button builder
-  Widget _buildPremiumButton(BuildContext context) {
+  Widget _buildPremiumButton(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
@@ -545,7 +934,7 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.orange.withOpacity(0.5),
+            color: Colors.orange.withValues(alpha: 0.5),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -555,6 +944,15 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
+            if (nameKitCtr.text.trim().isEmpty) {
+              AppSnackbar.show(
+                context,
+                message: "Please Enter Your Kit Name",
+                type: SnackBarType.error,
+              );
+              return;
+            }
+            ref.read(kitNameProvider.notifier).state = nameKitCtr.text.trim();
             Navigator.pushNamed(context, AppRoutes.kitItems);
           },
           borderRadius: BorderRadius.circular(16),
@@ -596,7 +994,7 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
@@ -608,7 +1006,7 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 22),

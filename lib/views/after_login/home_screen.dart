@@ -1,9 +1,11 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
+import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
@@ -85,28 +87,35 @@ class HomeScreen extends ConsumerWidget {
                 child: Row(
                   children: [
                     Expanded(
-                      child: TextField(
-                        style: text14(
-                          fontWeight: FontWeight.normal,
-                          color: AppColors.white,
-                        ),
-                        cursorColor: AppColors.white,
-                        decoration: InputDecoration(
-                          hintText: 'diya, agarbatti thali...',
-                          hintStyle: text14(color: AppColors.grey100),
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            color: AppColors.grey100,
-                          ),
-                          filled: true,
-                          fillColor: AppColors.primary,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide.none,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRoutes.searchProduct);
+                        },
+                        child: AbsorbPointer(
+                          child: TextField(
+                            style: text14(
+                              fontWeight: FontWeight.normal,
+                              color: AppColors.white,
+                            ),
+                            cursorColor: AppColors.white,
+                            decoration: InputDecoration(
+                              hintText: 'diya, agarbatti thali...',
+                              hintStyle: text14(color: AppColors.grey100),
+                              prefixIcon: const Icon(
+                                Icons.search,
+                                color: AppColors.grey100,
+                              ),
+                              filled: true,
+                              fillColor: AppColors.primary,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -200,8 +209,15 @@ class HomeScreen extends ConsumerWidget {
                   data: (state) {
                     final products = state.categoryProducts;
                     final dailyEss = state.dailyEssentials;
+                    final mostUsed = state.mostUsed;
 
-                    if (products.isEmpty) {
+                    // ✅ Check if ALL lists are empty
+                    final bool allEmpty =
+                        products.isEmpty &&
+                        dailyEss.isEmpty &&
+                        mostUsed.isEmpty;
+
+                    if (allEmpty) {
                       return const Center(child: Text("No Products Found"));
                     }
                     return ListView(
@@ -225,32 +241,49 @@ class HomeScreen extends ConsumerWidget {
 
                         const SizedBox(height: 10),
 
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          padding: const EdgeInsets.all(12),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                childAspectRatio: 0.75,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 10,
-                              ),
-                          itemCount: products.length,
-                          itemBuilder: (context, index) {
-                            final product = products[index];
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.productDetails,
-                                );
-                              },
-                              child: _buildProductCard(
-                                product, // Replace with your image or use NetworkImage
-                              ),
-                            );
-                          },
+                        AnimationLimiter(
+                          key: ValueKey(
+                            "grid_${products.length}",
+                          ), // 🔥 re-animation on change
+                          child: GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: const EdgeInsets.all(12),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 3,
+                                  childAspectRatio: 0.75,
+                                  crossAxisSpacing: 10,
+                                  mainAxisSpacing: 10,
+                                ),
+                            itemCount: products.length,
+                            itemBuilder: (context, index) {
+                              final product = products[index];
+
+                              return AnimationConfiguration.staggeredGrid(
+                                position: index,
+                                columnCount: 3, // ⚠️ MUST match crossAxisCount
+                                duration: const Duration(milliseconds: 400),
+                                child: SlideAnimation(
+                                  horizontalOffset: 50, // 👇 bottom se aayega
+                                  child: FadeInAnimation(
+                                    child: ScaleAnimation(
+                                      scale: 0.9, // 🔥 slight zoom-in effect
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.pushNamed(
+                                            context,
+                                            AppRoutes.productDetails,
+                                          );
+                                        },
+                                        child: _buildProductCard(product),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
 
                         // Daily Pooja Essentials
@@ -284,18 +317,35 @@ class HomeScreen extends ConsumerWidget {
                         const SizedBox(height: 10),
                         SizedBox(
                           height: 140,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            itemCount: 3,
-                            itemBuilder: (context, index) => GestureDetector(
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.productDetails,
+                          child: AnimationLimiter(
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              itemCount: dailyEss.length,
+                              itemBuilder: (context, index) {
+                                final product = dailyEss[index];
+
+                                return AnimationConfiguration.staggeredList(
+                                  position: index,
+                                  duration: const Duration(milliseconds: 400),
+                                  child: SlideAnimation(
+                                    horizontalOffset: 50, // 👉 right se aayega
+                                    child: FadeInAnimation(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.pushNamed(
+                                            context,
+                                            AppRoutes.productDetails,
+                                          );
+                                        },
+                                        child: _buildDiyaCard(product),
+                                      ),
+                                    ),
+                                  ),
                                 );
                               },
-                              child: _buildDiyaCard(),
                             ),
                           ),
                         ),
@@ -322,18 +372,38 @@ class HomeScreen extends ConsumerWidget {
                         const SizedBox(height: 10),
                         SizedBox(
                           height: 140,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: 3,
-                            itemBuilder: (context, index) => GestureDetector(
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.productDetails,
+                          child: AnimationLimiter(
+                            key: ValueKey(
+                              "mostUsed_${mostUsed.length}",
+                            ), // 🔥 re-animation support
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              itemCount: mostUsed.length,
+                              itemBuilder: (context, index) {
+                                final product = mostUsed[index];
+
+                                return AnimationConfiguration.staggeredList(
+                                  position: index,
+                                  duration: const Duration(milliseconds: 400),
+                                  child: SlideAnimation(
+                                    horizontalOffset: 50, // 👉 right se slide
+                                    child: FadeInAnimation(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.pushNamed(
+                                            context,
+                                            AppRoutes.productDetails,
+                                          );
+                                        },
+                                        child: _buildDiyaCard(product),
+                                      ),
+                                    ),
+                                  ),
                                 );
                               },
-                              child: _buildIncenseCard(),
                             ),
                           ),
                         ),
@@ -445,7 +515,9 @@ class HomeScreen extends ConsumerWidget {
       padding: const EdgeInsets.only(right: 8),
       child: GestureDetector(
         onTap: () {
-          ref.read(productProvider.notifier).filterByCategory(type);
+          ref
+              .read(productProvider.notifier)
+              .filterByCategory(type.toLowerCase());
         },
         child: Chip(
           avatar: Image.asset(img, width: 18, height: 18),
@@ -480,9 +552,16 @@ class HomeScreen extends ConsumerWidget {
             child: Stack(
               children: [
                 Center(
-                  child: Image.network(
-                    "http://192.168.1.40:8000/${product.thumbnail}",
-                    height: 90,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    child: CustomCachedImage(
+                      imageUrl: "http://192.168.1.40:8000/${product.thumbnail}",
+                      height: 90,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 Positioned(
@@ -569,12 +648,12 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDiyaCard() {
+  Widget _buildDiyaCard(Product product) {
     return Container(
       width: 120,
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
       ),
@@ -585,7 +664,20 @@ class HomeScreen extends ConsumerWidget {
           Expanded(
             child: Stack(
               children: [
-                Center(child: Image.asset("assets/icon/diya2.png", height: 90)),
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    child: CustomCachedImage(
+                      imageUrl: "http://192.168.1.40:8000/${product.thumbnail}",
+                      height: 90,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+
                 Positioned(
                   top: 6,
                   right: 6,
@@ -612,19 +704,19 @@ class HomeScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      "Diya",
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                    Expanded(
+                      child: Text(
+                        product.title ?? '',
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                     Text(
-                      '65% off',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey.shade500,
-                      ),
+                      '${product.discountPercent}% off',
+                      style: text10(color: AppColors.grey500),
                     ),
                   ],
                 ),
@@ -636,17 +728,17 @@ class HomeScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Rs. 149/-',
+                      'Rs. ${product.oldPrice}/-',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 8,
                         color: Colors.grey,
                         decoration: TextDecoration.lineThrough,
                       ),
                     ),
                     Text(
-                      'Rs. 100/-',
+                      'Rs. ${product.price}/-',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 11,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFFB71C1C),
                       ),
@@ -774,115 +866,6 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ),
                   ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIncenseCard() {
-    return Container(
-      width: 120,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 🔝 Image + Heart Icon
-          Expanded(
-            child: Stack(
-              children: [
-                Center(
-                  child: Image.asset("assets/icon/sticks.png", height: 90),
-                ),
-                Positioned(
-                  top: 6,
-                  right: 6,
-                  child: Icon(
-                    Icons.favorite_border,
-                    size: 16,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Divider
-          Container(height: 1, color: Colors.grey.shade300),
-
-          // 🔽 Details Section
-          Padding(
-            padding: const EdgeInsets.all(6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Name + Discount
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        "2 inch Brass Incense Stand",
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      '65% off',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 2),
-
-                // Old Price
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Rs. 149/-',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey,
-                        decoration: TextDecoration.lineThrough,
-                      ),
-                    ),
-                    Text(
-                      'Rs. 100/-',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFB71C1C),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 5),
-
-                AppButton(
-                  height: 22,
-                  radius: 4,
-                  textStyle: text11(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  title: "Add",
-                  onTap: () {},
                 ),
               ],
             ),

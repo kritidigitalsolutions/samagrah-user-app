@@ -11,6 +11,8 @@ class AppUrls {
   // ======================= Kit===================================
 
   static const String festivalKit = "$baseUrl/user/kits";
+  static const String userKit = "$baseUrl/user-kits";
+  static const String getMyKit = "$baseUrl/user-kits/my-kits";
 
   // ======================= product===================================
 

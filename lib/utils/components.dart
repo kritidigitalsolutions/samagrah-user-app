@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:samagrah/res/app_colors.dart';
@@ -125,4 +126,101 @@ Widget bottomLable() {
       ),
     ],
   );
+}
+
+class CustomCachedImage extends StatelessWidget {
+  final String imageUrl;
+
+  // Size
+  final double? height;
+  final double? width;
+
+  // UI
+  final BoxFit fit;
+  final BorderRadius? borderRadius;
+  final BoxShape shape;
+
+  // Placeholder & Error
+  final Widget? placeholder;
+  final Widget? errorWidget;
+
+  // Loader color
+  final Color loaderColor;
+
+  // Optional overlay
+  final Widget? overlay;
+
+  // Tap
+  final VoidCallback? onTap;
+
+  const CustomCachedImage({
+    super.key,
+    required this.imageUrl,
+    this.height,
+    this.width,
+    this.fit = BoxFit.cover,
+    this.borderRadius,
+    this.shape = BoxShape.rectangle,
+    this.placeholder,
+    this.errorWidget,
+    this.loaderColor = Colors.grey,
+    this.overlay,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget image = CachedNetworkImage(
+      imageUrl: imageUrl,
+      height: height,
+      width: width,
+      fit: fit,
+
+      /// 🔄 Loading widget
+      placeholder: (context, url) =>
+          placeholder ??
+          Center(
+            child: SizedBox(
+              height: 25,
+              width: 25,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: loaderColor,
+              ),
+            ),
+          ),
+
+      /// ❌ Error widget
+      errorWidget: (context, url, error) =>
+          errorWidget ??
+          Container(
+            color: Colors.grey.shade200,
+            child: const Icon(Icons.broken_image, size: 40),
+          ),
+    );
+
+    /// 🎨 Shape handling
+    if (shape == BoxShape.circle) {
+      image = ClipOval(child: image);
+    } else if (borderRadius != null) {
+      image = ClipRRect(borderRadius: borderRadius!, child: image);
+    }
+
+    /// 🧩 Overlay support
+    if (overlay != null) {
+      image = Stack(
+        children: [
+          Positioned.fill(child: image),
+          Positioned.fill(child: overlay!),
+        ],
+      );
+    }
+
+    /// 👆 Tap support
+    if (onTap != null) {
+      image = GestureDetector(onTap: onTap, child: image);
+    }
+
+    return image;
+  }
 }

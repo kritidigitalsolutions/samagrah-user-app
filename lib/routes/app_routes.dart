@@ -15,6 +15,7 @@ class AppRoutes {
   static const home = "/home";
   static const notification = "/notification";
   static const comparisionPage = "/comparisionPage";
+  static const searchProduct = "/searchProduct";
 
   //==============================================
   // wallet

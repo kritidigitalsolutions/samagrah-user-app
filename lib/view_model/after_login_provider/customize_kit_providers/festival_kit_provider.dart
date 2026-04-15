@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/repo/kit/festival_kit_repo.dart';
-import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/festivalkit_state.dart';
+import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/state/festivalkit_state.dart';
 
 final festivalProvider =
     AsyncNotifierProvider<FestivalNotifier, FestivalkitState>(

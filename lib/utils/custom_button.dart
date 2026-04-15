@@ -4,7 +4,7 @@ import 'package:samagrah/utils/textstyle.dart';
 
 class AppButton extends StatelessWidget {
   final String title;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final bool isLoading;
   final Color? color;
   final double height;
@@ -14,7 +14,7 @@ class AppButton extends StatelessWidget {
   const AppButton({
     super.key,
     required this.title,
-    required this.onTap,
+    this.onTap,
     this.isLoading = false,
     this.color,
     this.height = 45,

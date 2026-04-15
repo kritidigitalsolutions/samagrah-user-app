@@ -40,6 +40,7 @@ import 'package:samagrah/views/after_login/product/product_details.dart';
 import 'package:samagrah/views/after_login/profile/my_fav_products.dart';
 import 'package:samagrah/views/after_login/profile/my_profile_Page.dart';
 import 'package:samagrah/views/after_login/profile/saved_address_page.dart';
+import 'package:samagrah/views/after_login/search_product_page.dart';
 import 'package:samagrah/views/after_login/wallet/my_wallet_screen.dart';
 import 'package:samagrah/views/before_login/login_page.dart';
 import 'package:samagrah/views/before_login/otp_verfied_screen.dart';
@@ -83,6 +84,7 @@ class MyApp extends StatelessWidget {
         AppRoutes.notification: (context) => const NotificationPage(),
         AppRoutes.comparisionPage: (context) => const CategoryPage(),
         AppRoutes.myWallet: (context) => const MyWalletScreen(),
+        AppRoutes.searchProduct: (context) => const SearchProductPage(),
 
         AppRoutes.productDetails: (context) => const ProductDetails(),
         AppRoutes.orderSummary: (context) => const OrderSummaryScreen(),

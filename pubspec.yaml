@@ -46,6 +46,9 @@ dependencies:
   dio: ^5.9.2
   shared_preferences: ^2.5.5
 
+  cached_network_image: ^3.4.1
+  flutter_staggered_animations: ^1.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
