@@ -1,25 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:samagrah/model/request/kit/customize_kit_req_model.dart';
+import 'package:samagrah/model/response/kit_response/default_kit_res_model.dart';
+import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
+import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 
 class FestivalKitDetails extends ConsumerWidget {
   const FestivalKitDetails({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final kit = ModalRoute.of(context)!.settings.arguments as DefaultKitData;
     final isFestival = ref.watch(isFestivalProvider);
+    final isLoading = ref.watch(defaultKitLoaderPro);
+
+    // Watch the customized items
+    final customizedItems = ref.watch(customizeKitProvider);
+    final notifier = ref.read(customizeKitProvider.notifier);
+
+    // Initialize once when screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (customizedItems.isEmpty) {
+        notifier.initialize(kit);
+      }
+    });
+
+    final totalPrice = notifier.totalPrice;
+    final originalTotalPrice = notifier.originalTotalPrice;
+    final savings = notifier.savings;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
-        title: 'Diwali Pooja Kit',
-        subtitle:
-            'A complete pooja kit specially\nprepared for Diwali Lakshmi Pooja with all essential items',
+        title: kit.name ?? "Default Kit",
+        subtitle: 'A complete pooja kit specially',
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),
@@ -28,182 +50,721 @@ class FestivalKitDetails extends ConsumerWidget {
               width: 70,
               height: 70,
               fit: BoxFit.contain,
-              errorBuilder: (context, exception, stackTrace) {
-                return Container(
-                  width: 65,
-                  height: 65,
-                  decoration: BoxDecoration(color: AppColors.grey500),
-                  child: Center(child: Icon(Icons.image)),
-                );
-              },
             ),
           ),
         ],
       ),
-
       body: SafeArea(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text('Items Included', style: text18()),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
+
+            // Customize Toggle + Add Button
+            if (!isFestival)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    const Text(
+                      "Customize Kit",
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const Spacer(),
+                    Transform.scale(
+                      scale: 0.78,
+                      child: Switch(
+                        value:
+                            customizedItems.length != kit.items.length ||
+                            customizedItems.any(
+                              (item) => kit.items.every(
+                                (orig) =>
+                                    orig.product?.id != item.product?.id ||
+                                    (orig.quantity ?? 1) !=
+                                        (item.quantity ?? 1),
+                              ),
+                            ),
+                        activeThumbColor: AppColors.button,
+                        onChanged: (val) {
+                          if (!val) {
+                            notifier.resetToDefault();
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    CustomElevatedIconButton(
+                      height: 30,
+                      text: "Add More",
+                      icon: Icons.add,
+                      onPressed: () {
+                        _showAddItemBottomSheet(context, ref);
+                      },
+                    ),
+                  ],
+                ),
+              ),
 
             Expanded(
-              child: ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: isFestival
-                          ? null
-                          : () {
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.panditRecKit2,
-                              );
-                            },
-                      child: _buildItemCard(item),
+              child: customizedItems.isEmpty
+                  ? const Center(child: Text("No items in kit"))
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: customizedItems.length,
+                      itemBuilder: (context, index) {
+                        final item = customizedItems[index];
+                        final product = item.product;
+                        final qty = item.quantity ?? 1;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildCustomizableItemCard(
+                            context,
+                            ref,
+                            product,
+                            qty,
+                            index,
+                            !isFestival, // can customize if not festival
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
 
-            // total price
+            // Price Summary
             Container(
-              margin: EdgeInsets.symmetric(horizontal: 16),
-              padding: EdgeInsets.all(10),
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
                 color: AppColors.button,
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    "Kit Price",
-                    style: text15(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        "Kit Price",
+                        style: text15(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (totalPrice != originalTotalPrice)
+                        Text(
+                          "₹$originalTotalPrice",
+                          style: text13(
+                            color: AppColors.white.withOpacity(0.7),
+                          ).copyWith(decoration: TextDecoration.lineThrough),
+                        ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "₹$totalPrice",
+                        style: text18(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  Spacer(),
-                  Text(
-                    "₹250",
-                    style: text15(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.bold,
+                  if (savings > 0) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      "You Save ₹$savings",
+                      style: text13(color: Colors.white70),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
-            Card(
-              margin: EdgeInsets.all(16),
-              elevation: 1,
-              color: AppColors.white,
-              child: ListTile(
-                leading: Icon(
-                  Icons.check_circle_outline,
-                  color: AppColors.green,
-                ),
-                title: Text(
-                  "Save ₹80 compared to buying items individually",
-                  style: text13(fontWeight: FontWeight.bold),
-                ),
-                trailing: Icon(Icons.save_outlined),
-              ),
-            ),
+
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.all(16),
               child: AppButton(
-                title: "Buy Now",
-                onTap: () {
-                  Navigator.pushNamed(context, AppRoutes.orderSummary);
-                },
+                title: isLoading ? "Creating Kit..." : "Buy Now",
+                isLoading: isLoading, // Add loading support in your AppButton
+                onTap: isLoading
+                    ? null
+                    : () => _placeOrder(
+                        context,
+                        customizedItems,
+                        kit.name ?? "Pooja Kit",
+                        ref,
+                      ),
               ),
             ),
-            SizedBox(height: 10),
+
+            //  Container(
+            //   color: AppColors.button,
+            //   padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            //   child: AppButton(
+            //     title: _isLoading ? "Creating Kit..." : "Buy Now",
+            //     isLoading: _isLoading, // Add loading support in your AppButton
+            //     onTap: _isLoading
+            //         ? null
+            //         : () => _placeOrder(context, selectedCartItems, kitName),
+            //   ),
+            // ),
           ],
         ),
       ),
     );
   }
 
-  /// 🔴 Item Card
-  Widget _buildItemCard(ItemModel item) {
+  Future<void> _placeOrder(
+    BuildContext context,
+    List<Item> selectedItems, // ← List<Item> hai, na ki List<Map>
+    String kitName,
+    WidgetRef ref,
+  ) async {
+    if (selectedItems.isEmpty) {
+      AppSnackbar.show(
+        context,
+        message: "Please add items to your kit",
+        type: SnackBarType.warning,
+      );
+      return;
+    }
+
+    ref.read(defaultKitLoaderPro.notifier).state = true;
+
+    try {
+      // Correct mapping
+      final List<KitItem> kitItems = selectedItems.map((item) {
+        return KitItem(
+          productId: item.product?.id ?? '',
+          quantity: item.quantity ?? 1,
+        );
+      }).toList();
+
+      // Create request model
+      final request = CreateKitRequest(
+        name: kitName,
+        baseKit: null, // agar base kit hai to pass kar sakte ho
+        items: kitItems,
+      );
+
+      // Call API
+      print(request.toJson());
+      await ref.read(userDraftKits.notifier).createDraftKit(request);
+
+      // Success
+      AppSnackbar.show(
+        context,
+        message: "Kit created successfully!",
+        type: SnackBarType.success,
+      );
+
+      // ref.read(customizeKitProvider.notifier).resetToDefault(); // agar chahiye
+
+      // Navigate
+      Navigator.pushNamed(context, AppRoutes.orderSummary);
+    } catch (e, stackTrace) {
+      debugPrint("Error creating kit: $e\n$stackTrace");
+
+      AppSnackbar.show(
+        context,
+        message: "Failed to create kit: ${e.toString()}",
+        type: SnackBarType.error,
+      );
+    } finally {
+      ref.read(defaultKitLoaderPro.notifier).state = false;
+    }
+  }
+
+  Widget _buildCustomizableItemCard(
+    BuildContext context,
+    WidgetRef ref,
+    DefaultProduct? product,
+    int qty,
+    int index,
+    bool canCustomize,
+  ) {
+    final notifier = ref.read(customizeKitProvider.notifier);
+
     return Container(
-      padding: const EdgeInsets.all(10),
-      margin: EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
-          BoxShadow(blurRadius: 4, spreadRadius: 6, color: AppColors.grey100),
+          BoxShadow(blurRadius: 6, spreadRadius: 2, color: AppColors.grey100),
         ],
       ),
       child: Row(
         children: [
-          /// IMAGE
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Image.asset(
-              item.image,
-              height: 50,
-              width: 60,
+            child: CustomCachedImage(
+              imageUrl:
+                  "http://192.168.1.40:8000/${product?.media?.image.firstOrNull ?? ''}",
+              height: 55,
+              width: 65,
               fit: BoxFit.cover,
             ),
           ),
-
           const SizedBox(width: 12),
-
-          /// TEXT
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.title,
+                  product?.title ?? "Unknown Item",
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                const Text(
-                  "View Product",
-                  style: TextStyle(fontSize: 11, color: AppColors.button),
+                const SizedBox(height: 4),
+                Text(
+                  "₹${product?.pricing?.price ?? 0}",
+                  style: text16(
+                    color: AppColors.button,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
           ),
-
-          /// ARROW
-          Text("₹75", style: text18(color: AppColors.button)),
+          if (canCustomize)
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () => notifier.updateQuantity(index, qty - 1),
+                  icon: const Icon(
+                    Icons.remove_circle_outline,
+                    color: Colors.redAccent,
+                  ),
+                ),
+                Text(
+                  "$qty",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => notifier.updateQuantity(index, qty + 1),
+                  icon: const Icon(
+                    Icons.add_circle_outline,
+                    color: AppColors.green,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => notifier.deleteItem(index),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: AppColors.error,
+                  ),
+                ),
+              ],
+            )
+          else
+            Text(
+              "Qty: $qty",
+              style: const TextStyle(fontSize: 13, color: AppColors.button),
+            ),
         ],
+      ),
+    );
+  }
+
+  // ================== Add Item Bottom Sheet ==================
+  void _showAddItemBottomSheet(BuildContext context, WidgetRef ref) {
+    final kitNotifier = ref.read(customizeKitProvider.notifier);
+    final cartNotifier = ref.read(customizeKitCartProvider.notifier);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.92,
+          minChildSize: 0.6,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return CustomizeAddItemsBottomSheet(
+              scrollController: scrollController,
+              onItemAdded: (Product product) {
+                final defaultProduct = _convertToDefaultProduct(product);
+                kitNotifier.addItem(defaultProduct, quantity: 1);
+              },
+            );
+          },
+        );
+      },
+    ).whenComplete(() {
+      // Bottom sheet band hone ke baad cart clear kar do
+      cartNotifier.clearCart();
+    });
+  }
+
+  DefaultProduct _convertToDefaultProduct(Product product) {
+    return DefaultProduct(
+      id: product.id,
+      title: product.title,
+      pricing: Pricing(
+        price: product.price,
+        mrp: product.oldPrice, // oldPrice ko MRP maan rahe hain
+        currency: "INR",
+      ),
+      media: Media(
+        image: product.thumbnail != null
+            ? [product.thumbnail.toString()]
+            : (product.images.isNotEmpty
+                  ? product.images.map((e) => e.toString()).toList()
+                  : []),
       ),
     );
   }
 }
 
-/// 🔴 Model
-class ItemModel {
-  final String title;
-  final String image;
+class CustomizeAddItemsBottomSheet extends ConsumerWidget {
+  final ScrollController scrollController;
+  final Function(Product) onItemAdded;
 
-  ItemModel({required this.title, required this.image});
+  const CustomizeAddItemsBottomSheet({
+    super.key,
+    required this.scrollController,
+    required this.onItemAdded,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final productState = ref.watch(productProvider);
+    final cart = ref.watch(customizeKitCartProvider);
+    final customizedItems = ref.watch(customizeKitProvider); // Real Kit
+    final cartNotifier = ref.read(customizeKitCartProvider.notifier);
+
+    final selectedKitCategory =
+        productState.value?.selectedKitCategory ?? "All";
+
+    return Column(
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Add Items",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, size: 28),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        ),
+
+        // Search Bar (aapke code mein missing tha, main add kar raha hoon)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: TextField(
+            style: text14(
+              fontWeight: FontWeight.normal,
+              color: AppColors.black,
+            ),
+            cursorColor: AppColors.black,
+            decoration: InputDecoration(
+              hintText: 'Search diya, thali, agarbatti...',
+              hintStyle: text14(color: AppColors.grey),
+              prefixIcon: const Icon(Icons.search, color: AppColors.grey),
+              filled: true,
+              fillColor: AppColors.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Category Chips
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              _buildChip(
+                'All',
+                "All",
+                "assets/home/select-all.png",
+                selectedKitCategory == "All",
+                ref,
+              ),
+              _buildChip(
+                'Agri batti',
+                "agarbatti",
+                "assets/home/incense.png",
+                selectedKitCategory == "agarbatti",
+                ref,
+              ),
+              _buildChip(
+                'Fruits',
+                "fruits",
+                "assets/home/fruit.png",
+                selectedKitCategory == "fruits",
+                ref,
+              ),
+              _buildChip(
+                'Flowers',
+                "flowes",
+                "assets/home/flower.png",
+                selectedKitCategory == "flowes",
+                ref,
+              ),
+              _buildChip(
+                'Mala(Gralands)',
+                "mala",
+                "assets/home/mala.png",
+                selectedKitCategory == "mala",
+                ref,
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Products Grid
+        Expanded(
+          child: productState.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => const Center(child: Text("Something went wrong")),
+            data: (state) {
+              final products = state.categoryKitProducts;
+
+              if (products.isEmpty) {
+                return const Center(child: Text("No Products Found"));
+              }
+
+              return AnimationLimiter(
+                child: GridView.builder(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    childAspectRatio: 0.72,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 12,
+                  ),
+                  itemCount: products.length,
+                  itemBuilder: (context, index) {
+                    final product = products[index];
+
+                    // Real check from customize kit
+                    final isInRealKit = customizedItems.any(
+                      (item) => item.product?.id == product.id,
+                    );
+
+                    final cartQuantity = cart[product.id] ?? 0;
+
+                    return AnimationConfiguration.staggeredGrid(
+                      position: index,
+                      columnCount: 3,
+                      duration: const Duration(milliseconds: 380),
+                      child: SlideAnimation(
+                        verticalOffset: 40,
+                        child: FadeInAnimation(
+                          child: _buildProductCard(
+                            context,
+                            product,
+                            cartQuantity,
+                            isInRealKit,
+                            cartNotifier,
+                            onItemAdded,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProductCard(
+    BuildContext context,
+    Product product,
+    int cartQuantity,
+    bool isInRealKit,
+    CustomizeKitCartNotifier cartNotifier,
+    Function(Product) onItemAdded,
+  ) {
+    final bool isAdded = isInRealKit || cartQuantity > 0;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 5)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Stack(
+              children: [
+                InkWell(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                  onTap: () {
+                    Navigator.pushNamed(context, AppRoutes.productDetails);
+                  },
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    child: CustomCachedImage(
+                      imageUrl:
+                          "http://192.168.1.40:8000/${product.thumbnail ?? ''}",
+                      height: 100,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Icon(
+                    Icons.favorite_border,
+                    size: 16,
+                    color: AppColors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.title ?? 'N/A',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: text12(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '₹${product.price}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
+                    ),
+                    Text(
+                      '${product.discountPercent ?? 0}% off',
+                      style: text10(color: AppColors.grey500),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+
+                if (!isAdded)
+                  AppButton(
+                    height: 32,
+                    radius: 8,
+                    textStyle: text12(
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    title: "Add",
+                    onTap: () {
+                      cartNotifier.addItem(product);
+                      onItemAdded(product);
+                    },
+                  )
+                else
+                  Container(
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.button.withAlpha(25),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.button),
+                    ),
+                    child: Center(
+                      child: Text(
+                        isInRealKit ? "In Kit" : "$cartQuantity Added",
+                        style: text13(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.button,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChip(
+    String label,
+    String type,
+    String img,
+    bool selected,
+    WidgetRef ref,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: () {
+          ref
+              .read(productProvider.notifier)
+              .filterByCustKitCategory(type.toLowerCase());
+        },
+        child: Chip(
+          avatar: Image.asset(img, width: 18, height: 18),
+          label: Text(
+            label,
+            style: text13(color: selected ? AppColors.button : AppColors.black),
+          ),
+          backgroundColor: selected
+              ? AppColors.button.withAlpha(30)
+              : AppColors.white,
+          side: BorderSide(color: selected ? AppColors.button : AppColors.grey),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+    );
+  }
 }
-
-/// 🔴 Dummy Data
-final List<ItemModel> items = [
-  ItemModel(title: "Sindoor", image: "assets/icon/sticks.png"),
-  ItemModel(title: "Chandan", image: "assets/icon/sticks.png"),
-  ItemModel(title: "Agarbatti", image: "assets/icon/sticks.png"),
-  ItemModel(title: "Sindoor", image: "assets/icon/sticks.png"),
-  ItemModel(title: "Chandan", image: "assets/icon/sticks.png"),
-];

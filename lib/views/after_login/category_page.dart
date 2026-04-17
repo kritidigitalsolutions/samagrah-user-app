@@ -40,20 +40,6 @@ class CategoryPage extends ConsumerWidget {
                           'Pooja today',
                           style: text15(fontWeight: FontWeight.bold),
                         ),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              size: 14,
-                              color: AppColors.grey,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Meerut, UP', // 👈 dynamic bhi kar sakte ho
-                              style: text12(fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                     GestureDetector(
@@ -197,15 +183,7 @@ class CategoryPage extends ConsumerWidget {
                                 child: FadeInAnimation(
                                   child: ScaleAnimation(
                                     scale: 0.9, // 🔥 slight zoom-in effect
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Navigator.pushNamed(
-                                          context,
-                                          AppRoutes.productDetails,
-                                        );
-                                      },
-                                      child: _buildProductCard(product),
-                                    ),
+                                    child: _buildProductCard(context, product),
                                   ),
                                 ),
                               ),
@@ -272,15 +250,7 @@ class CategoryPage extends ConsumerWidget {
                                 child: FadeInAnimation(
                                   child: ScaleAnimation(
                                     scale: 0.9, // 🔥 slight zoom-in effect
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Navigator.pushNamed(
-                                          context,
-                                          AppRoutes.productDetails,
-                                        );
-                                      },
-                                      child: _buildProductCard(product),
-                                    ),
+                                    child: _buildProductCard(context, product),
                                   ),
                                 ),
                               ),
@@ -347,15 +317,7 @@ class CategoryPage extends ConsumerWidget {
                                 child: FadeInAnimation(
                                   child: ScaleAnimation(
                                     scale: 0.9, // 🔥 slight zoom-in effect
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Navigator.pushNamed(
-                                          context,
-                                          AppRoutes.productDetails,
-                                        );
-                                      },
-                                      child: _buildProductCard(product),
-                                    ),
+                                    child: _buildProductCard(context, product),
                                   ),
                                 ),
                               ),
@@ -422,15 +384,7 @@ class CategoryPage extends ConsumerWidget {
                                 child: FadeInAnimation(
                                   child: ScaleAnimation(
                                     scale: 0.9, // 🔥 slight zoom-in effect
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Navigator.pushNamed(
-                                          context,
-                                          AppRoutes.productDetails,
-                                        );
-                                      },
-                                      child: _buildProductCard(product),
-                                    ),
+                                    child: _buildProductCard(context, product),
                                   ),
                                 ),
                               ),
@@ -449,7 +403,7 @@ class CategoryPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildProductCard(Product product) {
+  Widget _buildProductCard(BuildContext context, Product product) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -464,15 +418,24 @@ class CategoryPage extends ConsumerWidget {
             child: Stack(
               children: [
                 Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.vertical(
+                  child: InkWell(
+                    borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(12),
                     ),
-                    child: CustomCachedImage(
-                      imageUrl: "http://192.168.1.40:8000/${product.thumbnail}",
-                      height: 90,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+                    onTap: () {
+                      Navigator.pushNamed(context, AppRoutes.productDetails);
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
+                      child: CustomCachedImage(
+                        imageUrl:
+                            "http://192.168.1.40:8000/${product.thumbnail}",
+                        height: 90,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),

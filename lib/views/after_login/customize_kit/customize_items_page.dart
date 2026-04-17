@@ -176,18 +176,10 @@ class _CustomizeItemsPageState extends ConsumerState<CustomizeItemsPage> {
                           child: FadeInAnimation(
                             child: ScaleAnimation(
                               scale: 0.9, // 🔥 slight zoom-in effect
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.productDetails,
-                                  );
-                                },
-                                child: _buildProductCard(
-                                  product,
-                                  quantity,
-                                  cartNotifier,
-                                ),
+                              child: _buildProductCard(
+                                product,
+                                quantity,
+                                cartNotifier,
                               ),
                             ),
                           ),
@@ -299,15 +291,24 @@ class _CustomizeItemsPageState extends ConsumerState<CustomizeItemsPage> {
             child: Stack(
               children: [
                 Center(
-                  child: ClipRRect(
+                  child: InkWell(
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(12),
                     ),
-                    child: CustomCachedImage(
-                      imageUrl: "http://192.168.1.40:8000/${product.thumbnail}",
-                      height: 90,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+                    onTap: () {
+                      Navigator.pushNamed(context, AppRoutes.productDetails);
+                    },
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
+                      child: CustomCachedImage(
+                        imageUrl:
+                            "http://192.168.1.40:8000/${product.thumbnail}",
+                        height: 90,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),

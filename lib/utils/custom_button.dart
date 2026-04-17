@@ -204,7 +204,7 @@ class CustomElevatedIconButton extends StatelessWidget {
     this.height = 45,
     this.iconSize = 20,
     this.textStyle,
-    this.padding = const EdgeInsets.symmetric(horizontal: 16),
+    this.padding = const EdgeInsets.symmetric(horizontal: 10),
   });
 
   @override

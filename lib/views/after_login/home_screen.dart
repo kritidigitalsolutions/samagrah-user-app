@@ -7,16 +7,24 @@ import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
+import 'package:samagrah/utils/localStogare_service/location_storage.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
+import 'package:samagrah/views/service_pages/location_provider.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  Widget build(BuildContext context) {
     final productState = ref.watch(productProvider);
     final selectedCategory = productState.value?.selectedCategory ?? "All";
+    final location = ref.watch(locationProvider);
     return Stack(
       children: [
         Container(
@@ -43,19 +51,31 @@ class HomeScreen extends ConsumerWidget {
                             'Pooja today',
                             style: text15(fontWeight: FontWeight.bold),
                           ),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.location_on_outlined,
-                                size: 14,
-                                color: AppColors.grey,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Meerut, UP', // 👈 dynamic bhi kar sakte ho
-                                style: text12(fontWeight: FontWeight.w500),
-                              ),
-                            ],
+                          InkWell(
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.locationPage,
+                              );
+                            },
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on_outlined,
+                                  size: 14,
+                                  color: AppColors.grey,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  (location != null &&
+                                          location.city != null &&
+                                          location.state != null)
+                                      ? "${location.city}, ${location.state}"
+                                      : "Select Location",
+                                  style: text12(fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -269,15 +289,7 @@ class HomeScreen extends ConsumerWidget {
                                   child: FadeInAnimation(
                                     child: ScaleAnimation(
                                       scale: 0.9, // 🔥 slight zoom-in effect
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          Navigator.pushNamed(
-                                            context,
-                                            AppRoutes.productDetails,
-                                          );
-                                        },
-                                        child: _buildProductCard(product),
-                                      ),
+                                      child: _buildProductCard(product),
                                     ),
                                   ),
                                 ),
@@ -333,15 +345,7 @@ class HomeScreen extends ConsumerWidget {
                                   child: SlideAnimation(
                                     horizontalOffset: 50, // 👉 right se aayega
                                     child: FadeInAnimation(
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          Navigator.pushNamed(
-                                            context,
-                                            AppRoutes.productDetails,
-                                          );
-                                        },
-                                        child: _buildDiyaCard(product),
-                                      ),
+                                      child: _buildDiyaCard(product),
                                     ),
                                   ),
                                 );
@@ -552,15 +556,24 @@ class HomeScreen extends ConsumerWidget {
             child: Stack(
               children: [
                 Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.vertical(
+                  child: InkWell(
+                    borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(12),
                     ),
-                    child: CustomCachedImage(
-                      imageUrl: "http://192.168.1.40:8000/${product.thumbnail}",
-                      height: 90,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+                    onTap: () {
+                      Navigator.pushNamed(context, AppRoutes.productDetails);
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
+                      child: CustomCachedImage(
+                        imageUrl:
+                            "http://192.168.1.40:8000/${product.thumbnail}",
+                        height: 90,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
@@ -665,15 +678,24 @@ class HomeScreen extends ConsumerWidget {
             child: Stack(
               children: [
                 Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.vertical(
+                  child: InkWell(
+                    borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(12),
                     ),
-                    child: CustomCachedImage(
-                      imageUrl: "http://192.168.1.40:8000/${product.thumbnail}",
-                      height: 90,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+                    onTap: () {
+                      Navigator.pushNamed(context, AppRoutes.productDetails);
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
+                      child: CustomCachedImage(
+                        imageUrl:
+                            "http://192.168.1.40:8000/${product.thumbnail}",
+                        height: 90,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),

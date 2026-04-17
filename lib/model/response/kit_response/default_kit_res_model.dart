@@ -1,5 +1,5 @@
-class UserDraftKitResModel {
-  UserDraftKitResModel({
+class DefaultKitResModel {
+  DefaultKitResModel({
     required this.success,
     required this.count,
     required this.data,
@@ -7,119 +7,110 @@ class UserDraftKitResModel {
 
   final bool? success;
   final int? count;
-  final List<UserKitData> data;
+  final List<DefaultKitData> data;
 
-  factory UserDraftKitResModel.fromJson(Map<String, dynamic> json) {
-    return UserDraftKitResModel(
+  factory DefaultKitResModel.fromJson(Map<String, dynamic> json) {
+    return DefaultKitResModel(
       success: json["success"],
       count: json["count"],
       data: json["data"] == null
           ? []
-          : List<UserKitData>.from(
-              json["data"]!.map((x) => UserKitData.fromJson(x)),
+          : List<DefaultKitData>.from(
+              json["data"]!.map((x) => DefaultKitData.fromJson(x)),
             ),
     );
   }
 }
 
-class UserKitData {
-  UserKitData({
+class DefaultKitData {
+  DefaultKitData({
     required this.id,
-    required this.user,
     required this.name,
-    required this.baseKit,
+    required this.description,
+    required this.image,
     required this.items,
     required this.totalPrice,
+    required this.kitPrice,
+    required this.savings,
     required this.status,
-    required this.paymentStatus,
-    required this.order,
     required this.createdAt,
     required this.updatedAt,
+    required this.slug,
     required this.v,
   });
 
   final String? id;
-  final String? user;
   final String? name;
-  final dynamic baseKit;
+  final String? description;
+  final String? image;
   final List<Item> items;
   final int? totalPrice;
+  final int? kitPrice;
+  final int? savings;
   final String? status;
-  final String? paymentStatus;
-  final dynamic order;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String? slug;
   final int? v;
 
-  factory UserKitData.fromJson(Map<String, dynamic> json) {
-    return UserKitData(
+  factory DefaultKitData.fromJson(Map<String, dynamic> json) {
+    return DefaultKitData(
       id: json["_id"],
-      user: json["user"],
       name: json["name"],
-      baseKit: json["baseKit"],
+      description: json["description"],
+      image: json["image"],
       items: json["items"] == null
           ? []
           : List<Item>.from(json["items"]!.map((x) => Item.fromJson(x))),
       totalPrice: json["totalPrice"],
+      kitPrice: json["kitPrice"],
+      savings: json["savings"],
       status: json["status"],
-      paymentStatus: json["paymentStatus"],
-      order: json["order"],
       createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
       updatedAt: DateTime.tryParse(json["updatedAt"] ?? ""),
+      slug: json["slug"],
       v: json["__v"],
     );
   }
 }
 
 class Item {
-  Item({
-    required this.product,
-    required this.quantity,
-    required this.priceAtTime,
-    required this.id,
-  });
+  Item({required this.product, required this.quantity});
 
-  final UserDraftProduct? product;
+  final DefaultProduct? product;
   final int? quantity;
-  final int? priceAtTime;
-  final String? id;
 
   factory Item.fromJson(Map<String, dynamic> json) {
     return Item(
       product: json["product"] == null
           ? null
-          : UserDraftProduct.fromJson(json["product"]),
+          : DefaultProduct.fromJson(json["product"]),
       quantity: json["quantity"],
-      priceAtTime: json["priceAtTime"],
-      id: json["_id"],
     );
   }
 }
 
-class UserDraftProduct {
-  UserDraftProduct({
+class DefaultProduct {
+  DefaultProduct({
     required this.pricing,
     required this.media,
     required this.id,
     required this.title,
-    required this.slug,
   });
 
   final Pricing? pricing;
   final Media? media;
   final String? id;
   final String? title;
-  final String? slug;
 
-  factory UserDraftProduct.fromJson(Map<String, dynamic> json) {
-    return UserDraftProduct(
+  factory DefaultProduct.fromJson(Map<String, dynamic> json) {
+    return DefaultProduct(
       pricing: json["pricing"] == null
           ? null
           : Pricing.fromJson(json["pricing"]),
       media: json["media"] == null ? null : Media.fromJson(json["media"]),
       id: json["_id"],
       title: json["title"],
-      slug: json["slug"],
     );
   }
 }

@@ -169,15 +169,7 @@ class _SearchProductPageState extends ConsumerState<SearchProductPage> {
                                 child: FadeInAnimation(
                                   child: ScaleAnimation(
                                     scale: 0.92,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Navigator.pushNamed(
-                                          context,
-                                          AppRoutes.productDetails,
-                                        );
-                                      },
-                                      child: _buildProductCard(product),
-                                    ),
+                                    child: _buildProductCard(product),
                                   ),
                                 ),
                               ),
@@ -210,15 +202,24 @@ class _SearchProductPageState extends ConsumerState<SearchProductPage> {
             child: Stack(
               children: [
                 Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.vertical(
+                  child: InkWell(
+                    borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(12),
                     ),
-                    child: CustomCachedImage(
-                      imageUrl: "http://192.168.1.40:8000/${product.thumbnail}",
-                      height: 90,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+                    onTap: () {
+                      Navigator.pushNamed(context, AppRoutes.productDetails);
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
+                      child: CustomCachedImage(
+                        imageUrl:
+                            "http://192.168.1.40:8000/${product.thumbnail}",
+                        height: 90,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),

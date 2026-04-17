@@ -46,6 +46,11 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 
+	<key>UIBackgroundModes</key>
+<array>
+  <string>location</string>
+</array>
+
 	<key>NSCameraUsageDescription</key>
 <string>This app needs camera access to take photos and videos.</string>
 </dict>

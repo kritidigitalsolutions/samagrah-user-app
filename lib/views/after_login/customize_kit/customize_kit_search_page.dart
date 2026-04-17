@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:samagrah/model/response/kit_response/default_kit_res_model.dart';
 import 'package:samagrah/model/response/kit_response/user_draft_kit_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
@@ -10,20 +11,63 @@ import 'package:samagrah/utils/custom_textfields.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
 
-class CustomizePoojaKitScreen extends ConsumerWidget {
-  CustomizePoojaKitScreen({super.key});
+class CustomizePoojaKitScreen extends ConsumerStatefulWidget {
+  const CustomizePoojaKitScreen({super.key});
 
+  @override
+  ConsumerState<CustomizePoojaKitScreen> createState() =>
+      _CustomizePoojaKitScreenState();
+}
+
+class _CustomizePoojaKitScreenState
+    extends ConsumerState<CustomizePoojaKitScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   final nameKitCtr = TextEditingController();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 5, vsync: this);
+    _tabController.addListener(() {
+      setState(() {}); // Tab change pe rebuild ke liye
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    nameKitCtr.dispose();
+    super.dispose();
+  }
+
+  // Filter Logic
+  List<UserKitData> _getFilteredKits(List<UserKitData> allKits) {
+    final currentTab = _tabController.index;
+
+    if (currentTab == 0) return allKits; // All
+
+    final statusMap = {
+      1: 'draft',
+      2: 'pending',
+      3: 'confirmed',
+      4: "shipped",
+      5: 'delivered',
+      6: "cancelled",
+    };
+
+    final targetStatus = statusMap[currentTab] ?? '';
+
+    return allKits.where((kit) {
+      final kitStatus = kit.status?.toLowerCase() ?? '';
+      return kitStatus.contains(targetStatus);
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final userDraftKit = ref.watch(userDraftKits);
-    final poojas = [
-      'Satyanarayan Pooja',
-      'Griha Provesh Pooja',
-      'Lakshmi Pooja',
-      'Ganesh Pooja',
-    ];
+    final defaultKits = ref.watch(userDraftKits);
 
     return SafeArea(
       child: Container(
@@ -167,7 +211,11 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
                                 const SizedBox(height: 36),
 
                                 // ✅ Premium search field
-                                _buildPremiumSearchField(context, ref, poojas),
+                                _buildPremiumSearchField(
+                                  context,
+                                  ref,
+                                  defaultKits.value?.defaultKit?.data ?? [],
+                                ),
 
                                 const SizedBox(height: 20),
 
@@ -187,57 +235,80 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
 
                     const SizedBox(height: 28),
 
+                    // ================== YOUR DRAFT KITS SECTION (UPDATED WITH TABS) ==================
+                    // Filtered Draft Kits Section with Customized TabBar
                     userDraftKit.when(
-                      loading: () => const SizedBox(),
-                      error: (e, _) => const SizedBox(),
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (e, _) =>
+                          const Center(child: Text("Failed to load kits")),
                       data: (kitState) {
-                        final kits = kitState.userKit?.data ?? [];
-
-                        /// ❌ Empty → kuch nahi dikhana
-                        if (kits.isEmpty) return const SizedBox();
+                        final allKits = kitState.userKit?.data ?? [];
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
+                            // Customized TabBar
+                            TabBar(
+                              controller: _tabController,
+                              isScrollable: true,
+                              tabAlignment: TabAlignment.start,
+                              padding: const EdgeInsets.only(
+                                left: 10,
+                              ), // Bahut kam
+                              labelPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
                               ),
-                              child: Text(
-                                "Your Draft Kits",
-                                style: text15(fontWeight: FontWeight.bold),
-                              ),
+                              labelColor: AppColors.button,
+                              unselectedLabelColor: AppColors.grey700,
+                              indicatorColor: AppColors.button,
+                              indicatorWeight: 3.5,
+                              indicatorSize: TabBarIndicatorSize.label,
+                              dividerColor: Colors.transparent,
+                              tabs: const [
+                                Tab(text: "All"),
+                                Tab(text: "Draft"),
+                                Tab(text: "Pending"),
+                                Tab(text: "Confirmed"),
+                                Tab(text: "Shipped"),
+                                Tab(text: "Delivered"),
+                                Tab(text: "Cancelled"),
+                              ],
                             ),
 
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 16),
 
-                            AnimationLimiter(
-                              key: ValueKey(
-                                "draft_${kits.length}",
-                              ), // 🔥 re-animation
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
+                            if (allKits.isEmpty)
+                              const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(40),
+                                  child: Text("No kits found"),
                                 ),
-                                itemCount: kits.length,
-                                itemBuilder: (context, index) {
-                                  final kit = kits[index];
-
-                                  return AnimationConfiguration.staggeredList(
-                                    position: index,
-                                    duration: Duration(milliseconds: 400),
-                                    child: SlideAnimation(
-                                      horizontalOffset:
-                                          50, // 👉 right se aayega
-                                      child: FadeInAnimation(
-                                        child: ScaleAnimation(
-                                          scale: 0.9, // 🔥 premium zoom
-                                          child: GestureDetector(
-                                            onTap: () {
-                                              // 👉 open edit kit screen
-                                            },
+                              )
+                            else
+                              AnimationLimiter(
+                                key: ValueKey("kits_${_tabController.index}"),
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  itemCount: _getFilteredKits(allKits).length,
+                                  itemBuilder: (context, index) {
+                                    final kit = _getFilteredKits(
+                                      allKits,
+                                    )[index];
+                                    return AnimationConfiguration.staggeredList(
+                                      position: index,
+                                      duration: const Duration(
+                                        milliseconds: 400,
+                                      ),
+                                      child: SlideAnimation(
+                                        horizontalOffset: 50,
+                                        child: FadeInAnimation(
+                                          child: ScaleAnimation(
+                                            scale: 0.95,
                                             child: _buildDraftKitCard(
                                               context,
                                               kit,
@@ -245,18 +316,14 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-
-                            const SizedBox(height: 20),
                           ],
                         );
                       },
                     ),
-
                     // ✅ Feature cards
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -300,196 +367,296 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDraftKitCard(BuildContext context, Datum kit) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+  Widget _buildDraftKitCard(BuildContext context, UserKitData kit) {
+    final status = kit.status?.toLowerCase() ?? 'unknown';
+    final statusColor = _getStatusColor(status);
+    final statusText = _getStatusText(status);
+
+    return Stack(
+      children: [
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.07),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /// 🔹 All Product Images (Horizontal List)
-          SizedBox(
-            height: 110,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Images Horizontal Scroll - Height Reduced
+              SizedBox(
+                height: 90, // ← Kam kiya (110 se 90)
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.all(8),
+                  itemCount: kit.items.length,
+                  itemBuilder: (context, index) {
+                    final item = kit.items[index];
+                    final imageUrl =
+                        item.product?.media?.image.isNotEmpty == true
+                        ? "http://192.168.1.40:8000/${item.product!.media!.image.first}"
+                        : "https://via.placeholder.com/150";
 
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: kit.items.length,
-              itemBuilder: (context, index) {
-                final item = kit.items[index];
-                final image = item.product?.media?.image.isNotEmpty == true
-                    ? item.product!.media!.image.first
-                    : null;
-
-                return Container(
-                  width: 110,
-
-                  margin: const EdgeInsets.only(right: 8),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: CustomCachedImage(
-                      imageUrl: image != null
-                          ? "http://192.168.1.40:8000/$image"
-                          : "https://via.placeholder.com/150",
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          /// 🔹 Content Section
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                /// 🔸 Kit Name + Actions
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        kit.name ?? "My Custom Kit",
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: text16(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                    return Container(
+                      width: 90, // ← Width bhi thoda kam
+                      margin: const EdgeInsets.only(right: 8),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: CustomCachedImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
                         ),
                       ),
-                    ),
-
-                    /// ✏️ Edit
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue),
-                      onPressed: () {
-                        // TODO: Edit Kit
-                      },
-                    ),
-
-                    /// 🗑 Delete
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        // TODO: Delete Kit
-                      },
-                    ),
-                  ],
-                ),
-
-                /// 🔸 Total Items
-                Text(
-                  "${kit.items.length} items",
-                  style: text12(color: AppColors.grey),
-                ),
-
-                /// 🔸 Price
-                if (kit.totalPrice != null)
-                  Text(
-                    "₹${kit.totalPrice}",
-                    style: text18(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green.shade700,
-                    ),
-                  ),
-
-                const SizedBox(height: 12),
-
-                /// 🔸 Product List (Names)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: kit.items.take(3).map((item) {
-                    return Text(
-                      "• ${item.product?.title ?? "Product"}",
-                      style: text12(color: Colors.black87),
                     );
-                  }).toList(),
+                  },
                 ),
+              ),
 
-                if (kit.items.length > 3)
-                  Text(
-                    "+${kit.items.length - 3} more items",
-                    style: text12(color: Colors.blue),
-                  ),
-
-                const SizedBox(height: 12),
-
-                /// 🔸 Buttons Row
-                Row(
+              // Content Section - Padding Reduced
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  12,
+                  10,
+                  12,
+                  12,
+                ), // ← Tight padding
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    /// View All
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          _showKitProductsBottomSheet(context, kit);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                    // Kit Name + Status
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            kit.name ?? "My Custom Kit",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: text15(
+                              fontWeight: FontWeight.bold,
+                            ), // ← Size kam kiya
+                          ),
+                        ),
+                        // Status Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            statusText,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: statusColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    // Items Count + Price
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Center(
-                            child: Text(
-                              "View All",
-                              style: text12(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.blue,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.inventory_2_outlined,
+                                size: 15,
+                                color: Colors.grey,
                               ),
-                            ),
+                              const SizedBox(width: 4),
+                              Text(
+                                "${kit.items.length} items",
+                                style: text12(fontWeight: FontWeight.w600),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
+                        const Spacer(),
+                        if (kit.totalPrice != null)
+                          Text(
+                            "₹${kit.totalPrice}",
+                            style: text18(
+                              // Price thoda chhota
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade700,
+                            ),
+                          ),
+                      ],
                     ),
 
-                    const SizedBox(width: 10),
+                    const SizedBox(height: 8),
 
-                    /// Buy Now
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          // TODO: Buy Now API / Checkout
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.green,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              "Buy Now",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                    // Product Names (First 2 only - to save space)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: kit.items.take(2).map((item) {
+                        return Text(
+                          "• ${item.product?.title ?? "Product"}",
+                          style: text12(color: Colors.black87),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        );
+                      }).toList(),
+                    ),
+
+                    if (kit.items.length > 2)
+                      Text(
+                        "+${kit.items.length - 2} more",
+                        style: text11(color: Colors.blue),
+                      ),
+
+                    const SizedBox(height: 12),
+
+                    // Action Buttons - Compact
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                _showKitProductsBottomSheet(context, kit),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  "View All",
+                                  style: text12(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.blue,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              // TODO: Buy Now
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  "Buy Now",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          top: 12,
+          right: 12,
+          child: GestureDetector(
+            onTap: () {
+              //  ref.read(userDraftKits.notifier).deleteUserKit(kit.id ?? "");
+            },
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.close, size: 18, color: Colors.red),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  void _showKitProductsBottomSheet(BuildContext context, Datum kit) {
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'draft':
+        return 'Draft';
+      case 'pending':
+        return 'Pending';
+      case 'confirmed':
+        return 'Confirmed';
+      case 'shipped':
+        return 'Shipped';
+      case 'delivered':
+        return 'Delivered';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status.toUpperCase();
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'delivered':
+        return Colors.green;
+      case 'confirmed':
+      case 'shipped':
+        return Colors.blue;
+      case 'pending':
+        return Colors.orange;
+      case 'draft':
+        return Colors.grey;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  void _showKitProductsBottomSheet(BuildContext context, UserKitData kit) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -684,7 +851,7 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
   Widget _buildPremiumSearchField(
     BuildContext context,
     WidgetRef ref,
-    List<String> poojas,
+    List<DefaultKitData> poojas,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -733,17 +900,21 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
               ),
             ],
           ),
-          child: Autocomplete<String>(
+          child: Autocomplete<DefaultKitData>(
+            // 🔥 IMPORTANT
+            displayStringForOption: (kit) => kit.name ?? "",
+
             optionsBuilder: (TextEditingValue textEditingValue) {
               if (textEditingValue.text.isEmpty) {
-                return const Iterable<String>.empty();
+                return poojas;
               }
               return poojas.where(
-                (pooja) => pooja.toLowerCase().contains(
+                (kit) => (kit.name ?? '').toLowerCase().contains(
                   textEditingValue.text.toLowerCase(),
                 ),
               );
             },
+
             fieldViewBuilder:
                 (context, controller, focusNode, onEditingComplete) {
                   return TextField(
@@ -778,6 +949,7 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
                     ),
                   );
                 },
+
             optionsViewBuilder: (context, onSelected, options) {
               return Align(
                 alignment: Alignment.topLeft,
@@ -798,6 +970,7 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
                       itemCount: options.length,
                       itemBuilder: (context, index) {
                         final option = options.elementAt(index);
+
                         return Container(
                           margin: const EdgeInsets.only(bottom: 6),
                           decoration: BoxDecoration(
@@ -822,15 +995,16 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Center(
-                                child: Image.asset(
-                                  "assets/god.png",
+                                child: CustomCachedImage(
                                   width: 32,
                                   height: 32,
+                                  imageUrl:
+                                      "http://192.168.1.40:8000${option.image}",
                                 ),
                               ),
                             ),
                             title: Text(
-                              option,
+                              option.name ?? "", // ✅ FIXED
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
@@ -860,10 +1034,15 @@ class CustomizePoojaKitScreen extends ConsumerWidget {
                 ),
               );
             },
+
             onSelected: (value) {
-              ref.read(selectedPoojaProvider.notifier).state = value;
               ref.read(isFestivalProvider.notifier).state = false;
-              Navigator.pushNamed(context, AppRoutes.festivalKitDetails);
+
+              Navigator.pushNamed(
+                context,
+                AppRoutes.festivalKitDetails,
+                arguments: value, // 🔥 full object pass
+              );
             },
           ),
         ),
