@@ -28,7 +28,7 @@ class _CustomizePoojaKitScreenState
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
     _tabController.addListener(() {
       setState(() {}); // Tab change pe rebuild ke liye
     });
@@ -562,12 +562,16 @@ class _CustomizePoojaKitScreenState
                         Expanded(
                           child: GestureDetector(
                             onTap: () {
-                              // TODO: Buy Now
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.orderSummary,
+                                arguments: kit,
+                              );
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
-                                color: Colors.green,
+                                color: AppColors.green,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Center(
@@ -596,7 +600,7 @@ class _CustomizePoojaKitScreenState
           right: 12,
           child: GestureDetector(
             onTap: () {
-              //  ref.read(userDraftKits.notifier).deleteUserKit(kit.id ?? "");
+              ref.read(userDraftKits.notifier).deleteMyKit(kit.id ?? "");
             },
             child: Container(
               padding: const EdgeInsets.all(6),

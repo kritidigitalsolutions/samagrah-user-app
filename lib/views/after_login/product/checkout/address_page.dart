@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/custom_textfields.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
 
-class AddressPage extends StatefulWidget {
+class AddressPage extends ConsumerStatefulWidget {
   const AddressPage({super.key});
 
   @override
-  State<AddressPage> createState() => _AddressPageState();
+  ConsumerState<AddressPage> createState() => _AddressPageState();
 }
 
-class _AddressPageState extends State<AddressPage> {
+class _AddressPageState extends ConsumerState<AddressPage> {
   String selectedAddressType = 'Work'; // Work, Home, Other
 
   final _fullNameController = TextEditingController();
@@ -35,6 +37,15 @@ class _AddressPageState extends State<AddressPage> {
 
   @override
   Widget build(BuildContext context) {
+    final userAsync = ref.watch(userProvider);
+
+    userAsync.whenData((user) {
+      if (user != null) {
+        _fullNameController.text = user["name"] ?? "";
+        _phoneController.text = user["phone"] ?? "";
+        _houseController.text = user["address"] ?? "";
+      }
+    });
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(

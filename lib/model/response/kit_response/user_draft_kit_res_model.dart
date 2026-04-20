@@ -42,7 +42,7 @@ class UserKitData {
   final String? user;
   final String? name;
   final dynamic baseKit;
-  final List<Item> items;
+  final List<UserKitItems> items;
   final int? totalPrice;
   final String? status;
   final String? paymentStatus;
@@ -59,7 +59,9 @@ class UserKitData {
       baseKit: json["baseKit"],
       items: json["items"] == null
           ? []
-          : List<Item>.from(json["items"]!.map((x) => Item.fromJson(x))),
+          : List<UserKitItems>.from(
+              json["items"]!.map((x) => UserKitItems.fromJson(x)),
+            ),
       totalPrice: json["totalPrice"],
       status: json["status"],
       paymentStatus: json["paymentStatus"],
@@ -71,8 +73,8 @@ class UserKitData {
   }
 }
 
-class Item {
-  Item({
+class UserKitItems {
+  UserKitItems({
     required this.product,
     required this.quantity,
     required this.priceAtTime,
@@ -84,8 +86,8 @@ class Item {
   final int? priceAtTime;
   final String? id;
 
-  factory Item.fromJson(Map<String, dynamic> json) {
-    return Item(
+  factory UserKitItems.fromJson(Map<String, dynamic> json) {
+    return UserKitItems(
       product: json["product"] == null
           ? null
           : UserDraftProduct.fromJson(json["product"]),
@@ -150,6 +152,28 @@ class Pricing {
       price: json["price"],
       mrp: json["mrp"],
       currency: json["currency"],
+    );
+  }
+}
+
+// ============== User current kit ============================
+
+class UserKitResModel {
+  UserKitResModel({
+    required this.success,
+    required this.msg,
+    required this.data,
+  });
+
+  final bool? success;
+  final String? msg;
+  final UserKitData? data;
+
+  factory UserKitResModel.fromJson(Map<String, dynamic> json) {
+    return UserKitResModel(
+      success: json["success"],
+      msg: json["message"],
+      data: json["data"] == null ? null : UserKitData.fromJson(json["data"]),
     );
   }
 }

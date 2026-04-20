@@ -13,11 +13,34 @@ import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 
-class FestivalKitDetails extends ConsumerWidget {
+class FestivalKitDetails extends ConsumerStatefulWidget {
   const FestivalKitDetails({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FestivalKitDetails> createState() => _FestivalKitDetailsState();
+}
+
+class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
+  DefaultKitData? _lastKit;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final kit = ModalRoute.of(context)!.settings.arguments as DefaultKitData;
+
+    // 👇 Only initialize if NEW kit
+    if (_lastKit?.id != kit.id) {
+      _lastKit = kit;
+
+      Future.microtask(() {
+        ref.read(customizeKitProvider.notifier).initialize(kit);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final kit = ModalRoute.of(context)!.settings.arguments as DefaultKitData;
     final isFestival = ref.watch(isFestivalProvider);
     final isLoading = ref.watch(defaultKitLoaderPro);
@@ -25,13 +48,6 @@ class FestivalKitDetails extends ConsumerWidget {
     // Watch the customized items
     final customizedItems = ref.watch(customizeKitProvider);
     final notifier = ref.read(customizeKitProvider.notifier);
-
-    // Initialize once when screen loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (customizedItems.isEmpty) {
-        notifier.initialize(kit);
-      }
-    });
 
     final totalPrice = notifier.totalPrice;
     final originalTotalPrice = notifier.originalTotalPrice;
@@ -193,21 +209,11 @@ class FestivalKitDetails extends ConsumerWidget {
                         customizedItems,
                         kit.name ?? "Pooja Kit",
                         ref,
+                        isFestival,
+                        kit,
                       ),
               ),
             ),
-
-            //  Container(
-            //   color: AppColors.button,
-            //   padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-            //   child: AppButton(
-            //     title: _isLoading ? "Creating Kit..." : "Buy Now",
-            //     isLoading: _isLoading, // Add loading support in your AppButton
-            //     onTap: _isLoading
-            //         ? null
-            //         : () => _placeOrder(context, selectedCartItems, kitName),
-            //   ),
-            // ),
           ],
         ),
       ),
@@ -216,23 +222,40 @@ class FestivalKitDetails extends ConsumerWidget {
 
   Future<void> _placeOrder(
     BuildContext context,
-    List<Item> selectedItems, // ← List<Item> hai, na ki List<Map>
+    List<Item> selectedItems,
     String kitName,
     WidgetRef ref,
+    bool isFestival,
+    DefaultKitData kit,
   ) async {
-    if (selectedItems.isEmpty) {
-      AppSnackbar.show(
-        context,
-        message: "Please add items to your kit",
-        type: SnackBarType.warning,
-      );
-      return;
-    }
-
-    ref.read(defaultKitLoaderPro.notifier).state = true;
-
     try {
-      // Correct mapping
+      final notifier = ref.read(customizeKitProvider.notifier);
+      final isCustomized = notifier.isCustomized;
+
+      // ✅ Case 1: Festival kit → direct
+      if (isFestival) {
+        Navigator.pushNamed(context, AppRoutes.orderSummary, arguments: kit);
+        return;
+      }
+
+      // ✅ Case 2: NOT customized → direct
+      if (!isCustomized) {
+        Navigator.pushNamed(context, AppRoutes.orderSummary, arguments: kit);
+        return;
+      }
+
+      // ✅ Case 3: Customized → create kit API
+      if (selectedItems.isEmpty) {
+        AppSnackbar.show(
+          context,
+          message: "Please add items to your kit",
+          type: SnackBarType.warning,
+        );
+        return;
+      }
+
+      ref.read(defaultKitLoaderPro.notifier).state = true;
+
       final List<KitItem> kitItems = selectedItems.map((item) {
         return KitItem(
           productId: item.product?.id ?? '',
@@ -240,28 +263,27 @@ class FestivalKitDetails extends ConsumerWidget {
         );
       }).toList();
 
-      // Create request model
       final request = CreateKitRequest(
         name: kitName,
-        baseKit: null, // agar base kit hai to pass kar sakte ho
+        baseKit: null,
         items: kitItems,
       );
 
-      // Call API
-      print(request.toJson());
-      await ref.read(userDraftKits.notifier).createDraftKit(request);
+      final createdKit = await ref
+          .read(userDraftKits.notifier)
+          .createDraftKit(request);
 
-      // Success
       AppSnackbar.show(
         context,
         message: "Kit created successfully!",
         type: SnackBarType.success,
       );
 
-      // ref.read(customizeKitProvider.notifier).resetToDefault(); // agar chahiye
-
-      // Navigate
-      Navigator.pushNamed(context, AppRoutes.orderSummary);
+      Navigator.pushNamed(
+        context,
+        AppRoutes.orderSummary,
+        arguments: createdKit,
+      );
     } catch (e, stackTrace) {
       debugPrint("Error creating kit: $e\n$stackTrace");
 

@@ -9,12 +9,10 @@ class CustomizeKitRepo {
   final _api = NetworkApiService();
 
   // ✅ Get festival
-  Future<Map<String, dynamic>> createCustoizeKits(
-    CreateKitRequest model,
-  ) async {
+  Future<UserKitResModel> createCustoizeKits(CreateKitRequest model) async {
     try {
       final res = await _api.postApi(AppUrls.userKit, model.toJson());
-      return res;
+      return UserKitResModel.fromJson(res);
     } catch (e) {
       rethrow;
     }
@@ -37,7 +35,7 @@ class CustomizeKitRepo {
     try {
       final token = await AuthLocalstorageService.getToken() ?? '';
       _api.setToken(token);
-      await _api.deleteApi("${AppUrls.getMyKit}/$id", {});
+      await _api.deleteApi("${AppUrls.userKit}/$id", {});
     } catch (e) {
       rethrow;
     }

@@ -1,193 +1,183 @@
 import 'package:flutter/material.dart';
+import 'package:samagrah/model/response/kit_response/default_kit_res_model.dart';
+import 'package:samagrah/model/response/kit_response/user_draft_kit_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
+import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 
-class OrderSummaryScreen extends StatefulWidget {
+class OrderSummaryScreen extends StatelessWidget {
   const OrderSummaryScreen({super.key});
 
   @override
-  State<OrderSummaryScreen> createState() => _OrderSummaryScreenState();
-}
-
-class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
-  int quantity = 2;
-
-  @override
   Widget build(BuildContext context) {
-    const double itemPrice = 220.0;
-    final double itemTotal = itemPrice * quantity;
-    const double deliveryFee = 20.0;
-    final double totalAmount = itemTotal + deliveryFee;
+    final args = ModalRoute.of(context)?.settings.arguments;
+
+    if (args == null) {
+      return const Scaffold(body: Center(child: Text("No data found")));
+    }
+
+    final kit = mapToOrderSummary(args);
+
+    final itemTotal = kit.totalPrice;
+    const deliveryFee = 20;
+    final totalAmount = itemTotal + deliveryFee;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      // appBar: AppBar(
-      //   title: const Text('Checkout'),
-      //   backgroundColor: Colors.white,
-      //   foregroundColor: Colors.black,
-      //   elevation: 0,
-      // ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Stepper Progress
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+        child: Column(
+          children: [
+            // 🔝 Header
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
                 children: [
-                  _buildStep(1, 'Item\nSummary', true),
-                  _buildStepConnector(isActive: true),
-                  _buildStep(2, 'Delivery\nAddress', false),
-                  _buildStepConnector(isActive: false),
-                  _buildStep(3, 'Payment\nMethod', false),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildStep(1, 'Item\nSummary', true),
+                      _buildStepConnector(isActive: true),
+                      _buildStep(2, 'Delivery\nAddress', false),
+                      _buildStepConnector(isActive: false),
+                      _buildStep(3, 'Payment\nMethod', false),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      kit.name,
+                      style: text18(fontWeight: FontWeight.w700),
+                    ),
+                  ),
                 ],
               ),
+            ),
 
-              const SizedBox(height: 32),
+            // 📦 Items
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: kit.items.length,
+                itemBuilder: (context, index) {
+                  final item = kit.items[index];
 
-              // Item Summary Card
-              Text('Item Summary', style: text18(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 12),
+                  final image = item.image.isNotEmpty
+                      ? item.image.replaceAll("\\", "/")
+                      : "";
 
-              Card(
-                elevation: 0,
+                  final itemTotal = item.quantity * item.price;
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          blurRadius: 8,
+                          color: Colors.black.withOpacity(0.05),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        // Image
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: image.isNotEmpty
+                              ? CustomCachedImage(
+                                  imageUrl: "http://192.168.1.40:8000/$image",
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  width: 60,
+                                  height: 60,
+                                  color: Colors.grey[200],
+                                  child: const Icon(Icons.image),
+                                ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        // Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.title,
+                                style: text16(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Qty: ${item.quantity}",
+                                style: text13(color: AppColors.grey400),
+                              ),
+                              Text(
+                                "₹${item.price}",
+                                style: text13(color: AppColors.grey400),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Total
+                        Text(
+                          "₹$itemTotal",
+                          style: text15(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // 🧾 Summary
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
                 color: AppColors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      // Product Image
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color: Colors.orange[100],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Center(
-                          child: Text('🪔', style: TextStyle(fontSize: 32)),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-
-                      // Product Details
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Clay Diyas',
-                              style: text16(fontWeight: FontWeight.w600),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Quantity: 2',
-                              style: text13(color: AppColors.grey400),
-                            ),
-                            Text(
-                              'Price: ₹220 each',
-                              style: text13(color: AppColors.grey400),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Quantity Stepper
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              onPressed: quantity > 1
-                                  ? () => setState(() => quantity--)
-                                  : null,
-                              icon: const Icon(Icons.remove),
-                              padding: const EdgeInsets.all(4),
-                              constraints: const BoxConstraints(minWidth: 36),
-                            ),
-                            Text(
-                              quantity.toString(),
-                              style: text15(fontWeight: FontWeight.w600),
-                            ),
-                            IconButton(
-                              onPressed: () => setState(() => quantity++),
-                              icon: const Icon(Icons.add),
-                              padding: const EdgeInsets.all(4),
-                              constraints: const BoxConstraints(minWidth: 36),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 10,
+                    color: Colors.black.withOpacity(0.05),
                   ),
+                ],
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
                 ),
               ),
-
-              const SizedBox(height: 32),
-
-              // Order Summary
-              Text('Order Summary', style: text18(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 12),
-
-              Card(
-                elevation: 0,
-                color: AppColors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      _buildSummaryRow(
-                        'Item Total',
-                        '₹${itemTotal.toStringAsFixed(0)}',
-                      ),
-                      _buildSummaryRow(
-                        'Delivery Fee',
-                        '₹${deliveryFee.toStringAsFixed(0)}',
-                      ),
-                      const Divider(height: 24),
-                      _buildSummaryRow(
-                        'Total Amount',
-                        '₹${totalAmount.toStringAsFixed(0)}',
-                        isTotal: true,
-                      ),
-                    ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildSummaryRow('Item Total', '₹$itemTotal'),
+                  _buildSummaryRow('Delivery Fee', '₹$deliveryFee'),
+                  const Divider(height: 20),
+                  _buildSummaryRow(
+                    'Total Amount',
+                    '₹$totalAmount',
+                    isTotal: true,
                   ),
-                ),
-              ),
+                  const SizedBox(height: 16),
 
-              const SizedBox(height: 40),
-
-              //
-              //Next Button
-              Center(
-                child: SizedBox(
-                  width: 100,
-
-                  child: AppButton(
-                    height: 40,
-                    title: "Next",
+                  AppButton(
+                    title: "Continue",
                     onTap: () {
                       Navigator.pushNamed(context, AppRoutes.addressPage);
                     },
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -220,7 +210,6 @@ class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
           style: TextStyle(
             fontSize: 12,
             color: isActive ? Colors.black : Colors.grey[600],
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
       ],
@@ -231,13 +220,13 @@ class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
     return Expanded(
       child: Container(
         height: 2,
-        color: isActive ? AppColors.button : Colors.grey[300],
         margin: const EdgeInsets.symmetric(horizontal: 8),
+        color: isActive ? AppColors.button : Colors.grey[300],
       ),
     );
   }
 
-  Widget _buildSummaryRow(String label, String amount, {bool isTotal = false}) {
+  Widget _buildSummaryRow(String label, String value, {bool isTotal = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -251,7 +240,7 @@ class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
             ),
           ),
           Text(
-            amount,
+            value,
             style: TextStyle(
               fontSize: isTotal ? 18 : 15,
               fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
@@ -262,4 +251,66 @@ class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
       ),
     );
   }
+}
+
+class OrderSummaryModel {
+  final String name;
+  final List<OrderItemModel> items;
+  final int totalPrice;
+
+  OrderSummaryModel({
+    required this.name,
+    required this.items,
+    required this.totalPrice,
+  });
+}
+
+class OrderItemModel {
+  final String title;
+  final String image;
+  final int quantity;
+  final int price;
+
+  OrderItemModel({
+    required this.title,
+    required this.image,
+    required this.quantity,
+    required this.price,
+  });
+}
+
+OrderSummaryModel mapToOrderSummary(dynamic args) {
+  if (args is UserKitData) {
+    return OrderSummaryModel(
+      name: args.name ?? "",
+      totalPrice: args.totalPrice ?? 0,
+      items: args.items.map((e) {
+        return OrderItemModel(
+          title: e.product?.title ?? "",
+          image: (e.product?.media?.image.isNotEmpty == true)
+              ? e.product!.media!.image.first
+              : "",
+          quantity: e.quantity ?? 0,
+          price: e.priceAtTime ?? 0,
+        );
+      }).toList(),
+    );
+  } else if (args is DefaultKitData) {
+    return OrderSummaryModel(
+      name: args.name ?? "",
+      totalPrice: args.totalPrice ?? 0,
+      items: args.items.map((e) {
+        return OrderItemModel(
+          title: e.product?.title ?? "",
+          image: (e.product?.media?.image.isNotEmpty == true)
+              ? e.product!.media!.image.first
+              : "",
+          quantity: e.quantity ?? 0,
+          price: e.product?.pricing?.price ?? 0,
+        );
+      }).toList(),
+    );
+  }
+
+  throw Exception("Invalid data passed");
 }

@@ -7,7 +7,6 @@ import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
-import 'package:samagrah/utils/localStogare_service/location_storage.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/views/service_pages/location_provider.dart';

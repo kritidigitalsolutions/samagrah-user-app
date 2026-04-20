@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:samagrah/model/response/kit_response/default_kit_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
@@ -124,6 +125,7 @@ class _FestivalKitPageState extends ConsumerState<FestivalKitPage> {
                         final item = list[index];
 
                         return FestivalCard(
+                          data: item,
                           title: item.name ?? "",
                           subtitle: item.description ?? "",
                           image: item.image ?? "", // 👈 from API
@@ -142,12 +144,14 @@ class _FestivalKitPageState extends ConsumerState<FestivalKitPage> {
 }
 
 class FestivalCard extends ConsumerWidget {
+  final DefaultKitData data;
   final String title;
   final String subtitle;
   final String image;
 
   const FestivalCard({
     super.key,
+    required this.data,
     required this.title,
     required this.subtitle,
     required this.image,
@@ -158,7 +162,11 @@ class FestivalCard extends ConsumerWidget {
     return GestureDetector(
       onTap: () {
         ref.read(isFestivalProvider.notifier).state = true;
-        Navigator.pushNamed(context, AppRoutes.festivalKitDetails);
+        Navigator.pushNamed(
+          context,
+          AppRoutes.festivalKitDetails,
+          arguments: data, // 🔥 full object pass
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 14),

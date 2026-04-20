@@ -190,8 +190,9 @@ class _SelectedCusKitItemsState extends ConsumerState<SelectedCusKitItems> {
       );
 
       // Call the API method
-      await ref.read(userDraftKits.notifier).createDraftKit(request);
-
+      final createdKit = await ref
+          .read(userDraftKits.notifier)
+          .createDraftKit(request);
       // Success
       if (mounted) {
         AppSnackbar.show(
@@ -200,11 +201,12 @@ class _SelectedCusKitItemsState extends ConsumerState<SelectedCusKitItems> {
           type: SnackBarType.success,
         );
 
-        // Optional: Clear cart after successful creation
-        //  ref.read(customizeKitCartProvider.notifier).clearCart();
-
         // Navigate to order summary or success page
-        Navigator.pushNamed(context, AppRoutes.orderSummary);
+        Navigator.pushNamed(
+          context,
+          AppRoutes.orderSummary,
+          arguments: createdKit,
+        );
       }
     } catch (e) {
       if (mounted) {
