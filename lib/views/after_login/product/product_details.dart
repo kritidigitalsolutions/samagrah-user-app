@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
+import 'package:samagrah/views/after_login/product/checkout/order_summary_page.dart';
+import 'package:samagrah/views/custom_widget/product_image_slider.dart';
+import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
 
-class ProductDetails extends StatelessWidget {
+class ProductDetails extends ConsumerWidget {
   const ProductDetails({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final product = ModalRoute.of(context)!.settings.arguments as Product;
+
+    final quantity = ref.watch(cartQuantityProvider(product.id ?? ''));
+    final cartNotifier = ref.read(cartProvider.notifier);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -30,18 +40,19 @@ class ProductDetails extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            CircleAvatar(
-                              backgroundColor: Colors.white,
-                              child: Icon(Icons.keyboard_arrow_left),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pop(context);
+                              },
+                              child: CircleAvatar(
+                                backgroundColor: AppColors.white,
+                                child: Icon(Icons.keyboard_arrow_left),
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 10),
-                        Image.asset(
-                          'assets/icon/diya2.png',
-                          fit: BoxFit.cover,
-                          height: 150,
-                        ),
+                        ProductImageSlider(images: product.images),
                       ],
                     ),
                   ),
@@ -52,7 +63,7 @@ class ProductDetails extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.white,
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Column(
@@ -64,26 +75,123 @@ class ProductDetails extends StatelessWidget {
                           children: [
                             Expanded(
                               child: Text(
-                                "Handmade Clay Diya for Pooja & Festivals",
+                                product.title ?? '',
                                 style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                             ),
-                            AppButton(title: "Add", height: 30, onTap: () {}),
+                            SizedBox(
+                              width: 100,
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                transitionBuilder: (child, animation) {
+                                  return ScaleTransition(
+                                    scale: animation,
+                                    child: child,
+                                  );
+                                },
+                                child: quantity == 0
+                                    ? AppButton(
+                                        key: ValueKey('add_${product.id}'),
+                                        height: 22,
+                                        radius: 4,
+                                        textStyle: text11(
+                                          color: AppColors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        title: "Add",
+                                        onTap: () {
+                                          cartNotifier.addItem(
+                                            CartItem(
+                                              productId: product.id ?? '',
+                                              title: product.title ?? '',
+                                              thumbnail:
+                                                  product.thumbnail ?? '',
+                                              price:
+                                                  product.price?.toDouble() ??
+                                                  0.0,
+                                            ),
+                                          );
+                                        },
+                                      )
+                                    : Container(
+                                        key: ValueKey('qty_${product.id}'),
+                                        height: 22,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.button,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            InkWell(
+                                              onTap: () =>
+                                                  cartNotifier.decreaseQuantity(
+                                                    product.id ?? '',
+                                                  ),
+                                              child: Container(
+                                                width: 22,
+                                                height: 22,
+                                                alignment: Alignment.center,
+                                                child: const Icon(
+                                                  Icons.remove,
+                                                  size: 12,
+                                                  color: AppColors.white,
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Container(
+                                                alignment: Alignment.center,
+                                                color: AppColors.white,
+                                                child: Text(
+                                                  '$quantity',
+                                                  style: text11(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppColors.button,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            InkWell(
+                                              onTap: () =>
+                                                  cartNotifier.increaseQuantity(
+                                                    product.id ?? '',
+                                                  ),
+                                              child: Container(
+                                                width: 22,
+                                                height: 22,
+                                                alignment: Alignment.center,
+                                                child: const Icon(
+                                                  Icons.add,
+                                                  size: 12,
+                                                  color: AppColors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                              ),
+                            ),
                           ],
                         ),
 
                         const SizedBox(height: 10),
 
                         /// Price
-                        const Text(
-                          "₹249/-",
+                        Text(
+                          "₹${product.price}/-",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
 
                         Row(
-                          children: const [
+                          children: [
                             Text(
-                              "MRP ₹399",
+                              "MRP ₹${product.oldPrice}",
                               style: TextStyle(
                                 decoration: TextDecoration.lineThrough,
                                 color: Colors.grey,
@@ -91,10 +199,24 @@ class ProductDetails extends StatelessWidget {
                             ),
                             SizedBox(width: 8),
                             Text(
-                              "38% OFF",
+                              "${product.discountPercent}% OFF",
                               style: TextStyle(color: Colors.green),
                             ),
                           ],
+                        ),
+
+                        const SizedBox(height: 6),
+
+                        Text(
+                          (product.inStock ?? false)
+                              ? "In Stock"
+                              : "Out of Stock",
+                          style: TextStyle(
+                            color: (product.inStock ?? false)
+                                ? AppColors.green
+                                : AppColors.error,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
 
                         const SizedBox(height: 10),
@@ -103,9 +225,19 @@ class ProductDetails extends StatelessWidget {
                         AppButton(
                           title: "Buy Now",
                           onTap: () {
+                            final qua = quantity == 0 ? 1 : quantity;
                             Navigator.pushNamed(
                               context,
                               AppRoutes.orderSummary,
+                              arguments: [
+                                OrderItem(
+                                  productId: product.id ?? '',
+                                  title: product.title ?? '',
+                                  price: product.price ?? 0,
+                                  quantity: qua,
+                                  image: product.thumbnail ?? '',
+                                ),
+                              ],
                             );
                           },
                           color: AppColors.primary,
@@ -252,31 +384,7 @@ class ProductDetails extends StatelessWidget {
               ),
             ),
 
-            /// 🛍 Floating Cart Button
-            // Positioned(
-            //   bottom: 20,
-            //   left: 60,
-            //   right: 60,
-            //   child: Container(
-            //     padding: const EdgeInsets.symmetric(
-            //       horizontal: 16,
-            //       vertical: 12,
-            //     ),
-            //     decoration: BoxDecoration(
-            //       color: Colors.white,
-            //       borderRadius: BorderRadius.circular(40),
-            //       boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black12)],
-            //     ),
-            //     child: Row(
-            //       mainAxisAlignment: MainAxisAlignment.center,
-            //       children: const [
-            //         Icon(Icons.shopping_cart, color: Colors.red),
-            //         SizedBox(width: 8),
-            //         Text("View Cart"),
-            //       ],
-            //     ),
-            //   ),
-            // ),
+            BottomCartBar(),
           ],
         ),
       ),

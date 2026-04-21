@@ -234,13 +234,13 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
 
       // ✅ Case 1: Festival kit → direct
       if (isFestival) {
-        Navigator.pushNamed(context, AppRoutes.orderSummary, arguments: kit);
+        Navigator.pushNamed(context, AppRoutes.kitOrderSummary, arguments: kit);
         return;
       }
 
       // ✅ Case 2: NOT customized → direct
       if (!isCustomized) {
-        Navigator.pushNamed(context, AppRoutes.orderSummary, arguments: kit);
+        Navigator.pushNamed(context, AppRoutes.kitOrderSummary, arguments: kit);
         return;
       }
 
@@ -281,7 +281,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
 
       Navigator.pushNamed(
         context,
-        AppRoutes.orderSummary,
+        AppRoutes.kitOrderSummary,
         arguments: createdKit,
       );
     } catch (e, stackTrace) {

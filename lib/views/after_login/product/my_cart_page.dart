@@ -1,41 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
+import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
+import 'package:samagrah/views/after_login/product/checkout/order_summary_page.dart';
 
-class MyCartPage extends StatefulWidget {
+class MyCartPage extends ConsumerStatefulWidget {
   const MyCartPage({super.key});
 
   @override
-  State<MyCartPage> createState() => _MyCartPageState();
+  ConsumerState<MyCartPage> createState() => _MyCartPageState();
 }
 
-class _MyCartPageState extends State<MyCartPage> {
-  List<CartItem> cartItems = [
-    CartItem('Clay Diyas', 'Pack of 100', 2, 100, 79),
-    CartItem('Clay Diyas', 'Pack of 100', 2, 100, 79),
-    CartItem('Clay Diyas', 'Pack of 100', 2, 100, 79),
-    CartItem('Clay Diyas', 'Pack of 100', 2, 100, 79),
-    CartItem('Clay Diyas', 'Pack of 100', 2, 100, 79),
-  ];
-
-  void incrementQuantity(int index) {
-    setState(() {
-      cartItems[index].quantity++;
-    });
-  }
-
-  void decrementQuantity(int index) {
-    setState(() {
-      if (cartItems[index].quantity > 1) {
-        cartItems[index].quantity--;
-      }
-    });
-  }
-
+class _MyCartPageState extends ConsumerState<MyCartPage> {
   @override
   Widget build(BuildContext context) {
+    final cartItems = ref.watch(cartProvider);
+    final itemTotal = ref.watch(totalPriceProvider);
+    const deliveryFee = 20;
+    final totalAmount = itemTotal + deliveryFee;
     return Scaffold(
       backgroundColor: AppColors.headerCard,
       body: SafeArea(
@@ -73,15 +59,16 @@ class _MyCartPageState extends State<MyCartPage> {
                   ],
                 ),
               ),
-
               Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(15),
-                  itemCount: cartItems.length,
-                  itemBuilder: (context, index) {
-                    return _buildCartItem(cartItems[index], index);
-                  },
-                ),
+                child: cartItems.isEmpty
+                    ? const Center(child: Text("Your cart is empty"))
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(15),
+                        itemCount: cartItems.length,
+                        itemBuilder: (context, index) {
+                          return _buildCartItem(cartItems[index], ref);
+                        },
+                      ),
               ),
 
               // Promotional Offers
@@ -124,20 +111,16 @@ class _MyCartPageState extends State<MyCartPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'Get 5% Off on your first',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.black87,
+                                  style: text11(
+                                    color: AppColors.black87,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 Text(
                                   'pooja package order',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey.shade600,
-                                  ),
+                                  style: text10(color: AppColors.grey600),
                                 ),
                               ],
                             ),
@@ -149,7 +132,7 @@ class _MyCartPageState extends State<MyCartPage> {
                     Container(
                       width: 1,
                       height: 40,
-                      color: Colors.grey.shade200,
+                      color: AppColors.grey200,
                       margin: const EdgeInsets.symmetric(horizontal: 10),
                     ),
 
@@ -160,12 +143,12 @@ class _MyCartPageState extends State<MyCartPage> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFEBEE),
+                              color: AppColors.button.withAlpha(20),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
                               Icons.delivery_dining,
-                              color: Color(0xFFE91E63),
+                              color: AppColors.button,
                               size: 18,
                             ),
                           ),
@@ -174,26 +157,48 @@ class _MyCartPageState extends State<MyCartPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'Free Delivery on Puja Essentials',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.black87,
+                                  style: text11(
+                                    color: AppColors.black87,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 Text(
                                   'On orders above ₹499',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey.shade600,
-                                  ),
+                                  style: text10(color: AppColors.grey600),
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: Colors.black.withOpacity(0.05),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildSummaryRow('Item Total', '₹$itemTotal'),
+                    _buildSummaryRow('Delivery Fee', '₹$deliveryFee'),
+                    const Divider(height: 20),
+                    _buildSummaryRow(
+                      'Total Amount',
+                      '₹$totalAmount',
+                      isTotal: true,
                     ),
                   ],
                 ),
@@ -229,7 +234,21 @@ class _MyCartPageState extends State<MyCartPage> {
                       child: AppButton(
                         title: "Place Order",
                         onTap: () {
-                          Navigator.pushNamed(context, AppRoutes.orderSummary);
+                          final orderItems = cartItems.map((item) {
+                            return OrderItem(
+                              productId: item.productId,
+                              title: item.title,
+                              price: item.price.toInt(), // 👈 double → int
+                              quantity: item.quantity,
+                              image: item.thumbnail,
+                            );
+                          }).toList();
+
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.orderSummary,
+                            arguments: orderItems,
+                          );
                         },
 
                         textStyle: text13(
@@ -248,7 +267,31 @@ class _MyCartPageState extends State<MyCartPage> {
     );
   }
 
-  Widget _buildCartItem(CartItem item, int index) {
+  Widget _buildSummaryRow(String label, String value, {bool isTotal = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: text13(
+              fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+          Text(
+            value,
+            style: text15(
+              fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
+              color: isTotal ? AppColors.button : Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCartItem(CartItem item, WidgetRef ref) {
     return Stack(
       children: [
         Container(
@@ -269,15 +312,13 @@ class _MyCartPageState extends State<MyCartPage> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               // Product Image
-              Container(
-                width: 75,
-                height: 75,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  image: DecorationImage(
-                    image: AssetImage("assets/icon/kalash.png"),
-                    fit: BoxFit.contain,
-                  ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: CustomCachedImage(
+                  width: 75,
+                  height: 75,
+                  imageUrl: "http://192.168.1.40:8000/${item.thumbnail}",
+                  fit: BoxFit.cover,
                 ),
               ),
 
@@ -289,31 +330,29 @@ class _MyCartPageState extends State<MyCartPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.name,
-                      style: const TextStyle(
-                        fontSize: 15,
+                      item.title,
+                      style: text15(
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: AppColors.black87,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      item.packSize,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
+                    // const SizedBox(height: 3),
+                    // Text(
+                    //   item.packSize,
+                    //   style: TextStyle(
+                    //     fontSize: 12,
+                    //     color: Colors.grey.shade500,
+                    //   ),
+                    // ),
                     const SizedBox(height: 8),
                     InkWell(
                       onTap: () {
                         Navigator.pushNamed(context, AppRoutes.productDetails);
                       },
-                      child: const Text(
+                      child: Text(
                         'View Product',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFFE91E63),
+                        style: text12(
+                          color: AppColors.button,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -331,14 +370,16 @@ class _MyCartPageState extends State<MyCartPage> {
                   // Quantity Controls
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE91E63),
+                      color: AppColors.button,
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         GestureDetector(
-                          onTap: () => decrementQuantity(index),
+                          onTap: () => ref
+                              .read(cartProvider.notifier)
+                              .decreaseQuantity(item.productId),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
@@ -346,7 +387,7 @@ class _MyCartPageState extends State<MyCartPage> {
                             ),
                             child: const Icon(
                               Icons.remove,
-                              color: Colors.white,
+                              color: AppColors.white,
                               size: 16,
                             ),
                           ),
@@ -356,18 +397,22 @@ class _MyCartPageState extends State<MyCartPage> {
                             horizontal: 12,
                             vertical: 4,
                           ),
-                          decoration: const BoxDecoration(color: Colors.white),
+                          decoration: const BoxDecoration(
+                            color: AppColors.white,
+                          ),
                           child: Text(
                             '${item.quantity}',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFFE91E63),
+                              color: AppColors.button,
                             ),
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => incrementQuantity(index),
+                          onTap: () => ref
+                              .read(cartProvider.notifier)
+                              .increaseQuantity(item.productId),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
@@ -375,7 +420,7 @@ class _MyCartPageState extends State<MyCartPage> {
                             ),
                             child: const Icon(
                               Icons.add,
-                              color: Colors.white,
+                              color: AppColors.white,
                               size: 16,
                             ),
                           ),
@@ -390,29 +435,23 @@ class _MyCartPageState extends State<MyCartPage> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        '₹ ${item.originalPrice}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade500,
-                          decoration: TextDecoration.lineThrough,
-                        ),
-                      ),
+                      // Text(
+                      //   '₹ ${item.}',
+                      //   style: text11(
+                      //     color: AppColors.grey500,
+                      //   ).copyWith(decoration: TextDecoration.lineThrough),
+                      // ),
                       const SizedBox(width: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 1),
-                        child: const Text(
-                          '|',
-                          style: TextStyle(fontSize: 11, color: Colors.grey),
-                        ),
+                        child: Text('|', style: text11(color: AppColors.grey)),
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '₹${item.discountedPrice}',
-                        style: const TextStyle(
-                          fontSize: 14,
+                        '₹${item.price}',
+                        style: text14(
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFFE91E63),
+                          color: AppColors.button,
                         ),
                       ),
                     ],
@@ -438,20 +477,4 @@ class _MyCartPageState extends State<MyCartPage> {
       ],
     );
   }
-}
-
-class CartItem {
-  String name;
-  String packSize;
-  int quantity;
-  int originalPrice;
-  int discountedPrice;
-
-  CartItem(
-    this.name,
-    this.packSize,
-    this.quantity,
-    this.originalPrice,
-    this.discountedPrice,
-  );
 }

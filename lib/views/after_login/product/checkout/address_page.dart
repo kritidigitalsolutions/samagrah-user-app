@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
+import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/custom_textfields.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
 
 class AddressPage extends ConsumerStatefulWidget {
   const AddressPage({super.key});
@@ -155,6 +158,82 @@ class _AddressPageState extends ConsumerState<AddressPage> {
                     height: 40,
                     title: "Next",
                     onTap: () {
+                      final name = _fullNameController.text.trim();
+                      final phone = _phoneController.text.trim();
+                      final house = _houseController.text.trim();
+                      final city = _cityController.text.trim();
+                      final stateText = _stateController.text.trim();
+                      final pincode = _pincodeController.text.trim();
+
+                      // 🔥 VALIDATION
+                      if (name.isEmpty) {
+                        AppSnackbar.show(
+                          context,
+                          message: "Please enter full name",
+                          type: SnackBarType.error,
+                        );
+                        return;
+                      }
+
+                      if (phone.isEmpty || phone.length < 10) {
+                        AppSnackbar.show(
+                          context,
+                          message: "Enter valid phone number",
+                          type: SnackBarType.error,
+                        );
+                        return;
+                      }
+
+                      if (house.isEmpty) {
+                        AppSnackbar.show(
+                          context,
+                          message: "Enter house/building address",
+                          type: SnackBarType.error,
+                        );
+                        return;
+                      }
+
+                      if (city.isEmpty) {
+                        AppSnackbar.show(
+                          context,
+                          message: "Enter city",
+                          type: SnackBarType.error,
+                        );
+                        return;
+                      }
+
+                      if (stateText.isEmpty) {
+                        AppSnackbar.show(
+                          context,
+                          message: "Enter state",
+                          type: SnackBarType.error,
+                        );
+                        return;
+                      }
+
+                      if (pincode.isEmpty || pincode.length != 6) {
+                        AppSnackbar.show(
+                          context,
+                          message: "Enter valid pincode",
+                          type: SnackBarType.error,
+                        );
+                        return;
+                      }
+
+                      // ✅ CREATE ADDRESS
+                      final address = Address(
+                        name: name,
+                        phone: phone,
+                        fullAddress: house,
+                        city: city,
+                        state: stateText,
+                        pincode: pincode,
+                      );
+
+                      // ✅ STORE IN PROVIDER
+                      ref.read(addressProvider.notifier).state = address;
+
+                      // ✅ NAVIGATE
                       Navigator.pushNamed(context, AppRoutes.paymentPage);
                     },
                   ),

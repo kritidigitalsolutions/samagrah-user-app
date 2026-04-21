@@ -74,6 +74,7 @@ class AppRoutes {
   static const festivalKit = "/festivalKit";
   static const festivalKitDetails = "/festivalKitDetails";
   static const selectedCusKit = "/selectedCusKit";
+  static const kitOrderSummary = "/kitOrderSummary";
 
   //==============================================
   //  order page

@@ -7,6 +7,7 @@ import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -35,11 +36,11 @@ class ProfilePage extends ConsumerWidget {
               const SizedBox(height: 20),
 
               // Profile Section
-             userAsync.when(
-  data: (user) => _buildProfileHeader(user),
-  loading: () => const CircularProgressIndicator(),
-  error: (e, _) => const Text("Error loading user"),
-),
+              userAsync.when(
+                data: (user) => _buildProfileHeader(user),
+                loading: () => const CircularProgressIndicator(),
+                error: (e, _) => const Text("Error loading user"),
+              ),
 
               const SizedBox(height: 30),
 
@@ -164,6 +165,7 @@ class ProfilePage extends ConsumerWidget {
                         ),
                         ElevatedButton(
                           onPressed: () async {
+                            ref.read(cartProvider.notifier).clearCart();
                             await AuthLocalstorageService.clear();
                             Navigator.pushReplacementNamed(
                               context,
@@ -204,7 +206,7 @@ class ProfilePage extends ConsumerWidget {
     );
   }
 
- Widget _buildProfileHeader(Map<String, dynamic>? user) {
+  Widget _buildProfileHeader(Map<String, dynamic>? user) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -225,15 +227,15 @@ class ProfilePage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-               Text(
-  user?['name'] ?? 'No Name',
-  style: text15(fontWeight: FontWeight.bold),
-),
-const SizedBox(height: 4),
-Text(
-  user?['phone'] ?? 'No Phone',
-  style: text13(color: Colors.black45),
-),
+                Text(
+                  user?['name'] ?? 'No Name',
+                  style: text15(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  user?['phone'] ?? 'No Phone',
+                  style: text13(color: Colors.black45),
+                ),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(

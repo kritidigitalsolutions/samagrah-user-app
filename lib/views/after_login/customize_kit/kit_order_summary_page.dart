@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
+import 'package:samagrah/model/response/kit_response/default_kit_res_model.dart';
+import 'package:samagrah/model/response/kit_response/user_draft_kit_res_model.dart';
+import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
@@ -8,19 +11,23 @@ import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
 
-class OrderSummaryScreen extends ConsumerWidget {
-  const OrderSummaryScreen({super.key});
+class KitOrderSummaryPage extends ConsumerWidget {
+  const KitOrderSummaryPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ModalRoute.of(context)?.settings.arguments as List<OrderItem>;
-    final itemTotal = items.fold(
-      0,
-      (sum, item) => sum + (item.price * item.quantity),
-    );
+    final args = ModalRoute.of(context)?.settings.arguments;
 
+    if (args == null) {
+      return const Scaffold(body: Center(child: Text("No data found")));
+    }
+
+    final kit = mapToOrderSummary(args);
+
+    final itemTotal = kit.totalPrice;
     const deliveryFee = 20;
     final totalAmount = itemTotal + deliveryFee;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -43,13 +50,13 @@ class OrderSummaryScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Align(
-                  //   alignment: Alignment.centerLeft,
-                  //   child: Text(
-                  //     kit.title ??'',
-                  //     style: text18(fontWeight: FontWeight.w700),
-                  //   ),
-                  // ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      kit.name,
+                      style: text18(fontWeight: FontWeight.w700),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -58,9 +65,9 @@ class OrderSummaryScreen extends ConsumerWidget {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: items.length,
+                itemCount: kit.items.length,
                 itemBuilder: (context, index) {
-                  final item = items[index];
+                  final item = kit.items[index];
 
                   final image = item.image.isNotEmpty
                       ? item.image.replaceAll("\\", "/")
@@ -168,15 +175,10 @@ class OrderSummaryScreen extends ConsumerWidget {
                   AppButton(
                     title: "Continue",
                     onTap: () {
-                      final verifyItems = items.map((item) {
-                        return VerifyItem(
-                          productId: item.productId,
-                          // or dynamic if needed
-                        );
-                      }).toList();
-
-                      ref.read(bookingItemProvider.notifier).state =
-                          verifyItems;
+                      final verifyItems = VerifyItem(productId: kit.id);
+                      ref.read(bookingItemProvider.notifier).state = [
+                        verifyItems,
+                      ];
 
                       ref.read(totalPrice.notifier).state = totalAmount;
 
@@ -200,13 +202,13 @@ class OrderSummaryScreen extends ConsumerWidget {
           height: 32,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isActive ? AppColors.button : AppColors.grey300,
+            color: isActive ? AppColors.button : Colors.grey[300],
           ),
           child: Center(
             child: Text(
               stepNumber.toString(),
-              style: text14(
-                color: isActive ? AppColors.white : AppColors.grey600,
+              style: TextStyle(
+                color: isActive ? Colors.white : Colors.grey[600],
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -216,7 +218,10 @@ class OrderSummaryScreen extends ConsumerWidget {
         Text(
           label,
           textAlign: TextAlign.center,
-          style: text12(color: isActive ? AppColors.black : AppColors.grey600),
+          style: TextStyle(
+            fontSize: 12,
+            color: isActive ? Colors.black : Colors.grey[600],
+          ),
         ),
       ],
     );
@@ -227,7 +232,7 @@ class OrderSummaryScreen extends ConsumerWidget {
       child: Container(
         height: 2,
         margin: const EdgeInsets.symmetric(horizontal: 8),
-        color: isActive ? AppColors.button : AppColors.grey300,
+        color: isActive ? AppColors.button : Colors.grey[300],
       ),
     );
   }
@@ -240,13 +245,15 @@ class OrderSummaryScreen extends ConsumerWidget {
         children: [
           Text(
             label,
-            style: text13(
+            style: TextStyle(
+              fontSize: isTotal ? 16 : 14,
               fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
           Text(
             value,
-            style: text15(
+            style: TextStyle(
+              fontSize: isTotal ? 18 : 15,
               fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
               color: isTotal ? AppColors.button : Colors.black87,
             ),
@@ -257,18 +264,68 @@ class OrderSummaryScreen extends ConsumerWidget {
   }
 }
 
-class OrderItem {
-  final String productId;
-  final String title;
-  final int price;
-  final int quantity;
-  final String image;
+class OrderSummaryModel {
+  final String id;
+  final String name;
+  final List<OrderItemModel> items;
+  final int totalPrice;
 
-  OrderItem({
-    required this.productId,
-    required this.title,
-    required this.price,
-    required this.quantity,
-    required this.image,
+  OrderSummaryModel({
+    required this.id,
+    required this.name,
+    required this.items,
+    required this.totalPrice,
   });
+}
+
+class OrderItemModel {
+  final String title;
+  final String image;
+  final int quantity;
+  final int price;
+
+  OrderItemModel({
+    required this.title,
+    required this.image,
+    required this.quantity,
+    required this.price,
+  });
+}
+
+OrderSummaryModel mapToOrderSummary(dynamic args) {
+  if (args is UserKitData) {
+    return OrderSummaryModel(
+      id: args.id ?? '',
+      name: args.name ?? "",
+      totalPrice: args.totalPrice ?? 0,
+      items: args.items.map((e) {
+        return OrderItemModel(
+          title: e.product?.title ?? "",
+          image: (e.product?.media?.image.isNotEmpty == true)
+              ? e.product!.media!.image.first
+              : "",
+          quantity: e.quantity ?? 0,
+          price: e.priceAtTime ?? 0,
+        );
+      }).toList(),
+    );
+  } else if (args is DefaultKitData) {
+    return OrderSummaryModel(
+      id: args.id ?? '',
+      name: args.name ?? "",
+      totalPrice: args.totalPrice ?? 0,
+      items: args.items.map((e) {
+        return OrderItemModel(
+          title: e.product?.title ?? "",
+          image: (e.product?.media?.image.isNotEmpty == true)
+              ? e.product!.media!.image.first
+              : "",
+          quantity: e.quantity ?? 0,
+          price: e.product?.pricing?.price ?? 0,
+        );
+      }).toList(),
+    );
+  } else if (args is Product) {}
+
+  throw Exception("Invalid data passed");
 }

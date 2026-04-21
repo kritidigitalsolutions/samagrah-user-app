@@ -204,7 +204,7 @@ class _SelectedCusKitItemsState extends ConsumerState<SelectedCusKitItems> {
         // Navigate to order summary or success page
         Navigator.pushNamed(
           context,
-          AppRoutes.orderSummary,
+          AppRoutes.kitOrderSummary,
           arguments: createdKit,
         );
       }

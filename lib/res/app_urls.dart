@@ -18,4 +18,9 @@ class AppUrls {
   // ======================= product===================================
 
   static const String getProduct = "$baseUrl/user/items";
+
+  //==========================payment =================================
+
+  static const String createOrder = "$baseUrl/order/payment/razorpay/order";
+  static const String verifyPayment = "$baseUrl/order/place";
 }

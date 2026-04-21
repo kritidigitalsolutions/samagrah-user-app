@@ -564,7 +564,7 @@ class _CustomizePoojaKitScreenState
                             onTap: () {
                               Navigator.pushNamed(
                                 context,
-                                AppRoutes.orderSummary,
+                                AppRoutes.kitOrderSummary,
                                 arguments: kit,
                               );
                             },

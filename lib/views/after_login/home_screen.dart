@@ -8,7 +8,10 @@ import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
+import 'package:samagrah/views/custom_widget/Product_card.dart';
+import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
 import 'package:samagrah/views/service_pages/location_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -288,7 +291,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   child: FadeInAnimation(
                                     child: ScaleAnimation(
                                       scale: 0.9, // 🔥 slight zoom-in effect
-                                      child: _buildProductCard(product),
+                                      child: ProductCard(product: product),
                                     ),
                                   ),
                                 ),
@@ -421,66 +424,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
 
-        // // Replace your old Positioned + rainbowButton() with this:
-        Positioned(
-          bottom: 20,
-          left: 0,
-          right: 0,
-          child: Center(
-            // ← Ye center mein rakhega
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10, // left-right padding
-                vertical: 8,
-              ),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                color: AppColors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Stack(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: AppColors.button,
-                        radius: 20,
-                        child: Center(
-                          child: Image.asset(
-                            "assets/icon/diya2.png",
-                            width: 20,
-                            height: 20,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "View Cart >",
-                        style: text15(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        "3 items",
-                        style: text13(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+        const BottomCartBar(),
       ],
     );
   }
@@ -540,129 +484,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildProductCard(Product product) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 🔝 Image + Heart Icon
-          Expanded(
-            child: Stack(
-              children: [
-                Center(
-                  child: InkWell(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(12),
-                    ),
-                    onTap: () {
-                      Navigator.pushNamed(context, AppRoutes.productDetails);
-                    },
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(12),
-                      ),
-                      child: CustomCachedImage(
-                        imageUrl:
-                            "http://192.168.1.40:8000/${product.thumbnail}",
-                        height: 90,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 6,
-                  right: 6,
-                  child: Icon(
-                    Icons.favorite_border,
-                    size: 16,
-                    color: AppColors.grey,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Divider
-          Container(height: 1, color: AppColors.grey300),
-
-          // 🔽 Details Section
-          Padding(
-            padding: const EdgeInsets.all(6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Name + Discount
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        product.title ?? 'N/A',
-                        overflow: TextOverflow.ellipsis,
-                        style: text11(fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                    Text(
-                      '${product.discountPercent}% off',
-                      style: text10(color: AppColors.grey500),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 2),
-
-                // Old Price
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Rs. ${product.oldPrice}/-',
-                      style: TextStyle(
-                        fontSize: 8,
-                        color: Colors.grey,
-                        decoration: TextDecoration.lineThrough,
-                      ),
-                    ),
-                    Text(
-                      'Rs. ${product.price}/-',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFB71C1C),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 5),
-
-                AppButton(
-                  height: 22,
-                  radius: 4,
-                  textStyle: text11(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  title: "Add",
-                  onTap: () {},
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildDiyaCard(Product product) {
+    final cartNotifier = ref.read(cartProvider.notifier);
+    final quantity = ref.watch(
+      cartQuantityProvider(product.id ?? ''),
+    ); // ✅ Fixed
+
     return Container(
       width: 120,
+
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -672,7 +502,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🔝 Image + Heart Icon
+          // Image + Heart Icon (same as before)
           Expanded(
             child: Stack(
               children: [
@@ -682,7 +512,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       top: Radius.circular(12),
                     ),
                     onTap: () {
-                      Navigator.pushNamed(context, AppRoutes.productDetails);
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.productDetails,
+                        arguments: product,
+                      );
                     },
                     child: ClipRRect(
                       borderRadius: BorderRadius.vertical(
@@ -698,7 +532,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ),
-
                 Positioned(
                   top: 6,
                   right: 6,
@@ -712,16 +545,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
-          // Divider
           Container(height: 1, color: Colors.grey.shade300),
 
-          // 🔽 Details Section
           Padding(
             padding: const EdgeInsets.all(6),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Name + Discount
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -741,10 +571,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 2),
-
-                // Old Price
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -768,15 +595,92 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 SizedBox(height: 5),
 
-                AppButton(
-                  height: 22,
-                  radius: 4,
-                  textStyle: text11(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  title: "Add",
-                  onTap: () {},
+                AnimatedSwitcher(
+                  duration: Duration(milliseconds: 200),
+                  transitionBuilder: (child, animation) {
+                    return ScaleTransition(scale: animation, child: child);
+                  },
+                  child: quantity == 0
+                      ? AppButton(
+                          key: ValueKey('add_button_${product.id}'),
+                          height: 22,
+                          radius: 4,
+                          textStyle: text11(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          title: "Add",
+                          onTap: () {
+                            cartNotifier.addItem(
+                              CartItem(
+                                productId: product.id ?? '',
+                                title: product.title ?? '',
+                                thumbnail: product.thumbnail ?? '',
+                                price: product.price?.toDouble() ?? 0.0,
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          key: ValueKey('quantity_control_${product.id}'),
+                          height: 22,
+                          decoration: BoxDecoration(
+                            color: AppColors.button,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  cartNotifier.decreaseQuantity(
+                                    product.id ?? '',
+                                  );
+                                },
+                                child: Container(
+                                  width: 22,
+                                  height: 22,
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    Icons.remove,
+                                    size: 12,
+                                    color: AppColors.white,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  color: AppColors.white,
+                                  child: Text(
+                                    '$quantity',
+                                    style: text11(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.button,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              InkWell(
+                                onTap: () {
+                                  cartNotifier.increaseQuantity(
+                                    product.id ?? '',
+                                  );
+                                },
+                                child: Container(
+                                  width: 22,
+                                  height: 22,
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    Icons.add,
+                                    size: 12,
+                                    color: AppColors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                 ),
               ],
             ),

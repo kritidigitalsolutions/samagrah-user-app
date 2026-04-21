@@ -5,6 +5,7 @@ import 'package:samagrah/views/after_login/category_page.dart';
 import 'package:samagrah/views/after_login/customize_kit/customize_items_page.dart';
 import 'package:samagrah/views/after_login/customize_kit/festival_kit_details.dart';
 import 'package:samagrah/views/after_login/customize_kit/festival_kit_page.dart';
+import 'package:samagrah/views/after_login/customize_kit/kit_order_summary_page.dart';
 import 'package:samagrah/views/after_login/customize_kit/selected_cus_kit_items.dart';
 import 'package:samagrah/views/after_login/notification_page.dart';
 import 'package:samagrah/views/after_login/order/my_order_screen.dart';
@@ -90,6 +91,7 @@ class AppPages {
     AppRoutes.selectedCusKit: (context) => const SelectedCusKitItems(),
     AppRoutes.festivalKit: (context) => const FestivalKitPage(),
     AppRoutes.festivalKitDetails: (context) => const FestivalKitDetails(),
+    AppRoutes.kitOrderSummary: (context) => const KitOrderSummaryPage(),
 
     AppRoutes.myOrder: (context) => const MyOrdersPage(),
     AppRoutes.trackOrder: (context) => const TrackOrderPage(),

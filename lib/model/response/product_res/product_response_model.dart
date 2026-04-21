@@ -76,7 +76,7 @@ class Product {
   final int? oldPrice;
   final int? discountPercent;
   final dynamic thumbnail;
-  final List<dynamic> images;
+  final List<String> images;
   final String? category;
   final bool? inStock;
   final bool? isRecommended;
@@ -93,9 +93,9 @@ class Product {
       oldPrice: json["oldPrice"],
       discountPercent: json["discountPercent"],
       thumbnail: json["thumbnail"],
-      images: json["images"] == null
+      images: json["products"] == null
           ? []
-          : List<dynamic>.from(json["images"]!.map((x) => x)),
+          : List<String>.from(json["products"]!.map((x) => x)),
       category: json["category"],
       inStock: json["inStock"],
       isRecommended: json["isRecommended"],
