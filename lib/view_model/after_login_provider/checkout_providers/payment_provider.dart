@@ -25,8 +25,11 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handleError);
   }
 
+  @override
   void dispose() {
-    _razorpay.clear();
+    // cleanup here (razorpay clear etc.)
+    _razorpay.clear(); // example
+    super.dispose();
   }
 
   // 🚀 START PAYMENT
@@ -36,7 +39,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
     try {
       debugPrint("🚀 START PAYMENT");
       debugPrint("🚀 ${address.toJson()}");
-      debugPrint("🚀 ${items}");
+      debugPrint("🚀 $items");
 
       this.address = address;
       this.items = items;

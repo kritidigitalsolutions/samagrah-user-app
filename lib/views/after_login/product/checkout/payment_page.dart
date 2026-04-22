@@ -27,12 +27,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
   }
 
   @override
-  void dispose() {
-    ref.read(paymentProvider.notifier).dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     ref.listen<PaymentState>(paymentProvider, (prev, next) {
       // 🔥 VERY IMPORTANT
@@ -66,7 +60,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
         });
       }
     });
-    final address = ref.read(addressProvider);
+    final address = ref.read(storeAddressProvider);
     final items = ref.watch(bookingItemProvider);
     final totalAmount = ref.read(totalPrice);
 

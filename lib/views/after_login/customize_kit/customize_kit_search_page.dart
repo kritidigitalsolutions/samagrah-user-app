@@ -22,47 +22,47 @@ class CustomizePoojaKitScreen extends ConsumerStatefulWidget {
 class _CustomizePoojaKitScreenState
     extends ConsumerState<CustomizePoojaKitScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+  // late TabController _tabController;
   final nameKitCtr = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 7, vsync: this);
-    _tabController.addListener(() {
-      setState(() {}); // Tab change pe rebuild ke liye
-    });
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _tabController = TabController(length: 7, vsync: this);
+  //   _tabController.addListener(() {
+  //     setState(() {}); // Tab change pe rebuild ke liye
+  //   });
+  // }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    // _tabController.dispose();
     nameKitCtr.dispose();
     super.dispose();
   }
 
   // Filter Logic
-  List<UserKitData> _getFilteredKits(List<UserKitData> allKits) {
-    final currentTab = _tabController.index;
+  // List<UserKitData> _getFilteredKits(List<UserKitData> allKits) {
+  //   final currentTab = _tabController.index;
 
-    if (currentTab == 0) return allKits; // All
+  //   if (currentTab == 0) return allKits; // All
 
-    final statusMap = {
-      1: 'draft',
-      2: 'pending',
-      3: 'confirmed',
-      4: "shipped",
-      5: 'delivered',
-      6: "cancelled",
-    };
+  //   final statusMap = {
+  //     1: 'draft',
+  //     2: 'pending',
+  //     3: 'confirmed',
+  //     4: "shipped",
+  //     5: 'delivered',
+  //     6: "cancelled",
+  //   };
 
-    final targetStatus = statusMap[currentTab] ?? '';
+  //   final targetStatus = statusMap[currentTab] ?? '';
 
-    return allKits.where((kit) {
-      final kitStatus = kit.status?.toLowerCase() ?? '';
-      return kitStatus.contains(targetStatus);
-    }).toList();
-  }
+  //   return allKits.where((kit) {
+  //     final kitStatus = kit.status?.toLowerCase() ?? '';
+  //     return kitStatus.contains(targetStatus);
+  //   }).toList();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -233,8 +233,6 @@ class _CustomizePoojaKitScreenState
                       ),
                     ),
 
-                    const SizedBox(height: 28),
-
                     // ================== YOUR DRAFT KITS SECTION (UPDATED WITH TABS) ==================
                     // Filtered Draft Kits Section with Customized TabBar
                     userDraftKit.when(
@@ -245,60 +243,33 @@ class _CustomizePoojaKitScreenState
                       data: (kitState) {
                         final allKits = kitState.userKit?.data ?? [];
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Customized TabBar
-                            TabBar(
-                              controller: _tabController,
-                              isScrollable: true,
-                              tabAlignment: TabAlignment.start,
-                              padding: const EdgeInsets.only(
-                                left: 10,
-                              ), // Bahut kam
-                              labelPadding: const EdgeInsets.symmetric(
-                                horizontal: 14,
+                        if (allKits.isEmpty) {
+                          return SizedBox.shrink();
+                        }
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Your Draft Kit",
+                                style: text15(fontWeight: FontWeight.bold),
                               ),
-                              labelColor: AppColors.button,
-                              unselectedLabelColor: AppColors.grey700,
-                              indicatorColor: AppColors.button,
-                              indicatorWeight: 3.5,
-                              indicatorSize: TabBarIndicatorSize.label,
-                              dividerColor: Colors.transparent,
-                              tabs: const [
-                                Tab(text: "All"),
-                                Tab(text: "Draft"),
-                                Tab(text: "Pending"),
-                                Tab(text: "Confirmed"),
-                                Tab(text: "Shipped"),
-                                Tab(text: "Delivered"),
-                                Tab(text: "Cancelled"),
-                              ],
-                            ),
+                              const SizedBox(height: 16),
 
-                            const SizedBox(height: 16),
-
-                            if (allKits.isEmpty)
-                              const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(40),
-                                  child: Text("No kits found"),
-                                ),
-                              )
-                            else
                               AnimationLimiter(
-                                key: ValueKey("kits_${_tabController.index}"),
+                                // 🔥 Removed ValueKey with tabController
                                 child: ListView.builder(
                                   shrinkWrap: true,
                                   physics: const NeverScrollableScrollPhysics(),
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
                                   ),
-                                  itemCount: _getFilteredKits(allKits).length,
+                                  itemCount: allKits.length,
                                   itemBuilder: (context, index) {
-                                    final kit = _getFilteredKits(
-                                      allKits,
-                                    )[index];
+                                    final kit = allKits[index];
+
                                     return AnimationConfiguration.staggeredList(
                                       position: index,
                                       duration: const Duration(
@@ -320,7 +291,8 @@ class _CustomizePoojaKitScreenState
                                   },
                                 ),
                               ),
-                          ],
+                            ],
+                          ),
                         );
                       },
                     ),

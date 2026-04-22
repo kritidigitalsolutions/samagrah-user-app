@@ -99,28 +99,59 @@ class AppOutlineButton extends StatelessWidget {
 
 class AppIconButton extends StatelessWidget {
   final IconData icon;
-  final VoidCallback onTap;
-  final Color color;
+  final VoidCallback? onTap;
+
+  // 🎨 Customization
+  final Color iconColor;
+  final Color backgroundColor;
+  final Color? borderColor;
+
+  // 📏 Size controls
+  final double size; // total button size
+  final double iconSize; // icon size
+  final double padding;
+
+  // ✨ Behavior
+  final bool isLoading;
+  final double borderRadius;
 
   const AppIconButton({
     super.key,
     required this.icon,
     required this.onTap,
-    this.color = Colors.blue,
+    this.iconColor = Colors.blue,
+    this.backgroundColor = const Color(0xFFE3F2FD),
+    this.borderColor,
+
+    this.size = 44,
+    this.iconSize = 22,
+    this.padding = 10,
+
+    this.isLoading = false,
+    this.borderRadius = 50,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(50),
+      onTap: isLoading ? null : onTap,
+      borderRadius: BorderRadius.circular(borderRadius),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        height: size,
+        width: size,
+        alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: backgroundColor,
           shape: BoxShape.circle,
+          border: borderColor != null ? Border.all(color: borderColor!) : null,
         ),
-        child: Icon(icon, color: color),
+        child: isLoading
+            ? SizedBox(
+                height: iconSize,
+                width: iconSize,
+                child: const CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Icon(icon, size: iconSize, color: iconColor),
       ),
     );
   }

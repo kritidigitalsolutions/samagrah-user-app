@@ -23,4 +23,14 @@ class AppUrls {
 
   static const String createOrder = "$baseUrl/order/payment/razorpay/order";
   static const String verifyPayment = "$baseUrl/order/place";
+
+  //==========================bokked order =================================
+
+  static const String myOrder = "$baseUrl/order/my";
+  //static const String verifyPayment = "$baseUrl/order/place";
+
+  //========================== Address pages =================================
+
+  static const String address = "$baseUrl/order/addresses";
+  // static const String postAddress = "$baseUrl/order/place";
 }

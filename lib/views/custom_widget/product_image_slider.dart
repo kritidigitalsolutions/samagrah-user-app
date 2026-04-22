@@ -7,7 +7,7 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 class ProductImageSlider extends StatefulWidget {
   final List<String> images;
 
-  const ProductImageSlider({required this.images});
+  const ProductImageSlider({super.key, required this.images});
 
   @override
   State<ProductImageSlider> createState() => _ProductImageSliderState();
