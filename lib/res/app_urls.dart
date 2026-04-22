@@ -33,4 +33,10 @@ class AppUrls {
 
   static const String address = "$baseUrl/order/addresses";
   // static const String postAddress = "$baseUrl/order/place";
+
+  //========================== my cart =================================
+
+  static const String myCart = "$baseUrl/cart/getCart";
+  static const String addCart = "$baseUrl/cart/addToCart";
+  static const String removeCart = "$baseUrl/cart/removeFromCart";
 }
