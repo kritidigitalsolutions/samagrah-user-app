@@ -1,4 +1,7 @@
+// lib/data/repository/product_repo.dart
+
 import 'package:samagrah/data/network/network_api_service.dart';
+import 'package:samagrah/model/response/product_res/cart_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_urls.dart';
 import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
@@ -10,7 +13,7 @@ class ProductRepo {
     return await AuthLocalstorageService.getToken() ?? '';
   }
 
-  // ✅ REGISTER
+  // 📦 Get all products
   Future<ProductResModel> getProducts() async {
     try {
       final token = await _getToken();
@@ -22,36 +25,59 @@ class ProductRepo {
     }
   }
 
-  // my cart
-
-  Future<ProductResModel> getMyCart() async {
+  // 🛒 Get user's cart from server
+  Future<CartResModel> getMyCart() async {
     try {
       final token = await _getToken();
       _api.setToken(token);
       final res = await _api.getApi(AppUrls.myCart);
-      return ProductResModel.fromJson(res);
+      return CartResModel.fromJson(res);
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<ProductResModel> addToCart() async {
+  // ➕ Add to cart (with productId and quantity)
+  Future<void> addToCart({
+    required String productId,
+    required int quantity,
+  }) async {
     try {
       final token = await _getToken();
       _api.setToken(token);
-      final res = await _api.getApi(AppUrls.addCart);
-      return ProductResModel.fromJson(res);
+
+      final body = {'productId': productId, 'quantity': quantity};
+
+      await _api.postApi(AppUrls.addCart, body);
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<ProductResModel> removeToCart() async {
+  // ❌ Remove from cart
+  Future<void> removeFromCart({
+    required String productId,
+    required int quantity,
+  }) async {
     try {
       final token = await _getToken();
       _api.setToken(token);
-      final res = await _api.getApi(AppUrls.removeCart);
-      return ProductResModel.fromJson(res);
+
+      final body = {'productId': productId, 'quantity': quantity};
+
+      await _api.postApi(AppUrls.removeCart, body);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // // 🗑️ Delete cart
+  Future<void> deleteCart({required String id}) async {
+    try {
+      final token = await _getToken();
+      _api.setToken(token);
+
+      await _api.deleteApi("${AppUrls.myCart}/$id", {});
     } catch (e) {
       rethrow;
     }

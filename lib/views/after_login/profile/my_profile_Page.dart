@@ -8,6 +8,7 @@ import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.da
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
+import 'package:samagrah/views/after_login/profile/policy_page.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -97,7 +98,30 @@ class ProfilePage extends ConsumerWidget {
                   Navigator.pushNamed(context, AppRoutes.savedAddress);
                 }),
                 _MenuItem("assets/profile/info.png", 'About US', () {}),
-                _MenuItem("assets/profile/term.png", 'Terms & Privacy', () {}),
+                _MenuItem("assets/profile/term.png", 'Terms & Conditions', () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PolicyPage(
+                        title: "Terms & Conditions",
+                        isTerms: true,
+                      ),
+                    ),
+                  );
+                }),
+
+                _MenuItem("assets/profile/term.png", 'Privacy Policy', () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PolicyPage(
+                        title: "Privacy Policy",
+                        isTerms: false,
+                      ),
+                    ),
+                  );
+                }),
+                _MenuItem("assets/profile/term.png", 'Delete Account', () {}),
               ]),
 
               const SizedBox(height: 30),

@@ -25,20 +25,20 @@ class _AddressPageState extends ConsumerState<AddressPage> {
   final _stateController = TextEditingController();
   final _pincodeController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
+  // @override
+  // void initState() {
+  //   super.initState();
 
-    Future.microtask(() {
-      ref.listen(addressProvider, (prev, next) {
-        final list = next.value?.addresses?.data?.addresses ?? [];
+  //   Future.microtask(() {
+  //     ref.listen(addressProvider, (prev, next) {
+  //       final list = next.value?.addresses?.data?.addresses ?? [];
 
-        if (list.isEmpty) {
-          ref.read(showFormProvider.notifier).state = true;
-        }
-      });
-    });
-  }
+  //       if (list.isEmpty) {
+  //         ref.read(showFormProvider.notifier).state = true;
+  //       }
+  //     });
+  //   });
+  // }
 
   @override
   void dispose() {
@@ -75,6 +75,13 @@ class _AddressPageState extends ConsumerState<AddressPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(addressProvider, (prev, next) {
+      final list = next.value?.addresses?.data?.addresses ?? [];
+
+      if (list.isEmpty) {
+        ref.read(showFormProvider.notifier).state = true;
+      }
+    });
     final isSaved = ref.watch(saveAddressProvider);
     final addressAsync = ref.watch(addressProvider);
     final showForm = ref.watch(showFormProvider);

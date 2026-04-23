@@ -60,13 +60,13 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
                 ),
               ),
               Expanded(
-                child: cartItems.isEmpty
+                child: cartItems.items.isEmpty
                     ? const Center(child: Text("Your cart is empty"))
                     : ListView.builder(
                         padding: const EdgeInsets.all(15),
-                        itemCount: cartItems.length,
+                        itemCount: cartItems.items.length,
                         itemBuilder: (context, index) {
-                          return _buildCartItem(cartItems[index], ref);
+                          return _buildCartItem(cartItems.items[index], ref);
                         },
                       ),
               ),
@@ -234,7 +234,7 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
                       child: AppButton(
                         title: "Place Order",
                         onTap: () {
-                          final orderItems = cartItems.map((item) {
+                          final orderItems = cartItems.items.map((item) {
                             return OrderItem(
                               productId: item.productId,
                               title: item.title,
@@ -464,13 +464,18 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
         Positioned(
           top: 5,
           right: 5,
-          child: CircleAvatar(
-            radius: 12,
-            backgroundColor: AppColors.button.withAlpha(20),
-            child: Icon(
-              Icons.delete_outline,
-              size: 20,
-              color: AppColors.button,
+          child: GestureDetector(
+            onTap: () {
+              ref.read(cartProvider.notifier).deleteCart(item.productId);
+            },
+            child: CircleAvatar(
+              radius: 12,
+              backgroundColor: AppColors.button.withAlpha(20),
+              child: Icon(
+                Icons.delete_outline,
+                size: 20,
+                color: AppColors.button,
+              ),
             ),
           ),
         ),

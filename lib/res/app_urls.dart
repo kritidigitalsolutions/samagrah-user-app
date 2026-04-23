@@ -36,7 +36,22 @@ class AppUrls {
 
   //========================== my cart =================================
 
-  static const String myCart = "$baseUrl/cart/getCart";
-  static const String addCart = "$baseUrl/cart/addToCart";
-  static const String removeCart = "$baseUrl/cart/removeFromCart";
+  static const String myCart = "$baseUrl/cart";
+  static const String addCart = "$baseUrl/cart/add";
+  static const String removeCart = "$baseUrl/cart/remove";
+
+  //==========================Wishlist api =================================
+
+  static const String wishlist = "$baseUrl/wishlist/my";
+  static const String wishlistToggle = "$baseUrl/wishlist/toggle";
+
+  //========================== Pandit api =================================
+
+  static const String rituals = "$baseUrl/pandit-bookings/rituals";
+  // static const String wishlistToggle = "$baseUrl/wishlist/toggle";
+
+  //========================== Policy api =================================
+
+  static const String term = "$baseUrl/legal/term";
+  static const String privacy = "$baseUrl/legal/privacy";
 }

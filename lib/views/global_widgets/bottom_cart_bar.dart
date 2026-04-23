@@ -8,7 +8,8 @@ import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
 
 class BottomCartBar extends ConsumerWidget {
-  const BottomCartBar({super.key});
+  final double bottom;
+  const BottomCartBar({super.key, this.bottom = 20});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -17,12 +18,12 @@ class BottomCartBar extends ConsumerWidget {
     final totalPrice = ref.watch(totalPriceProvider);
 
     // Hide if cart is empty
-    if (cart.isEmpty) return const SizedBox.shrink();
-    final displayItems = cart.take(3).toList();
-    final remainingCount = cart.length - displayItems.length;
+    if (cart.items.isEmpty) return const SizedBox.shrink();
+    final displayItems = cart.items.take(3).toList();
+    final remainingCount = cart.items.length - displayItems.length;
 
     return Positioned(
-      bottom: 20,
+      bottom: bottom,
       left: 0,
       right: 0,
       child: Center(

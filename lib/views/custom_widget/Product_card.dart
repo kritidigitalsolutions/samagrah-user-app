@@ -8,6 +8,7 @@ import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/wishlist_provider.dart';
 
 class ProductCard extends ConsumerWidget {
   final Product product;
@@ -16,10 +17,10 @@ class ProductCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // ✅ Only THIS card will rebuild when its quantity changes
+    final cartState = ref.watch(cartProvider);
     final quantity = ref.watch(cartQuantityProvider(product.id ?? ''));
     final cartNotifier = ref.read(cartProvider.notifier);
-
+    final isWishlisted = ref.watch(isWishlistedProvider(product.id ?? ''));
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -59,13 +60,20 @@ class ProductCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const Positioned(
+                Positioned(
                   top: 6,
                   right: 6,
-                  child: Icon(
-                    Icons.favorite_border,
-                    size: 16,
-                    color: AppColors.grey,
+                  child: GestureDetector(
+                    onTap: () {
+                      ref
+                          .read(wishlistProvider.notifier)
+                          .toggle(product.id ?? '');
+                    },
+                    child: Icon(
+                      isWishlisted ? Icons.favorite : Icons.favorite_border,
+                      size: 16,
+                      color: isWishlisted ? Colors.red : AppColors.grey,
+                    ),
                   ),
                 ),
               ],
@@ -123,6 +131,7 @@ class ProductCard extends ConsumerWidget {
                 _QuantityControl(
                   quantity: quantity,
                   productId: product.id ?? '',
+                  isLoading: cartState.isLoading,
                   product: product,
                   cartNotifier: cartNotifier,
                 ),
@@ -139,6 +148,7 @@ class ProductCard extends ConsumerWidget {
 class _QuantityControl extends StatelessWidget {
   final int quantity;
   final String productId;
+  final bool isLoading;
   final Product product;
   final CartNotifier cartNotifier;
 
@@ -147,16 +157,30 @@ class _QuantityControl extends StatelessWidget {
     required this.productId,
     required this.product,
     required this.cartNotifier,
+    required this.isLoading,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const SizedBox(
+        height: 22,
+        child: Center(
+          child: SizedBox(
+            height: 12,
+            width: 12,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 200),
       transitionBuilder: (child, animation) {
         return ScaleTransition(scale: animation, child: child);
       },
-      child: quantity == 0
+      child: quantity <= 0
           ? AppButton(
               key: ValueKey('add_$productId'),
               height: 22,
@@ -189,11 +213,10 @@ class _QuantityControl extends StatelessWidget {
                 children: [
                   InkWell(
                     onTap: () => cartNotifier.decreaseQuantity(productId),
-                    child: Container(
+                    child: const SizedBox(
                       width: 22,
                       height: 22,
-                      alignment: Alignment.center,
-                      child: const Icon(
+                      child: Icon(
                         Icons.remove,
                         size: 12,
                         color: AppColors.white,
@@ -215,15 +238,10 @@ class _QuantityControl extends StatelessWidget {
                   ),
                   InkWell(
                     onTap: () => cartNotifier.increaseQuantity(productId),
-                    child: Container(
+                    child: const SizedBox(
                       width: 22,
                       height: 22,
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.add,
-                        size: 12,
-                        color: AppColors.white,
-                      ),
+                      child: Icon(Icons.add, size: 12, color: AppColors.white),
                     ),
                   ),
                 ],

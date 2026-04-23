@@ -1,54 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
+import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
+import 'package:samagrah/utils/custom_snackbar.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
 
-class BookRetualPage extends StatefulWidget {
+class BookRetualPage extends ConsumerStatefulWidget {
   const BookRetualPage({super.key});
 
   @override
-  State<BookRetualPage> createState() => _BookRitualViewState();
+  ConsumerState<BookRetualPage> createState() => _BookRitualViewState();
 }
 
-class _BookRitualViewState extends State<BookRetualPage> {
-  String? selectedRitual;
+class _BookRitualViewState extends ConsumerState<BookRetualPage> {
+  final TextEditingController _searchController = TextEditingController();
 
-  final List<RitualItem> rituals = [
-    RitualItem(
-      'Satyanarayan Pooja',
-      'A sacred ritual for prosperity and blessings',
-      'assets/retual.png',
-    ),
-    RitualItem(
-      'Griha Pravesh',
-      'Ritual for entering a new home',
-      'assets/retual.png',
-    ),
-    RitualItem(
-      'Mundan Ceremony',
-      'First haircut ritual for children',
-      'assets/retual.png',
-    ),
-    RitualItem(
-      'Wedding Ritual',
-      'Traditional Hindu marriage rituals',
-      'assets/retual.png',
-    ),
-
-    RitualItem(
-      'Mundan Ceremony',
-      'First haircut ritual for children',
-      'assets/retual.png',
-    ),
-    RitualItem(
-      'Wedding Ritual',
-      'Traditional Hindu marriage rituals',
-      'assets/retual.png',
-    ),
-  ];
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final ritualAsync = ref.watch(ritualProvider);
+    final selectedRitual = ref.watch(selectedRitualProvider);
     return SafeArea(
       child: Container(
         decoration: BoxDecoration(color: AppColors.background),
@@ -130,19 +108,46 @@ class _BookRitualViewState extends State<BookRetualPage> {
                           ),
                           child: Row(
                             children: [
+                              Icon(
+                                Icons.search,
+                                color: AppColors.grey600,
+                                size: 18,
+                              ),
+                              SizedBox(width: 4),
                               Expanded(
                                 child: TextField(
+                                  controller: _searchController,
+                                  onChanged: (value) {
+                                    ref
+                                        .read(ritualProvider.notifier)
+                                        .searchProducts(value);
+                                  },
                                   decoration: InputDecoration(
                                     hintText: 'Search ritual...',
                                     hintStyle: TextStyle(
-                                      color: Colors.grey.shade400,
+                                      color: AppColors.grey400,
                                       fontSize: 14,
                                     ),
                                     border: InputBorder.none,
                                   ),
                                 ),
                               ),
-                              Icon(Icons.search, color: Colors.grey.shade600),
+                              SizedBox(width: 4),
+                              GestureDetector(
+                                onTap: () {
+                                  _searchController.clear();
+
+                                  // reset search
+                                  ref
+                                      .read(ritualProvider.notifier)
+                                      .searchProducts('');
+                                },
+                                child: Icon(
+                                  Icons.close,
+                                  color: AppColors.grey600,
+                                  size: 18,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -155,96 +160,92 @@ class _BookRitualViewState extends State<BookRetualPage> {
             const SizedBox(height: 10),
 
             /// 🔹 Ritual List
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                itemCount: rituals.length,
-                itemBuilder: (context, index) {
-                  final ritual = rituals[index];
-                  final isSelected = selectedRitual == '${ritual.title}_$index';
+            ritualAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
 
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedRitual = '${ritual.title}_$index';
-                      });
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 14),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected
-                              ? const Color(0xFFE91E63)
-                              : Colors.transparent,
-                          width: 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          /// Text
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  ritual.title,
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  ritual.description,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
+              error: (e, _) => Center(child: Text("Error: $e")),
+
+              data: (state) {
+                final rituals = state.searchResults.isNotEmpty
+                    ? state.searchResults
+                    : state.rituals;
+
+                return Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    itemCount: rituals.length,
+                    itemBuilder: (context, index) {
+                      final ritual = rituals[index];
+                      final isSelected = selectedRitual?.id == ritual.id;
+
+                      return GestureDetector(
+                        onTap: () {
+                          ref.read(selectedRitualProvider.notifier).state =
+                              ritual;
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 14),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.button
+                                  : Colors.transparent,
+                              width: 2,
                             ),
-                          ),
-
-                          const SizedBox(width: 10),
-
-                          /// Image
-                          Container(
-                            width: 65,
-                            height: 65,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              image: DecorationImage(
-                                image: AssetImage(ritual.imagePath),
-                                fit: BoxFit.cover,
-                                onError: (exception, stackTrace) {
-                                  Container(
-                                    width: 65,
-                                    height: 65,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.grey500,
-                                    ),
-                                    child: Center(child: Icon(Icons.image)),
-                                  );
-                                },
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.black.withOpacity(0.05),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+                          child: Row(
+                            children: [
+                              /// Text
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      ritual.title ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      ritual.description ?? '',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(width: 10),
+
+                              /// Image
+                              CustomCachedImage(
+                                imageUrl: ritual.image ?? '',
+                                width: 65,
+                                height: 65,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
             ),
 
             /// 🔹 Bottom Button
@@ -256,7 +257,22 @@ class _BookRitualViewState extends State<BookRetualPage> {
               child: AppButton(
                 title: 'Next >',
                 onTap: () {
-                  Navigator.pushNamed(context, AppRoutes.bookPandit);
+                  final selected = ref.read(selectedRitualProvider);
+
+                  if (selected == null) {
+                    AppSnackbar.show(
+                      context,
+                      message: "Please select a ritual",
+                      type: SnackBarType.info,
+                    );
+                    return;
+                  }
+
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.bookPandit,
+                    arguments: selected, // 🔥 pass selected ritual
+                  );
                 },
               ),
             ),
@@ -265,13 +281,4 @@ class _BookRitualViewState extends State<BookRetualPage> {
       ),
     );
   }
-}
-
-/// 🔹 Model
-class RitualItem {
-  final String title;
-  final String description;
-  final String imagePath;
-
-  RitualItem(this.title, this.description, this.imagePath);
 }
