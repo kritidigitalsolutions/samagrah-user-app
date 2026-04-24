@@ -248,7 +248,7 @@ class SavedAddressesScreen extends ConsumerWidget {
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   );
                 },

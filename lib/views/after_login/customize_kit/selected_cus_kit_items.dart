@@ -201,6 +201,11 @@ class _SelectedCusKitItemsState extends ConsumerState<SelectedCusKitItems> {
           type: SnackBarType.success,
         );
 
+        final notifier = ref.read(customizeKitProvider.notifier);
+
+        // ✅ initialize kit before navigation
+        notifier.initializeFromUser(createdKit!);
+
         // Navigate to order summary or success page
         Navigator.pushNamed(
           context,
@@ -273,10 +278,9 @@ class _SelectedCusKitItemsState extends ConsumerState<SelectedCusKitItems> {
                   children: [
                     Text(
                       product.title ?? 'Unknown Product',
-                      style: const TextStyle(
-                        fontSize: 15,
+                      style: text15(
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: AppColors.black87,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -285,21 +289,17 @@ class _SelectedCusKitItemsState extends ConsumerState<SelectedCusKitItems> {
                     Text(
                       product.category ??
                           '', // Add subtitle in model if available
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade500,
-                      ),
+                      style: text12(color: AppColors.grey500),
                     ),
                     const SizedBox(height: 8),
                     InkWell(
                       onTap: () {
                         Navigator.pushNamed(context, AppRoutes.productDetails);
                       },
-                      child: const Text(
+                      child: Text(
                         'View Product',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFFE91E63),
+                        style: text12(
+                          color: AppColors.button,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -317,7 +317,7 @@ class _SelectedCusKitItemsState extends ConsumerState<SelectedCusKitItems> {
                   // Quantity Controls
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE91E63),
+                      color: AppColors.button,
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Row(
@@ -333,7 +333,7 @@ class _SelectedCusKitItemsState extends ConsumerState<SelectedCusKitItems> {
                             ),
                             child: const Icon(
                               Icons.remove,
-                              color: Colors.white,
+                              color: AppColors.white,
                               size: 16,
                             ),
                           ),
@@ -343,13 +343,14 @@ class _SelectedCusKitItemsState extends ConsumerState<SelectedCusKitItems> {
                             horizontal: 12,
                             vertical: 4,
                           ),
-                          decoration: const BoxDecoration(color: Colors.white),
+                          decoration: const BoxDecoration(
+                            color: AppColors.white,
+                          ),
                           child: Text(
                             quantity.toString(),
-                            style: const TextStyle(
-                              fontSize: 14,
+                            style: text14(
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFFE91E63),
+                              color: AppColors.button,
                             ),
                           ),
                         ),
@@ -362,7 +363,7 @@ class _SelectedCusKitItemsState extends ConsumerState<SelectedCusKitItems> {
                             ),
                             child: const Icon(
                               Icons.add,
-                              color: Colors.white,
+                              color: AppColors.white,
                               size: 16,
                             ),
                           ),
@@ -379,24 +380,18 @@ class _SelectedCusKitItemsState extends ConsumerState<SelectedCusKitItems> {
                     children: [
                       Text(
                         '₹ ${product.oldPrice}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade500,
-                          decoration: TextDecoration.lineThrough,
-                        ),
+                        style: text11(
+                          color: AppColors.grey500,
+                        ).copyWith(decoration: TextDecoration.lineThrough),
                       ),
                       const SizedBox(width: 4),
-                      const Text(
-                        '|',
-                        style: TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
+                      Text('|', style: text11(color: AppColors.grey)),
                       const SizedBox(width: 4),
                       Text(
                         '₹${product.price}',
-                        style: const TextStyle(
-                          fontSize: 14,
+                        style: text14(
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFFE91E63),
+                          color: AppColors.button,
                         ),
                       ),
                     ],

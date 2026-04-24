@@ -5,20 +5,15 @@ import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/global_provider/policy_provider.dart';
 
-class PolicyPage extends ConsumerWidget {
-  final String title;
-  final bool isTerms;
-
-  const PolicyPage({super.key, required this.title, required this.isTerms});
+class AboutUsPage extends ConsumerWidget {
+  const AboutUsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncData = isTerms
-        ? ref.watch(termsProvider)
-        : ref.watch(privacyProvider);
+    final asyncData = ref.watch(aboutUsProvider);
 
     return Scaffold(
-      appBar: CustomAppBar(title: title),
+      appBar: CustomAppBar(title: "About Us"),
       backgroundColor: AppColors.background,
       body: asyncData.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -26,7 +21,8 @@ class PolicyPage extends ConsumerWidget {
         error: (e, _) => Center(child: Text("Error: $e")),
 
         data: (res) {
-          final content = res.legal?.content ?? "";
+          final content = res.aboutUs?.content ?? "";
+          print("about us ------- $content");
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),

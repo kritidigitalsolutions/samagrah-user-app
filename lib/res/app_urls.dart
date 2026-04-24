@@ -48,10 +48,11 @@ class AppUrls {
   //========================== Pandit api =================================
 
   static const String rituals = "$baseUrl/pandit-bookings/rituals";
-  // static const String wishlistToggle = "$baseUrl/wishlist/toggle";
+  static const String pandit = "$baseUrl/pandit-bookings/pandits";
 
   //========================== Policy api =================================
 
   static const String term = "$baseUrl/legal/term";
   static const String privacy = "$baseUrl/legal/privacy";
+  static const String aboutUs = "$baseUrl/aboutus";
 }

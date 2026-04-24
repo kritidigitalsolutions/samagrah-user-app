@@ -8,7 +8,7 @@ import 'package:samagrah/view_model/after_login_provider/checkout_providers/stat
 
 final storeAddressProvider = StateProvider<Address?>((ref) => null);
 final bookingItemProvider = StateProvider<List<VerifyItem>>((ref) => []);
-final totalPrice = StateProvider<num>((ref) => 0);
+final totalPriceProvider = StateProvider<num>((ref) => 0);
 
 // ====================== address store get update=====================
 

@@ -322,7 +322,7 @@ class _AddressPageState extends ConsumerState<AddressPage> {
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
 
                       const SizedBox(height: 20),
 

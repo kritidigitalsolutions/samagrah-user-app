@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:samagrah/model/request/kit/customize_kit_req_model.dart';
 import 'package:samagrah/model/response/kit_response/default_kit_res_model.dart';
+import 'package:samagrah/model/response/kit_response/user_draft_kit_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
@@ -34,7 +35,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
       _lastKit = kit;
 
       Future.microtask(() {
-        ref.read(customizeKitProvider.notifier).initialize(kit);
+        ref.read(customizeKitProvider.notifier).initializeFromDefault(kit);
       });
     }
   }
@@ -50,8 +51,18 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
     final notifier = ref.read(customizeKitProvider.notifier);
 
     final totalPrice = notifier.totalPrice;
-    final originalTotalPrice = notifier.originalTotalPrice;
+    // final originalTotalPrice = notifier.originalTotalPrice;
     final savings = notifier.savings;
+
+    final isCustomizeKit =
+        customizedItems.length != kit.items.length ||
+        customizedItems.any(
+          (item) => kit.items.every(
+            (orig) =>
+                orig.product?.id != item.product?.id ||
+                (orig.quantity ?? 1) != (item.quantity ?? 1),
+          ),
+        );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -169,30 +180,49 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                         ),
                       ),
                       const Spacer(),
-                      if (totalPrice != originalTotalPrice)
-                        Text(
-                          "₹$originalTotalPrice",
-                          style: text13(
-                            color: AppColors.white.withOpacity(0.7),
-                          ).copyWith(decoration: TextDecoration.lineThrough),
-                        ),
-                      const SizedBox(width: 8),
+
                       Text(
-                        "₹$totalPrice",
-                        style: text18(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        "₹${kit.totalPrice}",
+                        style: text13(
+                          color: AppColors.white.withOpacity(0.7),
+                        ).copyWith(decoration: TextDecoration.lineThrough),
                       ),
+                      const SizedBox(width: 8),
+                      if (isCustomizeKit)
+                        Text(
+                          "₹$totalPrice",
+                          style: text18(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                      if (!isCustomizeKit)
+                        Text(
+                          "₹${kit.kitPrice}",
+                          style: text18(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                     ],
                   ),
-                  if (savings > 0) ...[
-                    const SizedBox(height: 8),
+                  if (isCustomizeKit)
+                    if (savings > 0) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        "You Save ₹$savings",
+                        style: text13(color: Colors.white70),
+                      ),
+                    ],
+                  if (!isCustomizeKit)
                     Text(
-                      "You Save ₹$savings",
-                      style: text13(color: Colors.white70),
+                      "Saving ₹${kit.savings.toString()}",
+                      style: text15(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ],
                 ],
               ),
             ),
@@ -235,6 +265,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
       // ✅ Case 1: Festival kit → direct
       if (isFestival) {
         Navigator.pushNamed(context, AppRoutes.kitOrderSummary, arguments: kit);
+
         return;
       }
 
@@ -300,7 +331,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
   Widget _buildCustomizableItemCard(
     BuildContext context,
     WidgetRef ref,
-    DefaultProduct? product,
+    UserDraftProduct? product,
     int qty,
     int index,
     bool canCustomize,
@@ -431,8 +462,8 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
     });
   }
 
-  DefaultProduct _convertToDefaultProduct(Product product) {
-    return DefaultProduct(
+  UserDraftProduct _convertToDefaultProduct(Product product) {
+    return UserDraftProduct(
       id: product.id,
       title: product.title,
       pricing: Pricing(
@@ -447,6 +478,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                   ? product.images.map((e) => e.toString()).toList()
                   : []),
       ),
+      slug: '',
     );
   }
 }

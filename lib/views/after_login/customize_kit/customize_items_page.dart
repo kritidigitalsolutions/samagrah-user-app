@@ -195,17 +195,19 @@ class _CustomizeItemsPageState extends ConsumerState<CustomizeItemsPage> {
           //  SizedBox(height: 50),
 
           // Next Button
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.button,
-              // borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            padding: const EdgeInsets.fromLTRB(16, 5, 16, 8),
-            child: AppButton(
-              title: "Next",
-              onTap: () {
-                Navigator.pushNamed(context, AppRoutes.selectedCusKit);
-              },
+          SafeArea(
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.button,
+                // borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              padding: const EdgeInsets.fromLTRB(16, 5, 16, 8),
+              child: AppButton(
+                title: "Next",
+                onTap: () {
+                  Navigator.pushNamed(context, AppRoutes.selectedCusKit);
+                },
+              ),
             ),
           ),
         ],

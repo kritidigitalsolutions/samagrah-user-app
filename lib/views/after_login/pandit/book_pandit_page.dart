@@ -1,31 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
 
-class BookPanditPage extends StatefulWidget {
+class BookPanditPage extends ConsumerStatefulWidget {
   const BookPanditPage({super.key});
 
   @override
-  State<BookPanditPage> createState() => _BookPanditPageState();
+  ConsumerState<BookPanditPage> createState() => _BookPanditPageState();
 }
 
-class _BookPanditPageState extends State<BookPanditPage> {
+class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   int selectedOption = 2;
+  final TextEditingController _searchController = TextEditingController();
 
-  final List<PanditProfile> pandits = [
-    PanditProfile('Pandit Vishal Sharma', 4.5),
-    PanditProfile('Pandit Vishal Sharma', 4.2),
-    PanditProfile('Pandit Vishal Sharma', 4.8),
-    PanditProfile('Pandit Vishal Sharma', 4.6),
-    PanditProfile('Pandit Vishal Sharma', 4.3),
-    PanditProfile('Pandit Vishal Sharma', 4.7),
-  ];
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final panditAsync = ref.watch(panditProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
@@ -82,7 +84,7 @@ class _BookPanditPageState extends State<BookPanditPage> {
                                     Text(
                                       'Location',
                                       style: text11(
-                                        color: Colors.grey.shade800,
+                                        color: AppColors.grey800,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -94,7 +96,7 @@ class _BookPanditPageState extends State<BookPanditPage> {
                                 ),
                                 Text(
                                   'Agra, UP',
-                                  style: text10(color: Colors.grey.shade700),
+                                  style: text10(color: AppColors.grey700),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
@@ -113,10 +115,25 @@ class _BookPanditPageState extends State<BookPanditPage> {
                     child: SizedBox(
                       height: 40,
                       child: TextField(
+                        controller: _searchController,
+                        onChanged: (value) {
+                          ref.read(panditProvider.notifier).searchPandit(value);
+                        },
                         decoration: InputDecoration(
                           hintText: "Search",
                           hintStyle: text13(),
                           prefixIcon: const Icon(Icons.search, size: 18),
+                          suffixIcon: GestureDetector(
+                            onTap: () {
+                              _searchController.clear();
+
+                              // reset search
+                              ref
+                                  .read(panditProvider.notifier)
+                                  .searchPandit('');
+                            },
+                            child: Icon(Icons.close, size: 18),
+                          ),
                           filled: true,
                           fillColor: AppColors.warning.withAlpha(50),
                           contentPadding: const EdgeInsets.symmetric(
@@ -149,7 +166,7 @@ class _BookPanditPageState extends State<BookPanditPage> {
                           );
 
                           if (date != null) {
-                            TimeOfDay? time = await showTimePicker(
+                            await showTimePicker(
                               context: context,
                               initialTime: TimeOfDay.now(),
                             );
@@ -224,36 +241,47 @@ class _BookPanditPageState extends State<BookPanditPage> {
                   const SizedBox(height: 25),
 
                   // Pandits Grid
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 15,
-                            mainAxisSpacing: 15,
-                            childAspectRatio: 0.75,
-                          ),
-                      itemCount: pandits.length,
-                      itemBuilder: (context, index) {
-                        final pandit = pandits[index];
-                        return _buildPanditCard(pandit);
-                      },
-                    ),
+                  panditAsync.when(
+                    loading: () => Center(child: CircularProgressIndicator()),
+                    error: (error, stackTrace) => Text("Something went wrong"),
+                    data: (data) {
+                      final pandits = data.searchResults.isNotEmpty
+                          ? data.searchResults
+                          : data.pandit;
+                      if (pandits.isEmpty) {
+                        return Text("Pandit Not found");
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 15,
+                                mainAxisSpacing: 15,
+                                childAspectRatio: 0.75,
+                              ),
+                          itemCount: pandits.length,
+                          itemBuilder: (context, index) {
+                            final pandit = pandits[index];
+                            return _buildPanditCard(pandit);
+                          },
+                        ),
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 15),
 
                   TextButton(
                     onPressed: () {},
-                    child: const Text(
+                    child: Text(
                       'View More',
-                      style: TextStyle(
-                        color: Color(0xFFE91E63),
+                      style: text14(
+                        color: AppColors.button,
                         fontWeight: FontWeight.w600,
-                        fontSize: 14,
                       ),
                     ),
                   ),
@@ -294,7 +322,7 @@ class _BookPanditPageState extends State<BookPanditPage> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: AppColors.black.withOpacity(0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -308,13 +336,13 @@ class _BookPanditPageState extends State<BookPanditPage> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? color : Colors.grey.shade400,
+                  color: isSelected ? color : AppColors.grey400,
                   width: 2,
                 ),
                 color: isSelected ? color : Colors.transparent,
               ),
               child: isSelected
-                  ? const Icon(Icons.circle, size: 10, color: Colors.white)
+                  ? const Icon(Icons.circle, size: 10, color: AppColors.white)
                   : null,
             ),
             const SizedBox(width: 12),
@@ -324,7 +352,7 @@ class _BookPanditPageState extends State<BookPanditPage> {
                 children: [
                   isRec
                       ? Container(
-                          width: 120,
+                          width: 130,
                           padding: EdgeInsets.symmetric(
                             horizontal: 10,
                             vertical: 5,
@@ -351,20 +379,17 @@ class _BookPanditPageState extends State<BookPanditPage> {
                       : SizedBox.shrink(),
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontSize: 14,
+                    style: text14(
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.black87,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     description,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade600,
-                      height: 1.3,
-                    ),
+                    style: text11(
+                      color: AppColors.grey600,
+                    ).copyWith(height: 1.3),
                   ),
                 ],
               ),
@@ -375,13 +400,13 @@ class _BookPanditPageState extends State<BookPanditPage> {
     );
   }
 
-  Widget _buildPanditCard(PanditProfile pandit) {
+  Widget _buildPanditCard(PanditData pandit) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: AppColors.black.withOpacity(0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -393,7 +418,7 @@ class _BookPanditPageState extends State<BookPanditPage> {
           children: [
             // Background Image
             Positioned.fill(
-              child: Image.asset('assets/pandit.png', fit: BoxFit.cover),
+              child: CustomCachedImage(imageUrl: pandit.profileImage ?? ''),
             ),
 
             // Gradient Overlay
@@ -403,7 +428,10 @@ class _BookPanditPageState extends State<BookPanditPage> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                    colors: [
+                      Colors.transparent,
+                      AppColors.black.withOpacity(0.7),
+                    ],
                   ),
                 ),
               ),
@@ -420,20 +448,24 @@ class _BookPanditPageState extends State<BookPanditPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      pandit.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
+                      pandit.fullName ?? 'N/A',
+                      style: text14(
+                        color: AppColors.white,
+
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 14),
+                        const Icon(
+                          Icons.star,
+                          color: AppColors.warning,
+                          size: 14,
+                        ),
                         const SizedBox(width: 4),
                         Text(
-                          pandit.rating.toString(),
+                          pandit.ratingAverage.toString(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -450,7 +482,11 @@ class _BookPanditPageState extends State<BookPanditPage> {
                       ),
                       title: "View More",
                       onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.panditDetails);
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.panditDetails,
+                          arguments: pandit, // 👈 your PanditData object
+                        );
                       },
                     ),
                   ],
@@ -580,8 +616,7 @@ Widget _buildLocationTile(
     leading: const Icon(Icons.location_on, color: AppColors.warning),
     title: Text(
       address,
-      style: TextStyle(
-        fontSize: 14,
+      style: text14(
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       ),
     ),
@@ -589,11 +624,4 @@ Widget _buildLocationTile(
     selected: isSelected,
     selectedTileColor: Colors.orange.withOpacity(0.1),
   );
-}
-
-class PanditProfile {
-  final String name;
-  final double rating;
-
-  PanditProfile(this.name, this.rating);
 }

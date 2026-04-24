@@ -1,0 +1,276 @@
+class PanditResModel {
+  PanditResModel({
+    required this.success,
+    required this.count,
+    required this.data,
+  });
+
+  final bool? success;
+  final int? count;
+  final List<PanditData> data;
+
+  factory PanditResModel.fromJson(Map<String, dynamic> json) {
+    return PanditResModel(
+      success: json["success"],
+      count: json["count"],
+      data: json["data"] == null
+          ? []
+          : List<PanditData>.from(
+              json["data"]!.map((x) => PanditData.fromJson(x)),
+            ),
+    );
+  }
+}
+
+class PanditData {
+  PanditData({
+    required this.id,
+    required this.phone,
+    required this.fullName,
+    required this.profileImage,
+    required this.bio,
+    required this.ratingAverage,
+    required this.ratingCount,
+    required this.isPhoneVerified,
+    required this.yearsOfExperience,
+    required this.templeAssociated,
+    required this.languagesSpoken,
+    required this.isProfileComplete,
+    required this.isVerified,
+    required this.status,
+    required this.address,
+    //  required this.aadhaar,
+    required this.serviceTypes,
+    required this.poojaOfferings,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.v,
+  });
+
+  final String? id;
+  final String? phone;
+  final String? fullName;
+  final String? profileImage;
+  final String? bio;
+  final double? ratingAverage;
+  final int? ratingCount;
+  final bool? isPhoneVerified;
+  final int? yearsOfExperience;
+  final String? templeAssociated;
+  final List<String> languagesSpoken;
+  final bool? isProfileComplete;
+  final bool? isVerified;
+  final String? status;
+  final Address? address;
+  //  final Aadhaar? aadhaar;
+  final ServiceTypes? serviceTypes;
+  final List<PoojaOffering> poojaOfferings;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final int? v;
+
+  factory PanditData.fromJson(Map<String, dynamic> json) {
+    return PanditData(
+      id: json["_id"],
+      phone: json["phone"],
+      fullName: json["fullName"],
+      profileImage: json["profileImage"],
+      bio: json["bio"],
+      ratingAverage: json["ratingAverage"],
+      ratingCount: json["ratingCount"],
+      isPhoneVerified: json["isPhoneVerified"],
+      yearsOfExperience: json["yearsOfExperience"],
+      templeAssociated: json["templeAssociated"],
+      languagesSpoken: json["languagesSpoken"] == null
+          ? []
+          : List<String>.from(json["languagesSpoken"]!.map((x) => x)),
+      isProfileComplete: json["isProfileComplete"],
+      isVerified: json["isVerified"],
+      status: json["status"],
+      address: json["address"] == null
+          ? null
+          : Address.fromJson(json["address"]),
+      //  aadhaar: json["aadhaar"] == null ? null : Aadhaar.fromJson(json["aadhaar"]),
+      serviceTypes: json["serviceTypes"] == null
+          ? null
+          : ServiceTypes.fromJson(json["serviceTypes"]),
+      poojaOfferings: json["poojaOfferings"] == null
+          ? []
+          : List<PoojaOffering>.from(
+              json["poojaOfferings"]!.map((x) => PoojaOffering.fromJson(x)),
+            ),
+      createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
+      updatedAt: DateTime.tryParse(json["updatedAt"] ?? ""),
+      v: json["__v"],
+    );
+  }
+}
+
+// class Aadhaar {
+//     Aadhaar({
+//         required this.number,
+//         required this.frontImage,
+//         required this.backImage,
+//         required this.consentGiven,
+//     });
+
+//     final String? number;
+//     final String? frontImage;
+//     final String? backImage;
+//     final bool? consentGiven;
+
+//     factory Aadhaar.fromJson(Map<String, dynamic> json){
+//         return Aadhaar(
+//             number: json["number"],
+//             frontImage: json["frontImage"],
+//             backImage: json["backImage"],
+//             consentGiven: json["consentGiven"],
+//         );
+//     }
+// }
+
+class Address {
+  Address({
+    required this.line1,
+    required this.line2,
+    required this.city,
+    required this.state,
+    required this.pinCode,
+  });
+
+  final String? line1;
+  final String? line2;
+  final String? city;
+  final String? state;
+  final String? pinCode;
+
+  factory Address.fromJson(Map<String, dynamic> json) {
+    return Address(
+      line1: json["line1"],
+      line2: json["line2"],
+      city: json["city"],
+      state: json["state"],
+      pinCode: json["pinCode"],
+    );
+  }
+}
+
+class PoojaOffering {
+  PoojaOffering({
+    required this.name,
+    required this.description,
+    required this.isSelected,
+    required this.durationHours,
+    required this.travelForSpecialPooja,
+    required this.standardSamagri,
+    required this.customSamagri,
+    required this.customSamagriItems,
+  });
+
+  final String? name;
+  final String? description;
+  final bool? isSelected;
+  final int? durationHours;
+  final bool? travelForSpecialPooja;
+  final bool? standardSamagri;
+  final bool? customSamagri;
+  final List<dynamic> customSamagriItems;
+
+  factory PoojaOffering.fromJson(Map<String, dynamic> json) {
+    return PoojaOffering(
+      name: json["name"],
+      description: json["description"],
+      isSelected: json["isSelected"],
+      durationHours: json["durationHours"],
+      travelForSpecialPooja: json["travelForSpecialPooja"],
+      standardSamagri: json["standardSamagri"],
+      customSamagri: json["customSamagri"],
+      customSamagriItems: json["customSamagriItems"] == null
+          ? []
+          : List<dynamic>.from(json["customSamagriItems"]!.map((x) => x)),
+    );
+  }
+}
+
+class ServiceTypes {
+  ServiceTypes({
+    required this.detectedLocation,
+    required this.serviceDistance,
+    required this.outstationAvailability,
+    required this.onlinePooja,
+    required this.homeVisit,
+    required this.atTemple,
+    required this.travelForSpecialPoojas,
+  });
+
+  final DetectedLocation? detectedLocation;
+  final ServiceDistance? serviceDistance;
+  final OutstationAvailability? outstationAvailability;
+  final bool? onlinePooja;
+  final bool? homeVisit;
+  final bool? atTemple;
+  final bool? travelForSpecialPoojas;
+
+  factory ServiceTypes.fromJson(Map<String, dynamic> json) {
+    return ServiceTypes(
+      detectedLocation: json["detectedLocation"] == null
+          ? null
+          : DetectedLocation.fromJson(json["detectedLocation"]),
+      serviceDistance: json["serviceDistance"] == null
+          ? null
+          : ServiceDistance.fromJson(json["serviceDistance"]),
+      outstationAvailability: json["outstationAvailability"] == null
+          ? null
+          : OutstationAvailability.fromJson(json["outstationAvailability"]),
+      onlinePooja: json["onlinePooja"],
+      homeVisit: json["homeVisit"],
+      atTemple: json["atTemple"],
+      travelForSpecialPoojas: json["travelForSpecialPoojas"],
+    );
+  }
+}
+
+class DetectedLocation {
+  DetectedLocation({required this.city, required this.state});
+
+  final String? city;
+  final String? state;
+
+  factory DetectedLocation.fromJson(Map<String, dynamic> json) {
+    return DetectedLocation(city: json["city"], state: json["state"]);
+  }
+}
+
+class OutstationAvailability {
+  OutstationAvailability({
+    required this.withinDistrict,
+    required this.withinState,
+    required this.anywhereInIndia,
+  });
+
+  final bool? withinDistrict;
+  final bool? withinState;
+  final bool? anywhereInIndia;
+
+  factory OutstationAvailability.fromJson(Map<String, dynamic> json) {
+    return OutstationAvailability(
+      withinDistrict: json["withinDistrict"],
+      withinState: json["withinState"],
+      anywhereInIndia: json["anywhereInIndia"],
+    );
+  }
+}
+
+class ServiceDistance {
+  ServiceDistance({required this.selected, required this.customKm});
+
+  final String? selected;
+  final int? customKm;
+
+  factory ServiceDistance.fromJson(Map<String, dynamic> json) {
+    return ServiceDistance(
+      selected: json["selected"],
+      customKm: json["customKm"],
+    );
+  }
+}

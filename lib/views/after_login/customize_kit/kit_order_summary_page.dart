@@ -10,6 +10,7 @@ import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
+import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
 
 class KitOrderSummaryPage extends ConsumerWidget {
   const KitOrderSummaryPage({super.key});
@@ -25,9 +26,15 @@ class KitOrderSummaryPage extends ConsumerWidget {
     final kit = mapToOrderSummary(args);
 
     final itemTotal = kit.totalPrice;
-    const deliveryFee = 20;
-    final totalAmount = itemTotal + deliveryFee;
+    final totalAmount = itemTotal;
+    final notifier = ref.read(customizeKitProvider.notifier);
+    final totalPrice = notifier.totalPrice;
 
+    final isCustomized = notifier.isCustomized;
+
+    print("$itemTotal");
+    print("$totalPrice");
+    print("$isCustomized");
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -162,12 +169,15 @@ class KitOrderSummaryPage extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildSummaryRow('Item Total', '₹$itemTotal'),
-                  _buildSummaryRow('Delivery Fee', '₹$deliveryFee'),
+                  // _buildSummaryRow(
+                  //   'Item Total',
+                  //   isCustomizeKit ? "₹$totalPrice" : '₹$itemTotal',
+                  // ),
+                  // // _buildSummaryRow('Delivery Fee', '₹$deliveryFee'),
                   const Divider(height: 20),
                   _buildSummaryRow(
                     'Total Amount',
-                    '₹$totalAmount',
+                    isCustomized ? "₹$totalPrice" : '₹$totalAmount',
                     isTotal: true,
                   ),
                   const SizedBox(height: 16),
@@ -179,8 +189,13 @@ class KitOrderSummaryPage extends ConsumerWidget {
                       ref.read(bookingItemProvider.notifier).state = [
                         verifyItems,
                       ];
-
-                      ref.read(totalPrice.notifier).state = totalAmount;
+                      if (isCustomized) {
+                        ref.read(totalPriceProvider.notifier).state =
+                            totalPrice;
+                      } else {
+                        ref.read(totalPriceProvider.notifier).state =
+                            totalAmount;
+                      }
 
                       Navigator.pushNamed(context, AppRoutes.addressPage);
                     },
@@ -279,12 +294,14 @@ class OrderSummaryModel {
 }
 
 class OrderItemModel {
+  final String id;
   final String title;
   final String image;
   final int quantity;
   final int price;
 
   OrderItemModel({
+    required this.id,
     required this.title,
     required this.image,
     required this.quantity,
@@ -300,6 +317,7 @@ OrderSummaryModel mapToOrderSummary(dynamic args) {
       totalPrice: args.totalPrice ?? 0,
       items: args.items.map((e) {
         return OrderItemModel(
+          id: e.product?.id ?? '',
           title: e.product?.title ?? "",
           image: (e.product?.media?.image.isNotEmpty == true)
               ? e.product!.media!.image.first
@@ -313,9 +331,10 @@ OrderSummaryModel mapToOrderSummary(dynamic args) {
     return OrderSummaryModel(
       id: args.id ?? '',
       name: args.name ?? "",
-      totalPrice: args.totalPrice ?? 0,
+      totalPrice: args.kitPrice ?? 0,
       items: args.items.map((e) {
         return OrderItemModel(
+          id: e.product?.id ?? '',
           title: e.product?.title ?? "",
           image: (e.product?.media?.image.isNotEmpty == true)
               ? e.product!.media!.image.first

@@ -97,7 +97,9 @@ class ProfilePage extends ConsumerWidget {
                 _MenuItem("assets/profile/loc.png", 'Saved Address', () {
                   Navigator.pushNamed(context, AppRoutes.savedAddress);
                 }),
-                _MenuItem("assets/profile/info.png", 'About US', () {}),
+                _MenuItem("assets/profile/info.png", 'About US', () {
+                  Navigator.pushNamed(context, AppRoutes.aboutUs);
+                }),
                 _MenuItem("assets/profile/term.png", 'Terms & Conditions', () {
                   Navigator.push(
                     context,

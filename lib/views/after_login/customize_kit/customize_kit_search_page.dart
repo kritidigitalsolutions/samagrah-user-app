@@ -22,17 +22,7 @@ class CustomizePoojaKitScreen extends ConsumerStatefulWidget {
 class _CustomizePoojaKitScreenState
     extends ConsumerState<CustomizePoojaKitScreen>
     with SingleTickerProviderStateMixin {
-  // late TabController _tabController;
   final nameKitCtr = TextEditingController();
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _tabController = TabController(length: 7, vsync: this);
-  //   _tabController.addListener(() {
-  //     setState(() {}); // Tab change pe rebuild ke liye
-  //   });
-  // }
 
   @override
   void dispose() {
@@ -40,29 +30,6 @@ class _CustomizePoojaKitScreenState
     nameKitCtr.dispose();
     super.dispose();
   }
-
-  // Filter Logic
-  // List<UserKitData> _getFilteredKits(List<UserKitData> allKits) {
-  //   final currentTab = _tabController.index;
-
-  //   if (currentTab == 0) return allKits; // All
-
-  //   final statusMap = {
-  //     1: 'draft',
-  //     2: 'pending',
-  //     3: 'confirmed',
-  //     4: "shipped",
-  //     5: 'delivered',
-  //     6: "cancelled",
-  //   };
-
-  //   final targetStatus = statusMap[currentTab] ?? '';
-
-  //   return allKits.where((kit) {
-  //     final kitStatus = kit.status?.toLowerCase() ?? '';
-  //     return kitStatus.contains(targetStatus);
-  //   }).toList();
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -534,6 +501,13 @@ class _CustomizePoojaKitScreenState
                         Expanded(
                           child: GestureDetector(
                             onTap: () {
+                              final notifier = ref.read(
+                                customizeKitProvider.notifier,
+                              );
+
+                              // ✅ initialize kit before navigation
+                              notifier.initializeFromUser(kit);
+
                               Navigator.pushNamed(
                                 context,
                                 AppRoutes.kitOrderSummary,

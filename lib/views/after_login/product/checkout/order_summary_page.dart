@@ -178,7 +178,7 @@ class OrderSummaryScreen extends ConsumerWidget {
                       ref.read(bookingItemProvider.notifier).state =
                           verifyItems;
 
-                      ref.read(totalPrice.notifier).state = totalAmount;
+                      ref.read(totalPriceProvider.notifier).state = totalAmount;
 
                       Navigator.pushNamed(context, AppRoutes.addressPage);
                     },

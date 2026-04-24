@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
@@ -12,100 +13,119 @@ class PanditDetailsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final pandit = ModalRoute.of(context)!.settings.arguments as PanditData;
+
     final isExpanded = ref.watch(availabilityProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               /// 🔴 IMAGE
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  'assets/pandit.png', // replace with your image
+                child: Image.network(
+                  pandit.profileImage ?? "",
                   height: 250,
                   width: double.infinity,
                   fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    height: 250,
+                    color: Colors.grey.shade300,
+                    child: const Icon(Icons.person, size: 50),
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
 
               /// 🔴 NAME + BUTTON
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "Pandit Vishal Sharma 4.8",
-                    style: text16(fontWeight: FontWeight.bold),
+                  Expanded(
+                    child: Text(
+                      "${pandit.fullName ?? "Pandit"} ⭐ ${pandit.ratingAverage ?? 0}",
+                      style: text16(fontWeight: FontWeight.bold),
+                    ),
                   ),
-
+                  SizedBox(width: 8),
                   AppButton(
                     height: 35,
                     radius: 8,
                     title: "Book Now",
                     onTap: () {
-                      Navigator.pushNamed(context, AppRoutes.serviceSelection);
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.serviceSelection,
+                        arguments: pandit,
+                      );
                     },
                   ),
                 ],
               ),
 
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
 
-              Text("15+ Years Experience", style: text14()),
-              Text("Hindi", style: text14()),
+              /// 🔴 EXPERIENCE + LANGUAGE
+              Text(
+                "${pandit.yearsOfExperience ?? 0}+ Years Experience",
+                style: text14(),
+              ),
+              Text(
+                pandit.languagesSpoken.isNotEmpty
+                    ? pandit.languagesSpoken.join(", ")
+                    : "Language not available",
+                style: text14(),
+              ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
 
-              /// 🔴 ABOUT
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(10),
+              /// 🔴 TEMPLE ASSOCIATED
+              if (pandit.templeAssociated != null &&
+                  pandit.templeAssociated!.isNotEmpty)
+                _buildInfoCard(
+                  title: "Temple Associated",
+                  child: Text(pandit.templeAssociated!, style: text12()),
                 ),
+
+              /// 🔴 ADDRESS
+              if (pandit.address != null)
+                _buildInfoCard(
+                  title: "Address",
+                  child: Text(_buildAddress(pandit.address!), style: text12()),
+                ),
+
+              /// 🔴 ABOUT + SERVICES
+              _buildInfoCard(
+                title: "About",
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Pandit Vishal Sharma has over 15 years of experience performing rituals like Griha Pravesh, Satyanarayan Puja, and more.",
+                      pandit.bio ?? "No description available",
                       style: text12(),
                     ),
                     const SizedBox(height: 10),
 
-                    /// 🔴 AVAILABLE FOR
                     Text("Available For", style: text12()),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 6),
 
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Icon(Icons.circle, size: 6, color: AppColors.green),
-                            SizedBox(width: 6),
-                            Text("Home Puja", style: text12()),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Icon(Icons.circle, size: 6, color: AppColors.green),
-                            SizedBox(width: 6),
-                            Text("Online Puja", style: text12()),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Icon(Icons.circle, size: 6, color: AppColors.green),
-                            SizedBox(width: 6),
-                            Text("Video Call Ritual", style: text12()),
-                          ],
-                        ),
+                        if (pandit.serviceTypes?.homeVisit == true)
+                          _buildBullet("Home Puja"),
+                        if (pandit.serviceTypes?.onlinePooja == true)
+                          _buildBullet("Online Puja"),
+                        if (pandit.serviceTypes?.atTemple == true)
+                          _buildBullet("Temple Pooja"),
+                        if (pandit.serviceTypes?.travelForSpecialPoojas == true)
+                          _buildBullet("Special Travel Pooja"),
                       ],
                     ),
                   ],
@@ -114,6 +134,97 @@ class PanditDetailsPage extends ConsumerWidget {
 
               const SizedBox(height: 15),
 
+              /// 🔴 POOJA OFFERINGS (IMPROVED UI)
+              if (pandit.poojaOfferings.isNotEmpty)
+                _buildInfoCard(
+                  title: "Pooja Services",
+                  child: Column(
+                    children: pandit.poojaOfferings.map((pooja) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            /// 🔴 NAME
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.star,
+                                  size: 16,
+                                  color: Colors.orange,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    pooja.name ?? "Pooja",
+                                    style: text14(fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 6),
+
+                            /// 🔴 DESCRIPTION
+                            if (pooja.description != null &&
+                                pooja.description!.isNotEmpty)
+                              Text(pooja.description!, style: text12()),
+
+                            const SizedBox(height: 8),
+
+                            /// 🔴 DURATION
+                            if (pooja.durationHours != null)
+                              _buildKeyValue(
+                                "Duration",
+                                "${pooja.durationHours} hrs",
+                              ),
+
+                            /// 🔴 SAMAGRI TYPE
+                            if (pooja.standardSamagri == true)
+                              _buildKeyValue("Samagri", "Standard Included"),
+
+                            if (pooja.customSamagri == true)
+                              _buildKeyValue("Samagri", "Custom Required"),
+
+                            /// 🔴 TRAVEL
+                            if (pooja.travelForSpecialPooja == true)
+                              _buildKeyValue("Travel", "Available"),
+
+                            /// 🔴 CUSTOM ITEMS (if any)
+                            if (pooja.customSamagriItems.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Custom Items:",
+                                      style: text12(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    ...pooja.customSamagriItems.map((item) {
+                                      return Text("• $item", style: text12());
+                                    }).toList(),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+
+              const SizedBox(height: 15),
+
+              /// 🔴 RECOMMENDED KIT
               Text(
                 "Recommended Pooja Kit",
                 style: text15(fontWeight: FontWeight.bold),
@@ -213,6 +324,61 @@ class PanditDetailsPage extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildKeyValue(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Text("$title: ", style: text12(fontWeight: FontWeight.w600)),
+          Expanded(child: Text(value, style: text12())),
+        ],
+      ),
+    );
+  }
+
+  /// 🔹 Common Card
+  Widget _buildInfoCard({required String title, required Widget child}) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: text14(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          child,
+        ],
+      ),
+    );
+  }
+
+  /// 🔹 Address builder
+  String _buildAddress(Address address) {
+    return [
+      address.line1,
+      address.line2,
+      address.city,
+      address.state,
+      address.pinCode,
+    ].where((e) => e != null && e.isNotEmpty).join(", ");
+  }
+
+  /// 🔹 Bullet
+  Widget _buildBullet(String text) {
+    return Row(
+      children: [
+        Icon(Icons.circle, size: 6, color: AppColors.green),
+        const SizedBox(width: 6),
+        Text(text, style: text12()),
+      ],
     );
   }
 }

@@ -16,18 +16,27 @@ final defaultKitLoaderPro = StateProvider<bool>((ref) => false);
 // customize kit
 
 class CustomizeKitNotifier extends Notifier<List<Item>> {
-  late DefaultKitData originalKit;
+  late List<Item> originalItems;
 
   @override
   List<Item> build() {
     return []; // initial empty, will be set when screen loads
   }
 
-  void initialize(DefaultKitData kit) {
-    originalKit = kit;
-    state = kit.items
+  void initializeFromDefault(DefaultKitData kit) {
+    originalItems = kit.items
         .map((item) => Item(product: item.product, quantity: item.quantity))
         .toList();
+
+    state = [...originalItems];
+  }
+
+  void initializeFromUser(UserKitData kit) {
+    originalItems = kit.items
+        .map((item) => Item(product: item.product, quantity: item.quantity))
+        .toList();
+
+    state = [...originalItems];
   }
 
   void updateQuantity(int index, int newQuantity) {
@@ -47,7 +56,7 @@ class CustomizeKitNotifier extends Notifier<List<Item>> {
     state = updated;
   }
 
-  void addItem(DefaultProduct product, {int quantity = 1}) {
+  void addItem(UserDraftProduct product, {int quantity = 1}) {
     final updated = List<Item>.from(state);
     // Check if item already exists
     final existingIndex = updated.indexWhere(
@@ -68,7 +77,7 @@ class CustomizeKitNotifier extends Notifier<List<Item>> {
   }
 
   void resetToDefault() {
-    state = originalKit.items
+    state = originalItems
         .map((item) => Item(product: item.product, quantity: item.quantity))
         .toList();
   }
@@ -79,7 +88,7 @@ class CustomizeKitNotifier extends Notifier<List<Item>> {
     return sum + (price * (item.quantity ?? 1));
   });
 
-  int get originalTotalPrice => originalKit.items.fold(0, (sum, item) {
+  int get originalTotalPrice => originalItems.fold(0, (sum, item) {
     final price = item.product?.pricing?.price ?? 0;
     return sum + (price * (item.quantity ?? 1));
   });
@@ -89,11 +98,11 @@ class CustomizeKitNotifier extends Notifier<List<Item>> {
   // check in customize or not
 
   bool get isCustomized {
-    if (state.length != originalKit.items.length) return true;
+    if (state.length != originalItems.length) return true;
 
     for (int i = 0; i < state.length; i++) {
       final current = state[i];
-      final original = originalKit.items[i];
+      final original = originalItems[i];
 
       if (current.product?.id != original.product?.id ||
           (current.quantity ?? 1) != (original.quantity ?? 1)) {

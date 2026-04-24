@@ -1,3 +1,5 @@
+import 'package:samagrah/model/response/kit_response/user_draft_kit_res_model.dart';
+
 class DefaultKitResModel {
   DefaultKitResModel({
     required this.success,
@@ -77,70 +79,15 @@ class DefaultKitData {
 class Item {
   Item({required this.product, required this.quantity});
 
-  final DefaultProduct? product;
+  final UserDraftProduct? product;
   final int? quantity;
 
   factory Item.fromJson(Map<String, dynamic> json) {
     return Item(
       product: json["product"] == null
           ? null
-          : DefaultProduct.fromJson(json["product"]),
+          : UserDraftProduct.fromJson(json["product"]),
       quantity: json["quantity"],
-    );
-  }
-}
-
-class DefaultProduct {
-  DefaultProduct({
-    required this.pricing,
-    required this.media,
-    required this.id,
-    required this.title,
-  });
-
-  final Pricing? pricing;
-  final Media? media;
-  final String? id;
-  final String? title;
-
-  factory DefaultProduct.fromJson(Map<String, dynamic> json) {
-    return DefaultProduct(
-      pricing: json["pricing"] == null
-          ? null
-          : Pricing.fromJson(json["pricing"]),
-      media: json["media"] == null ? null : Media.fromJson(json["media"]),
-      id: json["_id"],
-      title: json["title"],
-    );
-  }
-}
-
-class Media {
-  Media({required this.image});
-
-  final List<String> image;
-
-  factory Media.fromJson(Map<String, dynamic> json) {
-    return Media(
-      image: json["image"] == null
-          ? []
-          : List<String>.from(json["image"]!.map((x) => x)),
-    );
-  }
-}
-
-class Pricing {
-  Pricing({required this.price, required this.mrp, required this.currency});
-
-  final int? price;
-  final int? mrp;
-  final String? currency;
-
-  factory Pricing.fromJson(Map<String, dynamic> json) {
-    return Pricing(
-      price: json["price"],
-      mrp: json["mrp"],
-      currency: json["currency"],
     );
   }
 }

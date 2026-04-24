@@ -18,7 +18,14 @@ class PaymentPage extends ConsumerStatefulWidget {
 }
 
 class _PaymentPageState extends ConsumerState<PaymentPage> {
-  bool isCashOnDelivery = false;
+  String selectedPaymentMethod = 'online'; // 'online', 'wallet', 'cod'
+
+  // Wallet balance (you can fetch this from provider)
+  final double walletBalance = 250.00;
+
+  // COD charges
+  final double codCharges = 25.00;
+  final double shippingCharges = 40.00;
 
   @override
   void initState() {
@@ -29,7 +36,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
   @override
   Widget build(BuildContext context) {
     ref.listen<PaymentState>(paymentProvider, (prev, next) {
-      // 🔥 VERY IMPORTANT
       if (!mounted) return;
 
       // ❌ Error Snackbar
@@ -60,9 +66,10 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
         });
       }
     });
+
     final address = ref.read(storeAddressProvider);
     final items = ref.watch(bookingItemProvider);
-    final totalAmount = ref.read(totalPrice);
+    final totalAmount = ref.read(totalPriceProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -76,12 +83,34 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTotalCard(totalAmount),
+                    _buildPriceBreakdown(totalAmount),
                     const SizedBox(height: 20),
+
+                    // Payment Methods Header
+                    Text(
+                      "Payment Methods",
+                      style: text16(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Wallet Option
+                    _buildWalletOption(totalAmount),
+                    const SizedBox(height: 12),
+
+                    // Online Payment Option
                     _buildOnlineMethods(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
+
+                    // COD Option
                     _buildCODOption(),
+
+                    // COD Charges Info
+                    if (selectedPaymentMethod == 'cod') ...[
+                      const SizedBox(height: 12),
+                      _buildCODChargesInfo(),
+                    ],
                   ],
                 ),
               ),
@@ -152,14 +181,18 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     );
   }
 
-  // 💰 TOTAL CARD (MODERN)
-  Widget _buildTotalCard(num totalAmount) {
+  // 💰 PRICE BREAKDOWN (Blinkit-style)
+  Widget _buildPriceBreakdown(num totalAmount) {
+    final codTotal = selectedPaymentMethod == 'cod'
+        ? totalAmount + codCharges + shippingCharges
+        : totalAmount;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             blurRadius: 12,
@@ -171,47 +204,305 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🔹 Label
-          Text(
-            "Total Payable",
-            style: text13(
-              color: AppColors.grey600,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-
-          const SizedBox(height: 6),
-
-          // 💰 Price (Primary Focus)
-          Text(
-            "₹$totalAmount",
-            style: text24(
-              fontWeight: FontWeight.w700,
-            ).copyWith(letterSpacing: 0.5),
-          ),
-
-          const SizedBox(height: 18),
-
-          // 🔸 Available Section (Secondary)
-          Text(
-            "Available on",
-            style: text13(
-              color: AppColors.grey700,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // 💳 Payment Icons
+          // Bill Details Header
           Row(
             children: [
-              _paymentIcon('assets/gPay.png'),
-              _paymentIcon('assets/paytm.png'),
-              _paymentIcon('assets/phonePe.png'),
+              const Icon(Icons.receipt_long_outlined, size: 20),
+              const SizedBox(width: 8),
+              Text("Bill Details", style: text14(fontWeight: FontWeight.w600)),
             ],
           ),
+
+          const SizedBox(height: 14),
+
+          // Item Total
+          _buildPriceRow("Item Total", "₹$totalAmount", false),
+
+          // COD Charges (if COD selected)
+          if (selectedPaymentMethod == 'cod') ...[
+            const SizedBox(height: 8),
+            _buildPriceRow("Delivery Charges", "₹$shippingCharges", false),
+            const SizedBox(height: 8),
+            _buildPriceRow("COD Charges", "₹$codCharges", false),
+          ],
+
+          const Divider(height: 24),
+
+          // Total Amount
+          _buildPriceRow(
+            "Total Amount",
+            "₹${codTotal.toStringAsFixed(2)}",
+            true,
+          ),
+
+          // Savings Badge (if online payment)
+          if (selectedPaymentMethod != 'cod') ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.green.withAlpha(30),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppColors.green,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      "You're saving ₹${(codCharges + shippingCharges).toStringAsFixed(0)} on this order",
+                      style: text12(
+                        color: AppColors.green,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildPriceRow(String label, String value, bool isBold) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: text13(
+            color: isBold ? AppColors.black : AppColors.grey700,
+            fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+        Text(
+          value,
+          style: text14(fontWeight: isBold ? FontWeight.bold : FontWeight.w600),
+        ),
+      ],
+    );
+  }
+
+  // 💳 WALLET OPTION (New)
+  Widget _buildWalletOption(num totalAmount) {
+    final isSelected = selectedPaymentMethod == 'wallet';
+    final canPayWithWallet = walletBalance >= totalAmount;
+
+    return GestureDetector(
+      onTap: () {
+        if (canPayWithWallet) {
+          setState(() {
+            selectedPaymentMethod = 'wallet';
+          });
+        } else {
+          AppSnackbar.show(
+            context,
+            message: "Insufficient wallet balance. Please recharge!",
+            type: SnackBarType.error,
+          );
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.button.withAlpha(20) : AppColors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.button : AppColors.grey300,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.button.withAlpha(20),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.account_balance_wallet,
+                    color: AppColors.button,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Wallet",
+                        style: text14(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "Available Balance: ₹${walletBalance.toStringAsFixed(2)}",
+                        style: text12(
+                          color: canPayWithWallet
+                              ? AppColors.green
+                              : AppColors.error,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  const Icon(Icons.check_circle, color: AppColors.button),
+              ],
+            ),
+
+            // Insufficient Balance Warning
+            if (!canPayWithWallet) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withAlpha(20),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      color: AppColors.error,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "Low balance! Recharge ₹${(totalAmount - walletBalance).toStringAsFixed(2)} more",
+                        style: text11(color: AppColors.error),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 💳 ONLINE METHODS CARD
+  Widget _buildOnlineMethods() {
+    final isSelected = selectedPaymentMethod == 'online';
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedPaymentMethod = 'online';
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.green.withAlpha(50) : AppColors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.green : AppColors.grey300,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.green.withAlpha(30),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.flash_on,
+                    color: AppColors.green,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              "UPI / Cards / Netbanking",
+                              style: text14(fontWeight: FontWeight.w600),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.green,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              "BEST",
+                              style: text10(
+                                color: AppColors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Get instant confirmation",
+                        style: text11(color: AppColors.grey600),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  const Icon(Icons.check_circle, color: AppColors.green),
+              ],
+            ),
+
+            // Payment Icons
+            if (isSelected) ...[
+              const SizedBox(height: 12),
+              const Divider(height: 1),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _paymentIcon('assets/gPay.png'),
+                  _paymentIcon('assets/paytm.png'),
+                  _paymentIcon('assets/phonePe.png'),
+                  const Spacer(),
+                  Text(
+                    "+more",
+                    style: text12(
+                      color: AppColors.grey600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -223,81 +514,118 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       decoration: BoxDecoration(
         color: AppColors.grey100,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.grey300),
       ),
-      child: Image.asset(path, height: 22),
-    );
-  }
-
-  // 💳 ONLINE METHODS CARD
-  Widget _buildOnlineMethods() {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isCashOnDelivery
-            ? AppColors.white
-            : AppColors.green.withAlpha(50),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isCashOnDelivery ? AppColors.grey300 : AppColors.green,
-        ),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.flash_on, color: AppColors.green),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              "Pay Online (Recommended)",
-              style: text14(fontWeight: FontWeight.w600),
-            ),
-          ),
-          if (!isCashOnDelivery)
-            const Icon(Icons.check_circle, color: AppColors.green),
-        ],
+      child: Image.asset(
+        path,
+        height: 20,
+        errorBuilder: (context, error, stackTrace) {
+          // Fallback icon if image fails to load
+          return const Icon(Icons.payment, size: 20, color: AppColors.grey600);
+        },
       ),
     );
   }
 
   // 💵 COD OPTION
   Widget _buildCODOption() {
+    final isSelected = selectedPaymentMethod == 'cod';
+
     return GestureDetector(
       onTap: () {
         setState(() {
-          isCashOnDelivery = !isCashOnDelivery;
+          selectedPaymentMethod = 'cod';
         });
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isCashOnDelivery
-              ? AppColors.button.withAlpha(20)
-              : AppColors.white,
+          color: isSelected ? AppColors.grey100 : AppColors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isCashOnDelivery ? AppColors.button : AppColors.grey300,
+            color: isSelected ? AppColors.black : AppColors.grey300,
+            width: isSelected ? 2 : 1,
           ),
         ),
         child: Row(
           children: [
-            const Icon(Icons.payments_outlined),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                "Cash on Delivery",
-                style: text14(fontWeight: FontWeight.w600),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.grey200,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.payments_outlined,
+                color: AppColors.black,
+                size: 22,
               ),
             ),
-            if (isCashOnDelivery)
-              const Icon(Icons.check_circle, color: AppColors.button),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Cash on Delivery",
+                    style: text14(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    "Extra ₹${(codCharges + shippingCharges).toStringAsFixed(0)} charges apply",
+                    style: text11(color: AppColors.grey600),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              const Icon(Icons.check_circle, color: AppColors.black),
           ],
         ),
       ),
     );
   }
 
-  // 🚀 BOTTOM CTA (MODERN FIXED BUTTON)
+  // 📊 COD CHARGES INFO
+  Widget _buildCODChargesInfo() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withAlpha(30),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.warning.withAlpha(100)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, color: AppColors.warning, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Additional Charges",
+                  style: text13(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.warning,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Delivery charges (₹$shippingCharges) and COD handling fee (₹$codCharges) will be added to your total.",
+                  style: text11(color: AppColors.grey700),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🚀 BOTTOM CTA
   Widget _buildBottomCTA(
     num totalAmount,
     Address? address,
@@ -305,27 +633,42 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
   ) {
     final paymentState = ref.watch(paymentProvider);
 
+    // Calculate final amount
+    final finalAmount = selectedPaymentMethod == 'cod'
+        ? totalAmount + codCharges + shippingCharges
+        : totalAmount;
+
+    String buttonText = "Pay ₹${finalAmount.toStringAsFixed(0)}";
+    Color buttonColor = AppColors.green;
+
+    if (paymentState.isLoading) {
+      buttonText = "Processing...";
+    } else if (selectedPaymentMethod == 'wallet') {
+      buttonText = "Pay with Wallet";
+      buttonColor = AppColors.button;
+    } else if (selectedPaymentMethod == 'cod') {
+      buttonText = "Place Order (₹${finalAmount.toStringAsFixed(0)})";
+      buttonColor = AppColors.black;
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.white,
         boxShadow: [
-          BoxShadow(blurRadius: 10, color: AppColors.black.withOpacity(0.05)),
+          BoxShadow(
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+            color: AppColors.black.withOpacity(0.05),
+          ),
         ],
       ),
       child: SafeArea(
         child: AppButton(
-          height: 50,
+          height: 52,
           isLoading: paymentState.isLoading,
-          title: paymentState.isLoading
-              ? "Processing..."
-              : isCashOnDelivery
-              ? "Place Order"
-              : "Pay ₹$totalAmount",
-
-          color: isCashOnDelivery ? AppColors.button : AppColors.green,
-
-          // 🔥 Disable tap while loading
+          title: buttonText,
+          color: buttonColor,
           onTap: paymentState.isLoading
               ? null
               : () async {
@@ -347,16 +690,28 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     return;
                   }
 
-                  if (isCashOnDelivery) {
+                  if (selectedPaymentMethod == 'cod') {
+                    // COD Order
                     Navigator.pushNamed(context, AppRoutes.successPage);
+                  } else if (selectedPaymentMethod == 'wallet') {
+                    // Wallet Payment
+                    if (walletBalance >= totalAmount) {
+                      // Process wallet payment
+                      Navigator.pushNamed(context, AppRoutes.successPage);
+                    } else {
+                      AppSnackbar.show(
+                        context,
+                        message: "Insufficient wallet balance",
+                        type: SnackBarType.error,
+                      );
+                    }
                   } else {
+                    // Online Payment
                     await ref
                         .read(paymentProvider.notifier)
                         .startPayment(address, items);
                   }
                 },
-
-          // 👉 OPTIONAL: show loader inside button
         ),
       ),
     );

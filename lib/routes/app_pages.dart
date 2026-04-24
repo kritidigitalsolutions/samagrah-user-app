@@ -33,6 +33,7 @@ import 'package:samagrah/views/after_login/product/checkout/success_page.dart';
 import 'package:samagrah/views/after_login/product/daliy_pooja_essential_page.dart';
 import 'package:samagrah/views/after_login/product/my_cart_page.dart';
 import 'package:samagrah/views/after_login/product/product_details.dart';
+import 'package:samagrah/views/after_login/profile/about_us_page.dart';
 import 'package:samagrah/views/after_login/profile/delete_account_page.dart';
 import 'package:samagrah/views/after_login/profile/my_fav_products.dart';
 import 'package:samagrah/views/after_login/profile/my_profile_Page.dart';
@@ -71,6 +72,7 @@ class AppPages {
     AppRoutes.savedAddress: (context) => const SavedAddressesScreen(),
     AppRoutes.favProduct: (context) => const MyFavProducts(),
     AppRoutes.accoundDelete: (context) => const DeleteAccountScreen(),
+    AppRoutes.aboutUs: (context) => const AboutUsPage(),
 
     // AppRoutes.editAddAddress: (context) => const EditAddAddressPage(),
     AppRoutes.bookPandit: (context) => const BookPanditPage(),
