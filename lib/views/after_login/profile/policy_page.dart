@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/res/app_colors.dart';
+import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/view_model/global_provider/policy_provider.dart';
 
 class PolicyPage extends ConsumerWidget {
@@ -16,7 +17,8 @@ class PolicyPage extends ConsumerWidget {
         : ref.watch(privacyProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(title), backgroundColor: AppColors.background),
+      appBar: CustomAppBar(title: title),
+      backgroundColor: AppColors.background,
       body: asyncData.when(
         loading: () => const Center(child: CircularProgressIndicator()),
 

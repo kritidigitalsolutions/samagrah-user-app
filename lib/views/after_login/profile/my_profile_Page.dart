@@ -110,7 +110,7 @@ class ProfilePage extends ConsumerWidget {
                   );
                 }),
 
-                _MenuItem("assets/profile/term.png", 'Privacy Policy', () {
+                _MenuItem("assets/profile/privacy.png", 'Privacy Policy', () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -121,7 +121,9 @@ class ProfilePage extends ConsumerWidget {
                     ),
                   );
                 }),
-                _MenuItem("assets/profile/term.png", 'Delete Account', () {}),
+                _MenuItem("assets/profile/delete.png", 'Delete Account', () {
+                  Navigator.pushNamed(context, AppRoutes.accoundDelete);
+                }),
               ]),
 
               const SizedBox(height: 30),

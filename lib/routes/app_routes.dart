@@ -45,6 +45,7 @@ class AppRoutes {
 
   static const editAddAddress = "/editAddAddress";
   static const favProduct = "/favProduct";
+  static const accoundDelete = "/accoundDelete";
 
   //==============================================
   // pandit
