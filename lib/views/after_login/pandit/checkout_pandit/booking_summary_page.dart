@@ -1,15 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:samagrah/model/request/payment_req/pandit_create_order_req_model.dart';
+import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/pandit_payment_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
 
-class BookingSummaryScreen extends StatelessWidget {
+class BookingSummaryScreen extends ConsumerStatefulWidget {
   const BookingSummaryScreen({super.key});
 
   @override
+  ConsumerState<BookingSummaryScreen> createState() =>
+      _BookingSummaryScreenState();
+}
+
+class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize Razorpay
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(panditPaymentBookingProvider.notifier)
+          .initializeRazorpay(context);
+    });
+  }
+
+  @override
+  void dispose() {
+    // Dispose Razorpay
+    // ref.read(panditPaymentBookingProvider.notifier).disposeRazorpay();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final paymentState = ref.watch(panditPaymentBookingProvider);
+    final slotPrice = ref.watch(slotPriceProvider);
+    final ritual = ref.read(selectedRitualProvider);
+    final pandit = ref.read(selectedPanditProvider);
+    final address = ref.read(selectedAddressProvider);
+    final dateTimeList = ref.read(selectedDateProvider);
+    final selectedService = ref.read(selectedServiceProvider);
+    final templeId = ref.read(selectedTempleIdProvider);
+
+    String fullAddress = '';
+
+    if (address != null) {
+      fullAddress = [
+        address.fullAddress,
+        address.city,
+        address.state,
+        address.pincode,
+      ].where((e) => e != null && e.isNotEmpty).join(', ');
+    }
+
     return Scaffold(
       backgroundColor: AppColors.headerCard,
       appBar: CustomAppBar(
@@ -51,46 +101,64 @@ class BookingSummaryScreen extends StatelessWidget {
                 // Pandit Details Card
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(color: AppColors.grey200),
                   ),
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      ClipRRect(
+                      CustomCachedImage(
+                        imageUrl: ritual?.image ?? '',
+                        width: 60,
+                        height: 60,
                         borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          width: 60,
-                          height: 60,
-                          color: Colors.orange.shade100,
-                          child: const Icon(
-                            Icons.temple_hindu,
-                            color: Colors.orange,
-                            size: 32,
-                          ),
-                        ),
                       ),
+
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Griha Pravesh',
+                              ritual?.title ?? '',
                               style: text16(fontWeight: FontWeight.bold),
                             ),
                             SizedBox(height: 4),
+                            if (dateTimeList.isNotEmpty)
+                              Column(
+                                children: List.generate(dateTimeList.length, (
+                                  index,
+                                ) {
+                                  final item = dateTimeList[index];
+
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Date -${item['date'] ?? ''}",
+                                        style: text14(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.grey500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "Time -${item['time_slot'] ?? ''}",
+                                        style: text13(
+                                          fontWeight: FontWeight.normal,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }),
+                              ),
                             Text(
-                              'Date: 20 March 2025',
-                              style: text12(color: AppColors.grey),
-                            ),
-                            Text(
-                              'Time: 10:00 AM - 12:00 PM',
-                              style: text12(color: AppColors.grey),
-                            ),
-                            Text(
-                              '2A/10 Shastri Nagar, Varanasi',
+                              fullAddress.isNotEmpty
+                                  ? fullAddress
+                                  : "No address selected",
                               style: text12(color: AppColors.grey),
                             ),
                           ],
@@ -102,25 +170,67 @@ class BookingSummaryScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 // Pandit Dakshina Section
                 Container(
+                  width: double.infinity,
                   decoration: BoxDecoration(
                     color: AppColors.button,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Text(
-                        'Pandit Dakshina',
-                        style: text16(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.white,
-                        ),
+                      CustomCachedImage(
+                        imageUrl: pandit?.profileImage ?? '',
+                        width: 60,
+                        height: 60,
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Calculeted rate is as per pandit advice and your satisfaction and happiness.',
-                        style: text12(color: AppColors.white),
+                      SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          /// 👤 NAME
+                          Text(
+                            pandit?.fullName ?? '',
+                            style: text16(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.white,
+                            ),
+                          ),
+
+                          const SizedBox(height: 6),
+
+                          /// ⭐ RATING + EXPERIENCE
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                "${pandit?.ratingAverage ?? 0} (${pandit?.ratingCount ?? 0}),",
+                                style: text12(color: AppColors.white),
+                              ),
+
+                              const SizedBox(width: 8),
+
+                              Text(
+                                "${pandit?.yearsOfExperience ?? 0} yrs exp",
+                                style: text12(color: AppColors.white),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 6),
+
+                          /// 🌐 LANGUAGES
+                          if (pandit?.languagesSpoken.isNotEmpty == true)
+                            Text(
+                              pandit!.languagesSpoken.join(', '),
+                              style: text12(color: AppColors.white),
+                            ),
+                        ],
                       ),
                     ],
                   ),
@@ -156,11 +266,21 @@ class BookingSummaryScreen extends StatelessWidget {
                       'Total Amount:',
                       style: text18(fontWeight: FontWeight.bold),
                     ),
-                    Text(
-                      '₹61',
-                      style: text20(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.button,
+                    slotPrice.when(
+                      data: (data) => Text(
+                        '₹${data["price"]}',
+                        style: text20(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.button,
+                        ),
+                      ),
+                      error: (error, stackTrace) => Text("0"),
+                      loading: () => SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: AppColors.button,
+                        ),
                       ),
                     ),
                   ],
@@ -198,16 +318,54 @@ class BookingSummaryScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 24),
+
                 // Pay Button
-                AppButton(
-                  title: 'Pay ₹61 & Request Booking',
-                  onTap: () {
-                    Navigator.pushNamed(context, AppRoutes.panditPayment);
-                  },
-                  color: AppColors.success,
-                  textStyle: text15(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.bold,
+                slotPrice.when(
+                  data: (data) => AppButton(
+                    isLoading: paymentState.isLoading,
+                    title: 'Pay ₹${data["price"]} & Request Booking',
+                    onTap: () {
+                      final List<DateTimeSlot> slots = dateTimeList.map((d) {
+                        return DateTimeSlot(
+                          date: d["date"] ?? "",
+                          time: d["time_slot"] ?? "",
+                        );
+                      }).toList();
+                      final model = PanditCreateOrderReqModel(
+                        ritualId: ritual?.id ?? '',
+                        bookingMode: selectedService?.type ?? '',
+
+                        panditId: pandit?.id ?? '',
+                        templeId: templeId,
+
+                        dateAndTime: DateAndTimeWrapper(dateAndTime: slots),
+                        address: Address(
+                          name: address?.name ?? '',
+                          phone: address?.phone ?? '',
+                          fullAddress: address?.fullAddress ?? '',
+                          city: address?.city ?? '',
+                          state: address?.state ?? '',
+                          pincode: address?.pincode ?? '',
+                        ),
+                        price: data["price"],
+                      );
+                      ref
+                          .read(panditPaymentBookingProvider.notifier)
+                          .createOrderAndPay(context: context, model: model);
+                    },
+                    color: AppColors.success,
+                    textStyle: text15(
+                      color: AppColors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  error: (error, stackTrace) => Text("0"),
+                  loading: () => Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(color: AppColors.button),
+                    ),
                   ),
                 ),
 

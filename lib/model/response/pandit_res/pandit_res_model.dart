@@ -61,7 +61,7 @@ class PanditData {
   final bool? isProfileComplete;
   final bool? isVerified;
   final String? status;
-  final Address? address;
+  final PanditAddress? address;
   //  final Aadhaar? aadhaar;
   final ServiceTypes? serviceTypes;
   final List<PoojaOffering> poojaOfferings;
@@ -89,7 +89,7 @@ class PanditData {
       status: json["status"],
       address: json["address"] == null
           ? null
-          : Address.fromJson(json["address"]),
+          : PanditAddress.fromJson(json["address"]),
       //  aadhaar: json["aadhaar"] == null ? null : Aadhaar.fromJson(json["aadhaar"]),
       serviceTypes: json["serviceTypes"] == null
           ? null
@@ -129,8 +129,8 @@ class PanditData {
 //     }
 // }
 
-class Address {
-  Address({
+class PanditAddress {
+  PanditAddress({
     required this.line1,
     required this.line2,
     required this.city,
@@ -144,8 +144,8 @@ class Address {
   final String? state;
   final String? pinCode;
 
-  factory Address.fromJson(Map<String, dynamic> json) {
-    return Address(
+  factory PanditAddress.fromJson(Map<String, dynamic> json) {
+    return PanditAddress(
       line1: json["line1"],
       line2: json["line2"],
       city: json["city"],

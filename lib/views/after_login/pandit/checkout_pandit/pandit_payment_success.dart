@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/main.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/pandit_payment_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
 import 'package:samagrah/views/after_login/pandit/checkout_pandit/booking_confirmed_page.dart';
 
-class PaymentSuccessScreen extends StatefulWidget {
+class PaymentSuccessScreen extends ConsumerStatefulWidget {
   const PaymentSuccessScreen({super.key});
 
   @override
-  State<PaymentSuccessScreen> createState() => _PaymentSuccessScreenState();
+  ConsumerState<PaymentSuccessScreen> createState() =>
+      _PaymentSuccessScreenState();
 }
 
-class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
+class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController controller;
   late Animation<double> scaleAnimation;
@@ -129,6 +134,13 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                     AppOutlineButton(
                       title: "Back to Home",
                       onTap: () {
+                        ref.invalidate(selectedDateProvider);
+                        ref.invalidate(selectedAddressProvider);
+                        ref.invalidate(selectedRitualProvider);
+                        ref.invalidate(panditPaymentBookingProvider);
+                        ref.invalidate(selectedPanditProvider);
+                        ref.invalidate(selectedServiceProvider);
+                        ref.invalidate(serviceSelected);
                         Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(

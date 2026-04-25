@@ -1,6 +1,14 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:samagrah/model/response/address_res/address_res_model.dart';
+import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
+import 'package:samagrah/model/response/pandit_res/temple_res_model.dart';
+import 'package:samagrah/repo/pandit_repo.dart';
 import 'package:samagrah/views/after_login/pandit/checkout_pandit/service_selection_screen.dart';
-import 'package:samagrah/views/after_login/pandit/checkout_pandit/temple_selection_screen.dart';
+
+// Pandit selection
+
+final selectedPanditProvider = StateProvider<PanditData?>((ref) => null);
 
 // service selection
 final serviceSelected = StateProvider<int?>((ref) => null);
@@ -8,5 +16,21 @@ final selectedServiceProvider = StateProvider<ServiceModel?>((ref) => null);
 
 // temple selection
 
-final templeSelected = StateProvider<int?>((ref) => null);
-final selectedTempleProvider = StateProvider<TempleModel?>((ref) => null);
+final selectedTempleIdProvider = StateProvider<String?>((ref) => null);
+
+// date and time slot select
+
+final selectedDateProvider = StateProvider<List<Map<String, String>>>(
+  (ref) => [],
+);
+
+// address selected
+
+final selectedAddressProvider = StateProvider<AddressRes?>((ref) => null);
+
+final panditRepoProvider = Provider((ref) => PanditRepo());
+
+final templeProvider = FutureProvider<TempleResModel>((ref) async {
+  final repo = ref.read(panditRepoProvider);
+  return repo.getTemple();
+});

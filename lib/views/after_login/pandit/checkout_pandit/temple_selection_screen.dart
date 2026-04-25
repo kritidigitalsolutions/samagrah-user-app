@@ -8,16 +8,19 @@ import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 
 // Screen 1: Address Selection Screen
-class TempleSelectionScreen extends StatefulWidget {
+class TempleSelectionScreen extends ConsumerStatefulWidget {
   const TempleSelectionScreen({super.key});
 
   @override
-  State<TempleSelectionScreen> createState() => _AddressSelectionScreenState();
+  ConsumerState<TempleSelectionScreen> createState() =>
+      _AddressSelectionScreenState();
 }
 
-class _AddressSelectionScreenState extends State<TempleSelectionScreen> {
+class _AddressSelectionScreenState
+    extends ConsumerState<TempleSelectionScreen> {
   @override
   Widget build(BuildContext context) {
+    final templeAsync = ref.watch(templeProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
@@ -55,42 +58,53 @@ class _AddressSelectionScreenState extends State<TempleSelectionScreen> {
               child: _buildCustomStepper(),
             ),
             const SizedBox(height: 24),
-            // Select Address Section
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: templeList.length,
-                itemBuilder: (context, index) {
-                  final service = templeList[index];
 
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: _buildServiceCard(
-                      context,
-                      service.title,
-                      service.description,
-                      service.image,
-                      index, // 👈 pass index (important for selection)
-                    ),
-                  );
-                },
-              ),
+            // Select Address Section
+            templeAsync.when(
+              loading: () => Center(child: CircularProgressIndicator()),
+              error: (error, stackTrace) =>
+                  Center(child: Text("Something went wrong")),
+              data: (data) {
+                final temples = data.data;
+                return Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: temples.length,
+                    itemBuilder: (context, index) {
+                      final temple = temples[index];
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _buildServiceCard(
+                          context,
+                          temple.name ?? '',
+                          temple.description ?? '',
+                          temple.image ?? '',
+                          temple.id ?? '',
+                          index, // 👈 pass index (important for selection)
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
             ),
+
             // Next Button
             Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(color: AppColors.button),
               child: Consumer(
                 builder: (context, ref, _) {
-                  final selectedIndex = ref.watch(serviceSelected) ?? 0;
+                  // final selectedIndex = ref.watch(serviceSelected) ?? 0;
 
                   return AppButton(
                     title: "Next",
                     onTap: () {
-                      final selected = templeList[selectedIndex];
+                      // final selected = templeList[selectedIndex];
 
-                      ref.read(selectedTempleProvider.notifier).state =
-                          selected;
+                      // ref.read(selectedTempleProvider.notifier).state =
+                      //     selected;
 
                       Navigator.pushNamed(context, AppRoutes.bookingSummary);
                     },
@@ -133,16 +147,17 @@ class _AddressSelectionScreenState extends State<TempleSelectionScreen> {
     String title,
     String description,
     String imagePath,
+    String id,
     int index, // 👈 important
   ) {
     return Consumer(
       builder: (context, ref, child) {
-        final selectedIndex = ref.watch(templeSelected);
-        final isSelected = selectedIndex == index;
+        final selectedTemple = ref.watch(selectedTempleIdProvider);
+        final isSelected = id == selectedTemple;
 
         return GestureDetector(
           onTap: () {
-            ref.read(templeSelected.notifier).state = index;
+            ref.read(selectedTempleIdProvider.notifier).state = id;
           },
           child: Container(
             decoration: BoxDecoration(
@@ -176,6 +191,8 @@ class _AddressSelectionScreenState extends State<TempleSelectionScreen> {
                         const SizedBox(height: 8),
                         Text(
                           description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: text12(color: Colors.grey.shade600),
                         ),
                       ],
@@ -185,18 +202,11 @@ class _AddressSelectionScreenState extends State<TempleSelectionScreen> {
                   const SizedBox(width: 12),
 
                   /// IMAGE / ICON
-                  ClipRRect(
+                  CustomCachedImage(
+                    imageUrl: imagePath,
+                    width: 80,
+                    height: 60,
                     borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      width: 80,
-                      height: 60,
-                      color: Colors.orange.shade100,
-                      child: const Icon(
-                        Icons.temple_hindu,
-                        color: Colors.orange,
-                        size: 32,
-                      ),
-                    ),
                   ),
 
                   const SizedBox(width: 10),
@@ -216,39 +226,4 @@ class _AddressSelectionScreenState extends State<TempleSelectionScreen> {
       },
     );
   }
-
-  final templeList = [
-    TempleModel(
-      title: 'Shri Hanuman Mandir',
-      type: "home",
-      description: 'Shastri Nagar, Meerut',
-      image: 'assets/home_visit.jpg',
-    ),
-    TempleModel(
-      title: 'Shri Hanuman Mandir',
-      type: "online",
-      description: 'Shastri Nagar, Meerut',
-      image: 'assets/online_pooja.jpg',
-    ),
-    TempleModel(
-      type: "temple",
-      title: 'Shri Durga Mandir',
-      description: 'Garh Road, Meerut',
-      image: 'assets/temple_ritual.jpg',
-    ),
-  ];
-}
-
-class TempleModel {
-  final String title;
-  final String type;
-  final String description;
-  final String image;
-
-  TempleModel({
-    required this.title,
-    required this.type,
-    required this.description,
-    required this.image,
-  });
 }

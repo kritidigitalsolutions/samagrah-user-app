@@ -5,6 +5,7 @@ import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/pandit_details_provider.dart';
 import 'package:samagrah/views/after_login/pandit/checkout_pandit/booking_confirmed_page.dart';
 
@@ -59,6 +60,7 @@ class PanditDetailsPage extends ConsumerWidget {
                     radius: 8,
                     title: "Book Now",
                     onTap: () {
+                      ref.read(selectedPanditProvider.notifier).state = pandit;
                       Navigator.pushNamed(
                         context,
                         AppRoutes.serviceSelection,
@@ -211,7 +213,7 @@ class PanditDetailsPage extends ConsumerWidget {
                                     const SizedBox(height: 4),
                                     ...pooja.customSamagriItems.map((item) {
                                       return Text("• $item", style: text12());
-                                    }).toList(),
+                                    }),
                                   ],
                                 ),
                               ),
@@ -361,7 +363,7 @@ class PanditDetailsPage extends ConsumerWidget {
   }
 
   /// 🔹 Address builder
-  String _buildAddress(Address address) {
+  String _buildAddress(PanditAddress address) {
     return [
       address.line1,
       address.line2,

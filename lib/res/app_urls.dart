@@ -21,8 +21,9 @@ class AppUrls {
 
   //==========================payment =================================
 
-  static const String createOrder = "$baseUrl/order/payment/razorpay/order";
-  static const String verifyPayment = "$baseUrl/order/place";
+  static const String productCreateOrder =
+      "$baseUrl/order/payment/razorpay/order";
+  static const String productVerifyPayment = "$baseUrl/order/place";
 
   //==========================bokked order =================================
 
@@ -49,6 +50,10 @@ class AppUrls {
 
   static const String rituals = "$baseUrl/pandit-bookings/rituals";
   static const String pandit = "$baseUrl/pandit-bookings/pandits";
+  static const String panditCreateOrder = "$baseUrl/pandit-bookings";
+  static const String panditVerifyPayment = "$baseUrl/order/place";
+  static const String slotPanditBooking = "$baseUrl/booking-price/price";
+  static const String temple = "$baseUrl/temples";
 
   //========================== Policy api =================================
 

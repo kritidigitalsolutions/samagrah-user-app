@@ -64,46 +64,38 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
               child: Row(
                 children: [
                   /// 📍 Location
-                  Expanded(
-                    flex: 2,
-                    child: GestureDetector(
-                      onTap: () {
-                        _showLocationBottomSheet(context);
-                      },
-                      child: Row(
-                        children: [
-                          const Icon(Icons.location_on, size: 16),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
+                  GestureDetector(
+                    onTap: () {
+                      _showLocationBottomSheet(context);
+                    },
+                    child: Row(
+                      children: [
+                        const Icon(Icons.location_on, size: 16),
+                        const SizedBox(width: 4),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
                               children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      'Location',
-                                      style: text11(
-                                        color: AppColors.grey800,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const Icon(
-                                      Icons.keyboard_arrow_down,
-                                      size: 14,
-                                    ),
-                                  ],
-                                ),
                                 Text(
-                                  'Agra, UP',
-                                  style: text10(color: AppColors.grey700),
-                                  overflow: TextOverflow.ellipsis,
+                                  'Location',
+                                  style: text11(
+                                    color: AppColors.grey800,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
+                                const Icon(Icons.keyboard_arrow_down, size: 14),
                               ],
                             ),
-                          ),
-                        ],
-                      ),
+                            Text(
+                              'Agra, UP',
+                              style: text10(color: AppColors.grey700),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
 
@@ -111,7 +103,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
 
                   /// 🔍 Search
                   Expanded(
-                    flex: 3,
                     child: SizedBox(
                       height: 40,
                       child: TextField(
@@ -151,47 +142,47 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                   const SizedBox(width: 6),
 
                   /// 📅 Date & Time
-                  Expanded(
-                    flex: 3,
-                    child: SizedBox(
-                      height: 40,
-                      child: TextField(
-                        readOnly: true,
-                        onTap: () async {
-                          DateTime? date = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime.now(),
-                            lastDate: DateTime(2100),
-                          );
+                  // Expanded(
+                  //   flex: 3,
+                  //   child: SizedBox(
+                  //     height: 40,
+                  //     child: TextField(
+                  //       readOnly: true,
+                  //       onTap: () async {
+                  //         DateTime? date = await showDatePicker(
+                  //           context: context,
+                  //           initialDate: DateTime.now(),
+                  //           firstDate: DateTime.now(),
+                  //           lastDate: DateTime(2100),
+                  //         );
 
-                          if (date != null) {
-                            await showTimePicker(
-                              context: context,
-                              initialTime: TimeOfDay.now(),
-                            );
-                          }
-                        },
-                        decoration: InputDecoration(
-                          hintText: "Date & Time",
-                          hintStyle: text13(),
-                          prefixIcon: const Icon(
-                            Icons.calendar_today,
-                            size: 18,
-                          ),
-                          filled: true,
-                          fillColor: AppColors.warning.withAlpha(50),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  //         if (date != null) {
+                  //           await showTimePicker(
+                  //             context: context,
+                  //             initialTime: TimeOfDay.now(),
+                  //           );
+                  //         }
+                  //       },
+                  //       decoration: InputDecoration(
+                  //         hintText: "Date & Time",
+                  //         hintStyle: text13(),
+                  //         prefixIcon: const Icon(
+                  //           Icons.calendar_today,
+                  //           size: 18,
+                  //         ),
+                  //         filled: true,
+                  //         fillColor: AppColors.warning.withAlpha(50),
+                  //         contentPadding: const EdgeInsets.symmetric(
+                  //           horizontal: 8,
+                  //         ),
+                  //         border: OutlineInputBorder(
+                  //           borderRadius: BorderRadius.circular(25),
+                  //           borderSide: BorderSide.none,
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -480,7 +471,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                         fontWeight: FontWeight.w600,
                         color: AppColors.white,
                       ),
-                      title: "View More",
+                      title: "View Details",
                       onTap: () {
                         Navigator.pushNamed(
                           context,

@@ -96,28 +96,25 @@ class PanditNotifier extends AsyncNotifier<PanditState> {
 
     final filteredResults = current.pandit.where((p) {
       final name = (p.fullName ?? "").toLowerCase();
-      final temple = (p.templeAssociated ?? "").toLowerCase();
-
       final city = (p.address?.city ?? "").toLowerCase();
       final stateName = (p.address?.state ?? "").toLowerCase();
+      final line1 = (p.address?.line1 ?? "").toLowerCase();
+      final line2 = (p.address?.line2 ?? "").toLowerCase();
 
       final languages = p.languagesSpoken.map((e) => e.toLowerCase()).join(" ");
-
+      final yearOfExp = p.yearsOfExperience.toString();
       final poojaNames = p.poojaOfferings
           .map((e) => (e.name ?? "").toLowerCase())
           .join(" ");
 
-      final poojaDesc = p.poojaOfferings
-          .map((e) => (e.description ?? "").toLowerCase())
-          .join(" ");
-
       return name.contains(searchTerm) ||
-          temple.contains(searchTerm) ||
           city.contains(searchTerm) ||
           stateName.contains(searchTerm) ||
           languages.contains(searchTerm) ||
           poojaNames.contains(searchTerm) ||
-          poojaDesc.contains(searchTerm);
+          line1.contains(searchTerm) ||
+          line2.contains(searchTerm) ||
+          yearOfExp.contains(searchTerm);
     }).toList();
 
     state = AsyncData(current.copyWith(searchResults: filteredResults));

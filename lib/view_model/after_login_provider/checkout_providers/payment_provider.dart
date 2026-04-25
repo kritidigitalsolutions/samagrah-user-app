@@ -51,7 +51,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 
       debugPrint("📤 CreateOrder Request: ${createReq.toJson()}");
 
-      final orderRes = await _repo.createOrder(createReq);
+      final orderRes = await _repo.productCreateOrder(createReq);
 
       debugPrint("📥 CreateOrder Response: ${orderRes.data}");
 
@@ -176,7 +176,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 
       debugPrint("🌐 Calling verifyPayment API...");
 
-      final success = await _repo.verifyPayment(verifyReq);
+      final success = await _repo.productVerifyPayment(verifyReq);
 
       debugPrint("📥 Verify API Response: $success");
 
