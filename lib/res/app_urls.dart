@@ -28,7 +28,7 @@ class AppUrls {
   //==========================bokked order =================================
 
   static const String myOrder = "$baseUrl/order/my";
-  //static const String verifyPayment = "$baseUrl/order/place";
+  static const String trackOrder = "$baseUrl/order";
 
   //========================== Address pages =================================
 
@@ -54,6 +54,7 @@ class AppUrls {
   static const String panditVerifyPayment = "$baseUrl/order/place";
   static const String slotPanditBooking = "$baseUrl/booking-price/price";
   static const String temple = "$baseUrl/temples";
+  static const String panditHistory = "$baseUrl/pandit-bookings/my";
 
   //========================== Policy api =================================
 

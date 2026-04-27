@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/request/payment_req/pandit_create_order_req_model.dart';
 import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
 import 'package:samagrah/res/app_colors.dart';
-import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
@@ -45,6 +44,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
     final ritual = ref.read(selectedRitualProvider);
     final pandit = ref.read(selectedPanditProvider);
     final address = ref.read(selectedAddressProvider);
+    final onlineDetails = ref.read(selectedOnlineProvider);
     final dateTimeList = ref.read(selectedDateProvider);
     final selectedService = ref.read(selectedServiceProvider);
     final templeId = ref.read(selectedTempleIdProvider);
@@ -347,6 +347,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           state: address?.state ?? '',
                           pincode: address?.pincode ?? '',
                         ),
+                        onlineDetails: onlineDetails,
                         price: data["price"],
                       );
                       ref

@@ -4,8 +4,10 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
+import 'package:samagrah/utils/components.dart';
 
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/views/custom_widget/Product_card.dart';
 import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
@@ -15,6 +17,7 @@ class CategoryPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final userAsync = ref.watch(userProvider);
     final productState = ref.watch(productProvider);
     return Scaffold(
       body: Stack(
@@ -45,19 +48,22 @@ class CategoryPage extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(context, AppRoutes.profile);
-                          },
-                          child: CircleAvatar(
-                            radius: 30,
-                            backgroundColor: AppColors.grey500,
-                            child: const Icon(
-                              Icons.person,
-                              size: 30,
-                              color: AppColors.white,
+                        userAsync.when(
+                          data: (user) => GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(context, AppRoutes.profile);
+                            },
+                            child: CircleAvatar(
+                              radius: 30,
+                              child: CustomCachedImage(
+                                imageUrl: user?['profileImage'] ?? '',
+
+                                borderRadius: BorderRadius.circular(35),
+                              ),
                             ),
                           ),
+                          loading: () => const CircularProgressIndicator(),
+                          error: (e, _) => const Text("Error loading user"),
                         ),
                       ],
                     ),

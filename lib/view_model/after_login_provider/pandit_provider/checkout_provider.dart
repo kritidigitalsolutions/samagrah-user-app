@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:samagrah/model/request/payment_req/pandit_create_order_req_model.dart';
 import 'package:samagrah/model/response/address_res/address_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/temple_res_model.dart';
@@ -27,6 +28,8 @@ final selectedDateProvider = StateProvider<List<Map<String, String>>>(
 // address selected
 
 final selectedAddressProvider = StateProvider<AddressRes?>((ref) => null);
+
+final selectedOnlineProvider = StateProvider<OnlineDetails?>((ref) => null);
 
 final panditRepoProvider = Provider((ref) => PanditRepo());
 

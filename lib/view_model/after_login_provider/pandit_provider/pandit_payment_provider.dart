@@ -115,7 +115,8 @@ class PanditPaymentBookingNotifier extends StateNotifier<PaymentState> {
       final data = response["data"];
 
       final String orderId = data["payment"]["razorpayOrderId"];
-      final String bookingId = data["_id"];
+      //final String bookingId = data["_id"];
+      final String bookingId = response["bookingIntentToken"];
       final double amount = model.price.toDouble();
 
       debugPrint("🧾 OrderId: $orderId");

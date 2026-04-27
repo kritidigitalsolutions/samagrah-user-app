@@ -7,6 +7,7 @@ class PanditCreateOrderReqModel {
   final String? templeId;
   final DateAndTimeWrapper dateAndTime;
   final Address? address;
+  final OnlineDetails? onlineDetails;
   final int price;
 
   PanditCreateOrderReqModel({
@@ -15,6 +16,7 @@ class PanditCreateOrderReqModel {
     required this.panditId,
     required this.dateAndTime,
     this.address,
+    this.onlineDetails,
     required this.price,
     this.templeId,
   });
@@ -35,7 +37,11 @@ class PanditCreateOrderReqModel {
 
     // ✅ If temple visit → send mandirId
     if (bookingMode == "temple" && templeId != null) {
-      data["mandirId"] = templeId!;
+      data["templeId"] = templeId!;
+    }
+
+    if (bookingMode == "online" && onlineDetails != null) {
+      data["address"] = onlineDetails!.toJson();
     }
 
     return data;
@@ -60,5 +66,23 @@ class DateTimeSlot {
 
   Map<String, dynamic> toJson() {
     return {"date": date, "time": time};
+  }
+}
+
+class OnlineDetails {
+  final String? name;
+  final String? phone;
+  final String? secPhone;
+  final String? email;
+
+  OnlineDetails({this.name, this.phone, this.secPhone, this.email});
+
+  Map<String, dynamic> toJson() {
+    return {
+      "name": name,
+      "phone": phone,
+      "secondPhone": secPhone,
+      "email": email,
+    };
   }
 }

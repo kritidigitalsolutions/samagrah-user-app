@@ -8,8 +8,10 @@ import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/wishlist_provider.dart';
 import 'package:samagrah/views/custom_widget/Product_card.dart';
 import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
 import 'package:samagrah/views/service_pages/location_provider.dart';
@@ -24,9 +26,11 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
+    final userAsync = ref.watch(userProvider);
     final productState = ref.watch(productProvider);
     final selectedCategory = productState.value?.selectedCategory ?? "All";
     final location = ref.watch(locationProvider);
+
     return Stack(
       children: [
         Container(
@@ -81,19 +85,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ],
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, AppRoutes.profile);
-                        },
-                        child: CircleAvatar(
-                          radius: 30,
-                          backgroundColor: AppColors.grey500,
-                          child: const Icon(
-                            Icons.person,
-                            size: 30,
-                            color: AppColors.white,
+                      userAsync.when(
+                        data: (user) => GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, AppRoutes.profile);
+                          },
+                          child: CircleAvatar(
+                            radius: 30,
+                            child: CustomCachedImage(
+                              imageUrl: user?['profileImage'] ?? '',
+
+                              borderRadius: BorderRadius.circular(35),
+                            ),
                           ),
                         ),
+                        loading: () => const CircularProgressIndicator(),
+                        error: (e, _) => const Text("Error loading user"),
                       ),
                     ],
                   ),
@@ -143,14 +150,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                     SizedBox(width: 8),
-                    // _buildFeature(
-                    //   "assets/icon/category.png",
-                    //   AppColors.button.withAlpha(20),
-                    //   "Categories",
-                    //   () {
-                    //     Navigator.pushNamed(context, AppRoutes.comparisionPage);
-                    //   },
-                    // ),
+
                     SizedBox(width: 8),
                     _buildFeature(
                       "assets/icon/purse.png",
@@ -490,6 +490,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       cartQuantityProvider(product.id ?? ''),
     ); // ✅ Fixed
 
+    final isWishlisted = ref.watch(isWishlistedProvider(product.id ?? ''));
+
     return Container(
       width: 120,
 
@@ -535,17 +537,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Positioned(
                   top: 6,
                   right: 6,
-                  child: Icon(
-                    Icons.favorite_border,
-                    size: 16,
-                    color: Colors.grey,
+                  child: GestureDetector(
+                    onTap: () {
+                      ref
+                          .read(wishlistProvider.notifier)
+                          .toggle(product.id ?? '');
+                    },
+                    child: Icon(
+                      isWishlisted ? Icons.favorite : Icons.favorite_border,
+                      size: 16,
+                      color: isWishlisted ? AppColors.error : AppColors.grey,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
 
-          Container(height: 1, color: Colors.grey.shade300),
+          Container(height: 1, color: AppColors.grey300),
 
           Padding(
             padding: const EdgeInsets.all(6),

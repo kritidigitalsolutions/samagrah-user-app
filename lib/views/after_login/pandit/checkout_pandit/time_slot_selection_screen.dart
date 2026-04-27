@@ -329,7 +329,7 @@ class _TimeSlotSelectionScreenState
                           ],
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                 ),
               ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/main.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
+import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
 import 'package:samagrah/utils/textstyle.dart';
@@ -288,15 +289,15 @@ class ProfilePage extends ConsumerWidget {
           ),
 
           // Profile Image
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFE91E63), width: 2),
-              image: const DecorationImage(
-                image: NetworkImage('https://i.pravatar.cc/150?img=12'),
-                fit: BoxFit.cover,
+          CircleAvatar(
+            radius: 39,
+            backgroundColor: AppColors.button,
+            child: CircleAvatar(
+              radius: 37,
+              child: CustomCachedImage(
+                imageUrl: user?['profileImage'] ?? '',
+
+                borderRadius: BorderRadius.circular(35),
               ),
             ),
           ),

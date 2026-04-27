@@ -98,7 +98,7 @@ class AppPages {
     AppRoutes.kitOrderSummary: (context) => const KitOrderSummaryPage(),
 
     AppRoutes.myOrder: (context) => const MyOrdersPage(),
-    AppRoutes.trackOrder: (context) => const TrackOrderPage(),
+    AppRoutes.trackOrder: (context) => TrackOrderPage(),
     AppRoutes.orderDetails: (context) => const OrderDetailsPage(),
   };
 }

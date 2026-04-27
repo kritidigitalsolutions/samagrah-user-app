@@ -72,7 +72,7 @@ class ProductCard extends ConsumerWidget {
                     child: Icon(
                       isWishlisted ? Icons.favorite : Icons.favorite_border,
                       size: 16,
-                      color: isWishlisted ? Colors.red : AppColors.grey,
+                      color: isWishlisted ? AppColors.error : AppColors.grey,
                     ),
                   ),
                 ),

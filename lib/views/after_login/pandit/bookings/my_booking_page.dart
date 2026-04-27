@@ -1,65 +1,78 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:samagrah/model/response/pandit_res/pandit_booked_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/booking_provider.dart';
+import 'package:intl/intl.dart';
 
 final bookingFilterProvider = StateProvider<String>((ref) => "All");
 
 class MyBookingsPage extends ConsumerWidget {
   const MyBookingsPage({super.key});
 
+  String _mapStatus(String? status) {
+    if (status == null) return "Pending";
+
+    // Map API status to filter status
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "Pending";
+      case "confirmed":
+        return "Confirmed";
+      case "completed":
+        return "Completed";
+      case "cancelled":
+        return "Cancelled";
+      default:
+        return "Pending";
+    }
+  }
+
+  String _formatBookingType(String? bookingMode) {
+    if (bookingMode == null) return "Home Visit";
+
+    switch (bookingMode.toLowerCase()) {
+      case "home":
+        return "Home Visit";
+      case "online":
+        return "Online Pooja (Video Call)";
+      case "temple":
+        return "Temple Pooja";
+      default:
+        return "Home Visit";
+    }
+  }
+
+  String _formatDate(String? dateStr) {
+    if (dateStr == null) return "";
+    try {
+      final date = DateTime.parse(dateStr);
+      return DateFormat('dd MMM yyyy').format(date);
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  String _formatTime(List<DateAndTimeElement>? dateAndTime) {
+    if (dateAndTime == null || dateAndTime.isEmpty) return "";
+
+    final times = dateAndTime
+        .map((dt) => dt.time ?? "")
+        .where((t) => t.isNotEmpty)
+        .toList();
+    if (times.isEmpty) return "";
+
+    return times.join(" — ");
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedFilter = ref.watch(bookingFilterProvider);
-
-    final allBookings = [
-      {
-        "type": "Home Visit",
-        "type1": "home",
-        "title": "Satyanarayan Pooja",
-        "date": "12 Nov 2026",
-        "time": "10:00 AM — 12:00 PM",
-        "image": "assets/retual.png",
-        "status": "Pending",
-      },
-      {
-        "type": "Online Pooja (Video Call)",
-        "type1": "online",
-        "title": "Lakshmi Pooja",
-        "date": "12 Nov 2026",
-        "time": "10:00 AM — 12:00 PM",
-        "image": "assets/retual.png",
-        "status": "Completed",
-      },
-      {
-        "type": "Temple Pooja",
-        "type1": "temple",
-        "title": "Navgraha Shanti Pooja",
-        "date": "12 Nov 2026",
-        "time": "10:00 AM — 12:00 PM",
-        "image": "assets/retual.png",
-        "status": "Confirmed",
-      },
-
-      {
-        "type": "Online Pooja (Video Call)",
-        "type1": "online",
-        "title": "Lakshmi Pooja",
-        "date": "12 Nov 2026",
-        "time": "10:00 AM — 12:00 PM",
-        "image": "assets/retual.png",
-        "status": "Cancelled",
-      },
-    ];
-
-    /// ✅ FILTER LOGIC
-    final filteredBookings = selectedFilter == "All"
-        ? allBookings
-        : allBookings.where((b) => b["status"] == selectedFilter).toList();
+    final bookingsAsync = ref.watch(panditBookingProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -67,51 +80,124 @@ class MyBookingsPage extends ConsumerWidget {
         title: "My Bookings",
         subtitle: "View and manage your pandit bookings",
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            /// ✅ FILTER TABS
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  _buildTab(ref, "All"),
-                  _buildTab(ref, "Pending"),
-                  _buildTab(ref, "Confirmed"),
-                  _buildTab(ref, "Completed"),
-                  _buildTab(ref, "Cancelled"),
-                ],
-              ),
+      body: bookingsAsync.when(
+        data: (bookingsData) {
+          final allBookings = bookingsData.data;
+
+          /// ✅ FILTER LOGIC
+          final filteredBookings = selectedFilter == "All"
+              ? allBookings
+              : allBookings
+                    .where((b) => _mapStatus(b.bookingStatus) == selectedFilter)
+                    .toList();
+
+          return SafeArea(
+            child: Column(
+              children: [
+                /// ✅ FILTER TABS
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      _buildTab(ref, "All"),
+                      _buildTab(ref, "Pending"),
+                      _buildTab(ref, "Confirmed"),
+                      _buildTab(ref, "Completed"),
+                      _buildTab(ref, "Cancelled"),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                /// ✅ LIST
+                Expanded(
+                  child: filteredBookings.isEmpty
+                      ? Center(
+                          child: Text(
+                            "No bookings found",
+                            style: text14(color: AppColors.grey),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: filteredBookings.length,
+                          itemBuilder: (context, index) {
+                            final booking = filteredBookings[index];
+
+                            return BookingCard(
+                              type: _formatBookingType(booking.bookingMode),
+                              title:
+                                  booking.ritual?.name ??
+                                  booking.ritualRef?.title ??
+                                  "Pooja",
+                              date: _formatDate(booking.bookingDate),
+                              time: _formatTime(
+                                booking.dateAndTime?.dateAndTime,
+                              ),
+                              image:
+                                  booking.ritual?.image ??
+                                  booking.ritualRef?.image ??
+                                  "assets/retual.png",
+                              status: _mapStatus(booking.bookingStatus),
+                              panditName:
+                                  booking.pandit?.fullName ?? "Pandit Ji",
+                              onTap: () {
+                                ref.watch(typeSelected.notifier).state =
+                                    booking.bookingMode?.toLowerCase() ??
+                                    "home";
+                                ref
+                                        .watch(selectedBookingProvider.notifier)
+                                        .state =
+                                    booking;
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.myBookingDetails,
+                                );
+                              },
+                            );
+                          },
+                        ),
+                ),
+              ],
             ),
-
-            const SizedBox(height: 10),
-
-            /// ✅ LIST
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: filteredBookings.length,
-                itemBuilder: (context, index) {
-                  final booking = filteredBookings[index];
-
-                  return BookingCard(
-                    type: booking["type"]!,
-                    title: booking["title"]!,
-                    date: booking["date"]!,
-                    time: booking["time"]!,
-                    image: booking["image"]!,
-                    status: booking["status"]!,
-                    onTap: () {
-                      ref.watch(typeSelected.notifier).state =
-                          booking["type1"]!;
-                      Navigator.pushNamed(context, AppRoutes.myBookingDetails);
-                    },
-                  );
-                },
-              ),
+          );
+        },
+        loading: () => const Scaffold(
+          backgroundColor: AppColors.background,
+          body: Center(child: CircularProgressIndicator()),
+        ),
+        error: (error, stack) => Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: CustomAppBar(
+            title: "My Bookings",
+            subtitle: "View and manage your pandit bookings",
+          ),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                SizedBox(height: 16),
+                Text(
+                  "Failed to load bookings",
+                  style: text16(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  error.toString(),
+                  style: text12(color: AppColors.grey),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => ref.refresh(panditBookingProvider),
+                  child: Text("Retry"),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -151,6 +237,7 @@ class BookingCard extends StatelessWidget {
   final String time;
   final String image;
   final String status;
+  final String panditName;
   final VoidCallback onTap;
 
   const BookingCard({
@@ -161,6 +248,7 @@ class BookingCard extends StatelessWidget {
     required this.time,
     required this.image,
     required this.status,
+    required this.panditName,
     required this.onTap,
   });
 
@@ -171,11 +259,11 @@ class BookingCard extends StatelessWidget {
       case "Confirmed":
         return Colors.blue;
       case "Completed":
-        return Colors.green;
+        return AppColors.green;
       case "Cancelled":
-        return Colors.red;
+        return AppColors.error;
       default:
-        return Colors.grey;
+        return AppColors.grey;
     }
   }
 
@@ -209,22 +297,16 @@ class BookingCard extends StatelessWidget {
                           color: AppColors.warningLighter,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(type, style: const TextStyle(fontSize: 10)),
+                        child: Text(type, style: text10()),
                       ),
 
                       const SizedBox(height: 8),
 
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
+                      Text(title, style: text14(fontWeight: FontWeight.bold)),
 
                       const SizedBox(height: 6),
-                      Text(date, style: const TextStyle(fontSize: 12)),
-                      Text(time, style: const TextStyle(fontSize: 12)),
+                      Text(date, style: text12()),
+                      Text(time, style: text12()),
 
                       const SizedBox(height: 10),
 
@@ -237,9 +319,9 @@ class BookingCard extends StatelessWidget {
                           color: AppColors.button,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Text(
+                        child: Text(
                           "View Details",
-                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          style: text12(color: AppColors.white),
                         ),
                       ),
                     ],
@@ -253,18 +335,15 @@ class BookingCard extends StatelessWidget {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
-                        image,
+                      child: CustomCachedImage(
+                        imageUrl: image,
                         height: 80,
                         width: 80,
                         fit: BoxFit.cover,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      "Pandit Vishal Sharma",
-                      style: TextStyle(fontSize: 10),
-                    ),
+                    Text(panditName, style: const TextStyle(fontSize: 10)),
                   ],
                 ),
               ],
@@ -285,7 +364,6 @@ class BookingCard extends StatelessWidget {
                 status,
                 style: text10(
                   color: AppColors.white,
-
                   fontWeight: FontWeight.bold,
                 ),
               ),

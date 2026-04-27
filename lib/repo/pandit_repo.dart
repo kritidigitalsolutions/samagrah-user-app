@@ -1,4 +1,5 @@
 import 'package:samagrah/data/network/network_api_service.dart';
+import 'package:samagrah/model/response/pandit_res/pandit_booked_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/ritual_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/temple_res_model.dart';
@@ -60,6 +61,19 @@ class PanditRepo {
       _api.setToken(token);
       final res = await _api.getApi(AppUrls.temple);
       return TempleResModel.fromJson(res);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // ========================= Get Temple ==============================
+
+  Future<PanditBookedResModel> getPnanditBooked() async {
+    try {
+      final token = await _getToken();
+      _api.setToken(token);
+      final res = await _api.getApi(AppUrls.panditHistory);
+      return PanditBookedResModel.fromJson(res);
     } catch (e) {
       rethrow;
     }

@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:samagrah/model/request/payment_req/pandit_create_order_req_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
+import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/custom_textfields.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 
 // Screen 1: Address Selection Screen
-class OnlineBookingDetails extends StatefulWidget {
+class OnlineBookingDetails extends ConsumerStatefulWidget {
   const OnlineBookingDetails({super.key});
 
   @override
-  State<OnlineBookingDetails> createState() => _OnlineBookingDetailsState();
+  ConsumerState<OnlineBookingDetails> createState() =>
+      _OnlineBookingDetailsState();
 }
 
-class _OnlineBookingDetailsState extends State<OnlineBookingDetails> {
+class _OnlineBookingDetailsState extends ConsumerState<OnlineBookingDetails> {
   final nameCtr = TextEditingController();
   final phoneCtr = TextEditingController();
   final otherPhoneCtr = TextEditingController();
@@ -95,14 +100,39 @@ class _OnlineBookingDetailsState extends State<OnlineBookingDetails> {
           ),
 
           // Next Button
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(color: AppColors.button),
-            child: AppButton(
-              title: "Next",
-              onTap: () {
-                Navigator.pushNamed(context, AppRoutes.bookingSummary);
-              },
+          SafeArea(
+            child: Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(color: AppColors.button),
+              child: AppButton(
+                title: "Next",
+                onTap: () {
+                  // ✅ Basic validation
+                  if (nameCtr.text.trim().isEmpty ||
+                      phoneCtr.text.trim().isEmpty) {
+                    AppSnackbar.show(context, message: "Please field details");
+                    return;
+                  }
+
+                  // ✅ Create model
+                  final details = OnlineDetails(
+                    name: nameCtr.text.trim(),
+                    phone: phoneCtr.text.trim(),
+                    secPhone: otherPhoneCtr.text.trim().isEmpty
+                        ? null
+                        : otherPhoneCtr.text.trim(),
+                    email: emailCtr.text.trim().isEmpty
+                        ? null
+                        : emailCtr.text.trim(),
+                  );
+
+                  // ✅ Save to provider
+                  ref.read(selectedOnlineProvider.notifier).state = details;
+
+                  // ✅ Navigate
+                  Navigator.pushNamed(context, AppRoutes.bookingSummary);
+                },
+              ),
             ),
           ),
         ],

@@ -2,6 +2,7 @@
 
 import 'package:samagrah/data/network/network_api_service.dart';
 import 'package:samagrah/model/response/product_res/cart_res_model.dart';
+import 'package:samagrah/model/response/product_res/product_details_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_urls.dart';
 import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
@@ -78,6 +79,18 @@ class ProductRepo {
       _api.setToken(token);
 
       await _api.deleteApi("${AppUrls.myCart}/$id", {});
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  //   // 📦 Get product details
+  Future<ProductDetailsResModel> productDetails(String productId) async {
+    try {
+      final token = await _getToken();
+      _api.setToken(token);
+      final res = await _api.getApi("${AppUrls.getProduct}/$productId");
+      return ProductDetailsResModel.fromJson(res);
     } catch (e) {
       rethrow;
     }

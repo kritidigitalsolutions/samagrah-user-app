@@ -5,6 +5,7 @@ import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/booking_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/pandit_payment_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
@@ -141,6 +142,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
                         ref.invalidate(selectedPanditProvider);
                         ref.invalidate(selectedServiceProvider);
                         ref.invalidate(serviceSelected);
+                        ref.invalidate(panditBookingProvider);
                         Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(

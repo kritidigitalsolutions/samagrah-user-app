@@ -10,6 +10,7 @@ import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
+import 'package:samagrah/views/global_widgets/product_details_bottom_sheet.dart';
 
 class SelectedCusKitItems extends ConsumerStatefulWidget {
   const SelectedCusKitItems({super.key});
@@ -294,7 +295,7 @@ class _SelectedCusKitItemsState extends ConsumerState<SelectedCusKitItems> {
                     const SizedBox(height: 8),
                     InkWell(
                       onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.productDetails);
+                        openProductBottomSheet(context, product.id ?? '');
                       },
                       child: Text(
                         'View Product',
@@ -422,4 +423,13 @@ class _SelectedCusKitItemsState extends ConsumerState<SelectedCusKitItems> {
       ],
     );
   }
+}
+
+void openProductBottomSheet(BuildContext context, String productId) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => ProductDetailsBottomSheet(productId: productId),
+  );
 }

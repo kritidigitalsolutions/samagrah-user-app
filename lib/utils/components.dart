@@ -163,41 +163,55 @@ class CustomCachedImage extends StatelessWidget {
     this.shape = BoxShape.rectangle,
     this.placeholder,
     this.errorWidget,
-    this.loaderColor = Colors.grey,
+    this.loaderColor = AppColors.grey,
     this.overlay,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    Widget image = CachedNetworkImage(
-      imageUrl: imageUrl,
-      height: height,
-      width: width,
-      fit: fit,
+    final bool isValidUrl =
+        imageUrl.isNotEmpty && Uri.tryParse(imageUrl)?.hasAbsolutePath == true;
 
-      /// 🔄 Loading widget
-      placeholder: (context, url) =>
-          placeholder ??
-          Center(
-            child: SizedBox(
-              height: 25,
-              width: 25,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: loaderColor,
-              ),
-            ),
-          ),
+    Widget image;
 
-      /// ❌ Error widget
-      errorWidget: (context, url, error) =>
+    if (!isValidUrl) {
+      image =
           errorWidget ??
           Container(
+            height: height,
+            width: width,
             color: Colors.grey.shade200,
-            child: const Icon(Icons.broken_image, size: 40),
-          ),
-    );
+            child: const Icon(Icons.image_not_supported, size: 40),
+          );
+    } else {
+      image = CachedNetworkImage(
+        imageUrl: imageUrl,
+        height: height,
+        width: width,
+        fit: fit,
+
+        placeholder: (context, url) =>
+            placeholder ??
+            Center(
+              child: SizedBox(
+                height: 25,
+                width: 25,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: loaderColor,
+                ),
+              ),
+            ),
+
+        errorWidget: (context, url, error) =>
+            errorWidget ??
+            Container(
+              color: Colors.grey.shade200,
+              child: const Icon(Icons.broken_image, size: 40),
+            ),
+      );
+    }
 
     /// 🎨 Shape handling
     if (shape == BoxShape.circle) {

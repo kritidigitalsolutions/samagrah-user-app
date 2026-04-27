@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/response/product_booked_res/product_booked_res_modle.dart';
 import 'package:intl/intl.dart';
+import 'package:samagrah/model/response/product_booked_res/track_order_res_model.dart';
 import 'package:samagrah/repo/booking_repo.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/view_model/after_login_provider/order_provider/order_state.dart';
@@ -142,3 +143,15 @@ class OrderUtils {
     return parts.join(', ');
   }
 }
+
+// track order
+
+final trackOrderRepo = Provider((ref) => BookingRepo());
+
+final trackOrderProvider = FutureProvider.family<TrackOrderResModel, String>((
+  ref,
+  id,
+) async {
+  final repo = ref.read(trackOrderRepo);
+  return repo.trackOrder(id);
+});

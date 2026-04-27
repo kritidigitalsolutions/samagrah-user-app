@@ -66,12 +66,15 @@ class PaymentRepo {
     try {
       final token = await AuthLocalstorageService.getToken() ?? '';
       _api.setToken(token);
-      final res = await _api
-          .postApi("${AppUrls.panditCreateOrder}/$id/confirm-payment", {
-            "razorpayOrderId": razorpayOrderId,
-            "razorpayPaymentId": paymentId,
-            "razorpaySignature": razorpaySignature,
-          });
+      final res = await _api.postApi(
+        "${AppUrls.panditCreateOrder}/$razorpayOrderId/confirm-payment",
+        {
+          "razorpayOrderId": razorpayOrderId,
+          "razorpayPaymentId": paymentId,
+          "razorpaySignature": razorpaySignature,
+          "bookingIntentToken": id,
+        },
+      );
 
       return res["success"] == true;
     } catch (e) {

@@ -9,6 +9,7 @@ import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
+import 'package:samagrah/views/global_widgets/product_details_bottom_sheet.dart';
 
 class CustomizeItemsPage extends ConsumerStatefulWidget {
   const CustomizeItemsPage({super.key});
@@ -298,7 +299,7 @@ class _CustomizeItemsPageState extends ConsumerState<CustomizeItemsPage> {
                       top: Radius.circular(12),
                     ),
                     onTap: () {
-                      Navigator.pushNamed(context, AppRoutes.productDetails);
+                      openProductBottomSheet(context, product.id ?? '');
                     },
                     child: ClipRRect(
                       borderRadius: const BorderRadius.vertical(
@@ -441,4 +442,13 @@ class _CustomizeItemsPageState extends ConsumerState<CustomizeItemsPage> {
       ),
     );
   }
+}
+
+void openProductBottomSheet(BuildContext context, String productId) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => ProductDetailsBottomSheet(productId: productId),
+  );
 }
