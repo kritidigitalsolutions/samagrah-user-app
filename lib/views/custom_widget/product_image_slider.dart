@@ -36,10 +36,7 @@ class _ProductImageSliderState extends State<ProductImageSlider> {
 
             return ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: CustomCachedImage(
-                imageUrl: "http://192.168.1.40:8000/$cleanImage",
-                fit: BoxFit.cover,
-              ),
+              child: CustomCachedImage(imageUrl: cleanImage, fit: BoxFit.cover),
             );
           }).toList(),
         ),

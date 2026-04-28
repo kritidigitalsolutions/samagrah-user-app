@@ -257,9 +257,7 @@ class TrackOrderPage extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(8),
                     image: imageUrl.isNotEmpty
                         ? DecorationImage(
-                            image: NetworkImage(
-                              "http://192.168.1.40:8000/${imageUrl}",
-                            ),
+                            image: NetworkImage(imageUrl),
                             fit: BoxFit.cover,
                           )
                         : null,

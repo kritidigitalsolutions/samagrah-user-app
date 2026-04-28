@@ -39,7 +39,7 @@ class ProfilePage extends ConsumerWidget {
 
               // Profile Section
               userAsync.when(
-                data: (user) => _buildProfileHeader(user),
+                data: (user) => _buildProfileHeader(context, user),
                 loading: () => const CircularProgressIndicator(),
                 error: (e, _) => const Text("Error loading user"),
               ),
@@ -235,7 +235,7 @@ class ProfilePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildProfileHeader(Map<String, dynamic>? user) {
+  Widget _buildProfileHeader(BuildContext context, Map<String, dynamic>? user) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -266,21 +266,27 @@ class ProfilePage extends ConsumerWidget {
                   style: text13(color: Colors.black45),
                 ),
                 const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.button,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'Edit',
-                    style: text12(
-                      color: AppColors.white,
+                InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () {
+                    Navigator.pushNamed(context, AppRoutes.editProfile);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.button,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Edit',
+                      style: text12(
+                        color: AppColors.white,
 
-                      fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),

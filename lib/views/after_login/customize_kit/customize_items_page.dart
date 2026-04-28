@@ -306,8 +306,7 @@ class _CustomizeItemsPageState extends ConsumerState<CustomizeItemsPage> {
                         top: Radius.circular(12),
                       ),
                       child: CustomCachedImage(
-                        imageUrl:
-                            "http://192.168.1.40:8000/${product.thumbnail}",
+                        imageUrl: product.thumbnail,
                         height: 90,
                         width: double.infinity,
                         fit: BoxFit.cover,

@@ -218,7 +218,7 @@ class FestivalCard extends ConsumerWidget {
 
             /// Image
             Image.network(
-              "http://192.168.1.40:8000$image",
+              image,
               height: 110,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) {

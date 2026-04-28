@@ -164,8 +164,7 @@ class OrderCard extends StatelessWidget {
           displayItems.add(
             ProductDisplayItem(
               name: kitItem.product?.title ?? 'Unknown',
-              emoji:
-                  "http://192.168.1.40:8000/${kitItem.product?.media?.image.first}",
+              emoji: kitItem.product?.media?.image.first ?? '',
               pack: 'Qty: ${kitItem.quantity ?? 1}',
             ),
           );
@@ -178,8 +177,7 @@ class OrderCard extends StatelessWidget {
                 orderItem.product?.title ??
                 orderItem.product?.name ??
                 'Unknown',
-            emoji:
-                "http://192.168.1.40:8000/${orderItem.product?.media?.image.first}",
+            emoji: orderItem.product?.media?.image.first ?? '',
             pack: 'Qty: ${orderItem.quantity ?? 1}',
           ),
         );

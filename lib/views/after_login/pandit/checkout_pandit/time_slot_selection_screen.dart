@@ -115,13 +115,13 @@ class _TimeSlotSelectionScreenState
           });
 
           // Show confirmation
-          if (mounted) {
-            AppSnackbar.show(
-              context,
-              message: 'Added: $formattedDate, $timeSlot',
-              type: SnackBarType.success,
-            );
-          }
+          // if (mounted) {
+          //   AppSnackbar.show(
+          //     context,
+          //     message: 'Added: $formattedDate, $timeSlot',
+          //     type: SnackBarType.success,
+          //   );
+          // }
         }
       }
     }
@@ -194,15 +194,92 @@ class _TimeSlotSelectionScreenState
         child: Column(
           children: [
             // Progress Indicator
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 16,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    // 🔵 Step Circle (Gradient + Shadow)
+                    Container(
+                      width: 30,
+                      height: 30,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFF9800), Color(0xFFFF5722)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.orange.withOpacity(0.4),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        "2",
+                        style: text14(
+                          color: AppColors.white,
+
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    // 📝 Title + Subtitle
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Select Date & Time",
+                            style: text16(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            "Choose your preferred schedule",
+                            style: text12(color: AppColors.grey600),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // 📊 Step Indicator
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.orange.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Text(
+                        "2 / 3",
+                        style: text12(
+                          color: AppColors.warningDark,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              decoration: BoxDecoration(color: AppColors.headerCard),
-              child: _buildCustomStepper(),
             ),
-            const SizedBox(height: 16),
 
             // Available Time Slots Header
             Padding(
@@ -272,7 +349,7 @@ class _TimeSlotSelectionScreenState
                         const SizedBox(width: 8),
                         Text(
                           'Selected Slots (${selectedSlots.length})',
-                          style: TextStyle(
+                          style: text14(
                             fontWeight: FontWeight.bold,
                             color: Colors.pink.shade700,
                           ),
@@ -288,7 +365,7 @@ class _TimeSlotSelectionScreenState
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.white,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.grey.shade300),
                         ),
@@ -300,18 +377,12 @@ class _TimeSlotSelectionScreenState
                                 children: [
                                   Text(
                                     slot.date,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                    ),
+                                    style: text14(fontWeight: FontWeight.w600),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     slot.timeSlot,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
+                                    style: text12(color: AppColors.grey600),
                                   ),
                                 ],
                               ),
@@ -319,7 +390,7 @@ class _TimeSlotSelectionScreenState
                             IconButton(
                               icon: const Icon(
                                 Icons.close,
-                                color: Colors.red,
+                                color: AppColors.error,
                                 size: 20,
                               ),
                               onPressed: () => removeSlot(index),
@@ -395,13 +466,13 @@ class _TimeSlotSelectionScreenState
                                     );
                                   });
 
-                                  if (mounted) {
-                                    AppSnackbar.show(
-                                      context,
-                                      message: 'Added: ${item.date}, $timeSlot',
-                                      type: SnackBarType.success,
-                                    );
-                                  }
+                                  // if (mounted) {
+                                  //   AppSnackbar.show(
+                                  //     context,
+                                  //     message: 'Added: ${item.date}, $timeSlot',
+                                  //     type: SnackBarType.success,
+                                  //   );
+                                  // }
                                 }
                               }
                             },
@@ -483,34 +554,6 @@ class _TimeSlotSelectionScreenState
       ),
     );
   }
-
-  Widget _buildCustomStepper() {
-    return Column(
-      children: [
-        const SizedBox(height: 8),
-
-        /// 🔴 DOT + LINE ROW
-        Row(
-          children: [
-            buildCircle("1", true),
-            buildDottedLine(),
-            buildCircle("2", true),
-            buildDottedLine(),
-            buildCircle("3", false),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        bottomLable(),
-      ],
-    );
-  }
-
-  final List<String> timeSlots = [
-    "6:00 AM - 8:00 AM",
-    "12:00 PM - 2:00 PM",
-    "6:00 PM - 8:00 PM",
-  ];
 }
 
 class DateSlot {

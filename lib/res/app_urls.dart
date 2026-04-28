@@ -18,6 +18,7 @@ class AppUrls {
   // ======================= product===================================
 
   static const String getProduct = "$baseUrl/user/items";
+  static const String banner = "$baseUrl/banners";
 
   //==========================payment =================================
 
@@ -61,4 +62,8 @@ class AppUrls {
   static const String term = "$baseUrl/legal/term";
   static const String privacy = "$baseUrl/legal/privacy";
   static const String aboutUs = "$baseUrl/aboutus";
+
+  //========================== profile edit api =================================
+
+  static const String editProfile = "$baseUrl/user";
 }

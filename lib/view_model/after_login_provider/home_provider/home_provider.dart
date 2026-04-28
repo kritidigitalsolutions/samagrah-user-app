@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:samagrah/model/response/banner_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/repo/product_repo.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/product_state.dart';
@@ -170,3 +171,18 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
     );
   }
 }
+
+// image slide
+
+final imageSliderIndexProvider = StateProvider.family<int, String>(
+  (ref, productId) => 0,
+);
+
+// ===================== banner ==================================
+
+final productRepoProvider = Provider((ref) => ProductRepo());
+
+final bannerProvider = FutureProvider<BannerResModel>((ref) async {
+  final repo = ref.read(productRepoProvider);
+  return repo.getBanner();
+});

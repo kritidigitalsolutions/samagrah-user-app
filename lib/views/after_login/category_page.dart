@@ -9,6 +9,7 @@ import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
+import 'package:samagrah/views/after_login/product/daliy_pooja_essential_page.dart';
 import 'package:samagrah/views/custom_widget/Product_card.dart';
 import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
 
@@ -187,6 +188,18 @@ class CategoryPage extends ConsumerWidget {
   ) {
     if (products.isEmpty) return const SizedBox.shrink();
 
+    // Determine categoryType based on title
+    String categoryType = "";
+    if (title.contains("Everyday Ritual")) {
+      categoryType = "daily";
+    } else if (title.contains("Most Used")) {
+      categoryType = "mostUsed";
+    } else if (title.contains("Ritual Essentials")) {
+      categoryType = "ritualItems";
+    } else {
+      categoryType = "others";
+    }
+
     return Column(
       children: [
         Padding(
@@ -197,7 +210,15 @@ class CategoryPage extends ConsumerWidget {
               Text(title, style: text15(fontWeight: FontWeight.bold)),
               TextButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, AppRoutes.dalityPujaE);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TypeOfCategoryPage(
+                        title: title,
+                        categoryType: categoryType,
+                      ),
+                    ),
+                  );
                 },
                 child: Text(
                   'View all >',

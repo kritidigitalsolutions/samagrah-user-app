@@ -102,7 +102,7 @@ class KitOrderSummaryPage extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(8),
                           child: image.isNotEmpty
                               ? CustomCachedImage(
-                                  imageUrl: "http://192.168.1.40:8000/$image",
+                                  imageUrl: image,
                                   width: 60,
                                   height: 60,
                                   fit: BoxFit.cover,

@@ -1,6 +1,7 @@
 // lib/data/repository/product_repo.dart
 
 import 'package:samagrah/data/network/network_api_service.dart';
+import 'package:samagrah/model/response/banner_res_model.dart';
 import 'package:samagrah/model/response/product_res/cart_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_details_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
@@ -91,6 +92,18 @@ class ProductRepo {
       _api.setToken(token);
       final res = await _api.getApi("${AppUrls.getProduct}/$productId");
       return ProductDetailsResModel.fromJson(res);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  //   // 📦 Get product details
+  Future<BannerResModel> getBanner() async {
+    try {
+      final token = await _getToken();
+      _api.setToken(token);
+      final res = await _api.getApi(AppUrls.banner);
+      return BannerResModel.fromJson(res);
     } catch (e) {
       rethrow;
     }

@@ -353,8 +353,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: CustomCachedImage(
-              imageUrl:
-                  "http://192.168.1.40:8000/${product?.media?.image.firstOrNull ?? ''}",
+              imageUrl: product?.media?.image.firstOrNull ?? '',
               height: 55,
               width: 65,
               fit: BoxFit.cover,
@@ -395,13 +394,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                     color: Colors.redAccent,
                   ),
                 ),
-                Text(
-                  "$qty",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text("$qty", style: text16(fontWeight: FontWeight.bold)),
                 IconButton(
                   onPressed: () => notifier.updateQuantity(index, qty + 1),
                   icon: const Icon(
@@ -419,10 +412,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
               ],
             )
           else
-            Text(
-              "Qty: $qty",
-              style: const TextStyle(fontSize: 13, color: AppColors.button),
-            ),
+            Text("Qty: $qty", style: text13(color: AppColors.button)),
         ],
       ),
     );
@@ -698,8 +688,7 @@ class CustomizeAddItemsBottomSheet extends ConsumerWidget {
                       top: Radius.circular(12),
                     ),
                     child: CustomCachedImage(
-                      imageUrl:
-                          "http://192.168.1.40:8000/${product.thumbnail ?? ''}",
+                      imageUrl: product.thumbnail ?? '',
                       height: 100,
                       width: double.infinity,
                       fit: BoxFit.cover,

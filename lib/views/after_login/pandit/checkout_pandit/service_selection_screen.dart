@@ -6,6 +6,7 @@ import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/custom_snackbar.dart';
+import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 
 class ServiceSelectionScreen extends ConsumerWidget {
@@ -87,22 +88,100 @@ class ServiceSelectionScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            /// 🔵 Stepper
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              color: AppColors.headerCard,
-              child: _buildCustomStepper(),
-            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    // 🔵 Step Circle (Gradient + Shadow)
+                    Container(
+                      width: 30,
+                      height: 30,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFF9800), Color(0xFFFF5722)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.orange.withOpacity(0.4),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        "1",
+                        style: text14(
+                          color: AppColors.white,
 
-            const SizedBox(height: 20),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    // 📝 Title + Subtitle
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Select Pooja Mode",
+                            style: text16(fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            "Choose how you want your pooja",
+                            style: text12(color: AppColors.grey600),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // 📊 Step Indicator
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.orange.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Text(
+                        "1 / 3",
+                        style: text12(
+                          color: AppColors.warningDark,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
 
             /// 🔴 EMPTY STATE
             if (serviceList.isEmpty)
-              const Expanded(
+              Expanded(
                 child: Center(
                   child: Text(
                     "No services available for this pandit",
-                    style: TextStyle(fontSize: 16),
+                    style: text16(),
                   ),
                 ),
               )
@@ -159,24 +238,24 @@ class ServiceSelectionScreen extends ConsumerWidget {
     );
   }
 
-  /// 🔵 Stepper UI
-  Widget _buildCustomStepper() {
-    return Column(
-      children: [
-        Row(
-          children: [
-            buildCircle("1", true),
-            buildDottedLine(),
-            buildCircle("2", false),
-            buildDottedLine(),
-            buildCircle("3", false),
-          ],
-        ),
-        const SizedBox(height: 8),
-        bottomLable(),
-      ],
-    );
-  }
+  // /// 🔵 Stepper UI
+  // Widget _buildCustomStepper() {
+  //   return Column(
+  //     children: [
+  //       Row(
+  //         children: [
+  //           buildCircle("1", true),
+  //           buildDottedLine(),
+  //           buildCircle("2", false),
+  //           buildDottedLine(),
+  //           buildCircle("3", false),
+  //         ],
+  //       ),
+  //       const SizedBox(height: 8),
+  //       bottomLable(),
+  //     ],
+  //   );
+  // }
 
   /// 🔵 Service Card
   Widget _buildServiceCard(
@@ -215,18 +294,12 @@ class ServiceSelectionScreen extends ConsumerWidget {
                   children: [
                     Text(
                       service.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: text16(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       service.description,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
+                      style: text12(color: AppColors.grey600),
                     ),
                   ],
                 ),

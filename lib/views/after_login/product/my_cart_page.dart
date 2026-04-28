@@ -318,7 +318,7 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
                 child: CustomCachedImage(
                   width: 75,
                   height: 75,
-                  imageUrl: "http://192.168.1.40:8000/${item.thumbnail}",
+                  imageUrl: item.thumbnail,
                   fit: BoxFit.cover,
                 ),
               ),

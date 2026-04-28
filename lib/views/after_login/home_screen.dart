@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:samagrah/model/response/banner_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
@@ -12,9 +13,11 @@ import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/wishlist_provider.dart';
+import 'package:samagrah/views/after_login/product/daliy_pooja_essential_page.dart';
 import 'package:samagrah/views/custom_widget/Product_card.dart';
 import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
 import 'package:samagrah/views/service_pages/location_provider.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -30,7 +33,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final productState = ref.watch(productProvider);
     final selectedCategory = productState.value?.selectedCategory ?? "All";
     final location = ref.watch(locationProvider);
-
+    final bannerAsync = ref.watch(bannerProvider);
     return Stack(
       children: [
         Container(
@@ -246,21 +249,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       padding: EdgeInsets.only(top: 8),
                       children: [
                         // Promotional Banner
-                        CarouselSlider(
-                          options: CarouselOptions(
-                            height: 120,
-                            autoPlay: true,
-                            enlargeCenterPage: true,
-                            viewportFraction: 1,
-                            autoPlayInterval: Duration(seconds: 3),
-                          ),
-                          items: [
-                            poojaOfferBanner(),
-                            poojaOfferBanner(),
-                            poojaOfferBanner(),
-                          ],
-                        ),
+                        bannerAsync.when(
+                          data: (res) {
+                            final banners = res.data;
 
+                            return CarouselSlider(
+                              options: CarouselOptions(
+                                height: 120,
+                                autoPlay: true,
+                                enlargeCenterPage: true,
+                                viewportFraction: 1,
+                                autoPlayInterval: Duration(seconds: 3),
+                              ),
+                              items: banners.map((banner) {
+                                return poojaOfferBanner(banner); // ✅ pass data
+                              }).toList(),
+                            );
+                          },
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
+                          error: (e, _) => const Text("Something went wrong"),
+                        ),
                         const SizedBox(height: 10),
 
                         AnimationLimiter(
@@ -312,9 +321,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.pushNamed(
+                                  Navigator.push(
                                     context,
-                                    AppRoutes.dalityPujaE,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const TypeOfCategoryPage(
+                                            title: 'Daily Pooja Essentials',
+                                            categoryType: 'daily',
+                                          ),
+                                    ),
                                   );
                                 },
                                 child: Text(
@@ -368,9 +383,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 'Most Used Items in Pooja',
                                 style: text15(fontWeight: FontWeight.bold),
                               ),
-                              Text(
-                                'View all >',
-                                style: text13(color: AppColors.warningDark),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const TypeOfCategoryPage(
+                                            title: 'Most Used Items in Pooja',
+                                            categoryType: 'mostUsed',
+                                          ),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  'View all >',
+                                  style: text13(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.warningDark,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -491,6 +523,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ); // ✅ Fixed
 
     final isWishlisted = ref.watch(isWishlistedProvider(product.id ?? ''));
+    final currentIndex = ref.watch(imageSliderIndexProvider(product.id ?? ''));
 
     return Container(
       width: 120,
@@ -508,30 +541,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Expanded(
             child: Stack(
               children: [
-                Center(
-                  child: InkWell(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(12),
+                InkWell(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.productDetails,
+                      arguments: product,
+                    );
+                  },
+                  child: CarouselSlider(
+                    options: CarouselOptions(
+                      autoPlay: false,
+                      viewportFraction: 1,
+
+                      enlargeCenterPage: false,
+                      onPageChanged: (index, reason) {
+                        ref
+                                .read(
+                                  imageSliderIndexProvider(
+                                    product.id ?? '',
+                                  ).notifier,
+                                )
+                                .state =
+                            index;
+                      },
                     ),
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.productDetails,
-                        arguments: product,
-                      );
-                    },
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(12),
-                      ),
-                      child: CustomCachedImage(
-                        imageUrl:
-                            "http://192.168.1.40:8000/${product.thumbnail}",
-                        height: 90,
-                        width: double.infinity,
+                    items: product.images.map((image) {
+                      final cleanImage = image.replaceAll("\\", "/");
+
+                      return CustomCachedImage(
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(12),
+                        ),
+                        imageUrl: cleanImage,
                         fit: BoxFit.cover,
-                      ),
-                    ),
+                        width: double.infinity,
+                      );
+                    }).toList(),
                   ),
                 ),
                 Positioned(
@@ -550,10 +599,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ),
+                Positioned(
+                  bottom: 5,
+                  left: 5,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 8,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: AnimatedSmoothIndicator(
+                      activeIndex: currentIndex,
+                      count: product.images.length,
+                      effect: product.images.length <= 5
+                          ? WormEffect(
+                              dotHeight: 7,
+                              dotWidth: 7,
+                              activeDotColor: AppColors.black,
+                              dotColor: AppColors.white.withOpacity(0.5),
+                            )
+                          : ScrollingDotsEffect(
+                              activeDotColor: AppColors.black,
+                              dotColor: AppColors.white.withOpacity(0.5),
+                              dotHeight: 7,
+                              dotWidth: 7,
+                              spacing: 4,
+                              maxVisibleDots: 5,
+                            ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-
           Container(height: 1, color: AppColors.grey300),
 
           Padding(
@@ -699,7 +781,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget poojaOfferBanner() {
+  Widget poojaOfferBanner(BannerData banner) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -730,7 +812,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           // 🔻 Content
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 30, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 30, 16, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
@@ -739,26 +821,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Expanded(
                   child: RichText(
                     text: TextSpan(
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: AppColors.white),
                       children: [
                         TextSpan(
-                          text: 'Get Everything\n',
-                          style: text20(
+                          text: "${banner.title}\n",
+                          style: text15(
                             color: AppColors.white,
                             fontWeight: FontWeight.w600,
                           ).copyWith(height: 1.5),
                         ),
 
                         TextSpan(
-                          text: 'you need for a\n',
-                          style: text14(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w600,
+                          text: "${banner.subTitle}.",
+
+                          style: text12(
+                            color: AppColors.white.withAlpha(150),
+                            fontWeight: FontWeight.w400,
                           ).copyWith(height: 1.5),
                         ),
                         TextSpan(
-                          text: 'perfect Pooja ',
-                          style: text14(
+                          text: ' perfect Pooja ',
+                          style: text13(
                             color: AppColors.warning,
                             fontWeight: FontWeight.bold,
                           ).copyWith(height: 1.2),
@@ -773,20 +856,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    CustomCachedImage(
+                      imageUrl: banner.image ?? '',
+
+                      height: 40,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     RichText(
                       text: TextSpan(
                         children: [
-                          TextSpan(text: '🎉 ', style: TextStyle(fontSize: 16)),
                           TextSpan(
-                            text: 'Get ',
-                            style: TextStyle(
-                              color: AppColors.white,
-                              fontSize: 16,
-                            ),
+                            text: '🎉 Get ',
+                            style: text12(color: AppColors.white),
                           ),
                           TextSpan(
-                            text: '20%',
-                            style: text18(
+                            text: banner.priceOff,
+                            style: text14(
                               color: AppColors.warning,
 
                               fontWeight: FontWeight.bold,
@@ -794,7 +879,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           TextSpan(
                             text: ' OFF 🎉',
-                            style: text16(color: AppColors.white),
+                            style: text12(color: AppColors.white),
                           ),
                         ],
                       ),

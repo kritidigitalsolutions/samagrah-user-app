@@ -13,6 +13,7 @@ class AppTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final int? maxLength;
   final double radius;
+  final int? maxline;
 
   const AppTextField({
     super.key,
@@ -26,6 +27,7 @@ class AppTextField extends StatelessWidget {
     this.inputFormatters,
     this.maxLength,
     this.radius = 30,
+    this.maxline = 1,
   });
 
   @override
@@ -36,6 +38,7 @@ class AppTextField extends StatelessWidget {
       obscureText: obscureText,
       validator: validator,
       inputFormatters: inputFormatters,
+      maxLines: maxline,
 
       // ✅ ADD THIS (IMPORTANT)
       maxLength: maxLength,
@@ -87,6 +90,7 @@ class NumberTextField extends StatelessWidget {
   final String hintText;
   final int? maxLength;
   final double radius;
+  final Widget? prefixIcon;
 
   const NumberTextField({
     super.key,
@@ -94,6 +98,7 @@ class NumberTextField extends StatelessWidget {
     required this.hintText,
     this.maxLength,
     this.radius = 30,
+    this.prefixIcon,
   });
 
   @override
@@ -103,6 +108,7 @@ class NumberTextField extends StatelessWidget {
       hintText: hintText,
       keyboardType: TextInputType.number,
       radius: radius,
+      prefixIcon: prefixIcon,
 
       // ✅ ONLY NUMBER INPUT
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],

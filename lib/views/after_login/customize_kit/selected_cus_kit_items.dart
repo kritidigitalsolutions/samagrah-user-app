@@ -262,9 +262,7 @@ class _SelectedCusKitItemsState extends ConsumerState<SelectedCusKitItems> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   image: DecorationImage(
-                    image: NetworkImage(
-                      "http://192.168.1.40:8000/${product.thumbnail}",
-                    ),
+                    image: NetworkImage(product.thumbnail),
                     fit: BoxFit.cover,
                   ),
                 ),

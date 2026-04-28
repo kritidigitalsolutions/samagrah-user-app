@@ -41,6 +41,7 @@ class AppRoutes {
   //===================================================
 
   static const profile = "/profile";
+  static const editProfile = "/editProfile";
   static const savedAddress = "/savedAddress";
 
   static const editAddAddress = "/editAddAddress";

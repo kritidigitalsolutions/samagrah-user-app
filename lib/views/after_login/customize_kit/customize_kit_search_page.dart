@@ -150,15 +150,13 @@ class _CustomizePoojaKitScreenState
                                       Colors.deepOrange.shade600,
                                     ],
                                   ).createShader(bounds),
-                                  child: const Text(
+                                  child: Text(
                                     'Create Your Custom Kit',
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 24,
+                                    style: text24(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      letterSpacing: -0.5,
-                                    ),
+                                      color: AppColors.white,
+                                    ).copyWith(letterSpacing: -0.5),
                                   ),
                                 ),
 
@@ -167,12 +165,9 @@ class _CustomizePoojaKitScreenState
                                 Text(
                                   'Handpick sacred items for your\npersonalized pooja ceremony',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    color: Colors.grey.shade600,
-                                    height: 1.6,
-                                    letterSpacing: 0.2,
-                                  ),
+                                  style: text15(
+                                    color: AppColors.grey600,
+                                  ).copyWith(height: 1.6, letterSpacing: 0.2),
                                 ),
 
                                 const SizedBox(height: 36),
@@ -230,9 +225,7 @@ class _CustomizePoojaKitScreenState
                                 child: ListView.builder(
                                   shrinkWrap: true,
                                   physics: const NeverScrollableScrollPhysics(),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
+
                                   itemCount: allKits.length,
                                   itemBuilder: (context, index) {
                                     final kit = allKits[index];
@@ -318,10 +311,10 @@ class _CustomizePoojaKitScreenState
           margin: const EdgeInsets.only(bottom: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: Colors.white,
+            color: AppColors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.07),
+                color: AppColors.black.withValues(alpha: 0.07),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -341,8 +334,8 @@ class _CustomizePoojaKitScreenState
                     final item = kit.items[index];
                     final imageUrl =
                         item.product?.media?.image.isNotEmpty == true
-                        ? "http://192.168.1.40:8000/${item.product!.media!.image.first}"
-                        : "https://via.placeholder.com/150";
+                        ? item.product!.media!.image.first
+                        : "";
 
                     return Container(
                       width: 90, // ← Width bhi thoda kam
@@ -396,8 +389,7 @@ class _CustomizePoojaKitScreenState
                           ),
                           child: Text(
                             statusText,
-                            style: TextStyle(
-                              fontSize: 11,
+                            style: text11(
                               fontWeight: FontWeight.w600,
                               color: statusColor,
                             ),
@@ -520,13 +512,12 @@ class _CustomizePoojaKitScreenState
                                 color: AppColors.green,
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Center(
+                              child: Center(
                                 child: Text(
                                   "Buy Now",
-                                  style: TextStyle(
-                                    color: Colors.white,
+                                  style: text14(
+                                    color: AppColors.white,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14,
                                   ),
                                 ),
                               ),
@@ -719,8 +710,8 @@ class _CustomizePoojaKitScreenState
                                       imageUrl:
                                           product?.media?.image.isNotEmpty ==
                                               true
-                                          ? "http://192.168.1.40:8000/${product!.media!.image.first}"
-                                          : "https://via.placeholder.com/100",
+                                          ? product!.media!.image.first
+                                          : "",
                                       height: 70,
                                       width: 70,
                                       fit: BoxFit.cover,
@@ -737,14 +728,14 @@ class _CustomizePoojaKitScreenState
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.black87,
+                                        color: AppColors.black87,
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
                                         "x${item.quantity}",
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 11,
+                                        style: text11(
+                                          color: AppColors.white,
+
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -823,12 +814,10 @@ class _CustomizePoojaKitScreenState
               const SizedBox(width: 8),
               Text(
                 'Select Pooja Type',
-                style: TextStyle(
-                  fontSize: 14,
+                style: text14(
                   fontWeight: FontWeight.w700,
                   color: Colors.grey.shade800,
-                  letterSpacing: 0.3,
-                ),
+                ).copyWith(letterSpacing: 0.3),
               ),
             ],
           ),
@@ -878,9 +867,8 @@ class _CustomizePoojaKitScreenState
                     ),
                     decoration: InputDecoration(
                       hintText: "Search for pooja kit...",
-                      hintStyle: TextStyle(
+                      hintStyle: text15(
                         color: AppColors.white.withValues(alpha: 0.65),
-                        fontSize: 15,
                       ),
                       prefixIcon: Icon(
                         Icons.search_rounded,
@@ -948,17 +936,15 @@ class _CustomizePoojaKitScreenState
                                 child: CustomCachedImage(
                                   width: 32,
                                   height: 32,
-                                  imageUrl:
-                                      "http://192.168.1.40:8000${option.image}",
+                                  imageUrl: option.image ?? '',
                                 ),
                               ),
                             ),
                             title: Text(
                               option.name ?? "", // ✅ FIXED
-                              style: TextStyle(
-                                fontSize: 15,
+                              style: text15(
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade800,
+                                color: AppColors.grey800,
                               ),
                             ),
                             trailing: Container(
@@ -1022,12 +1008,10 @@ class _CustomizePoojaKitScreenState
               const SizedBox(width: 8),
               Text(
                 'Kit Name',
-                style: TextStyle(
-                  fontSize: 14,
+                style: text14(
                   fontWeight: FontWeight.w700,
-                  color: Colors.grey.shade800,
-                  letterSpacing: 0.3,
-                ),
+                  color: AppColors.grey800,
+                ).copyWith(letterSpacing: 0.3),
               ),
             ],
           ),
@@ -1091,16 +1075,19 @@ class _CustomizePoojaKitScreenState
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.add_circle_outline, color: Colors.white, size: 24),
+                Icon(
+                  Icons.add_circle_outline,
+                  color: AppColors.white,
+                  size: 24,
+                ),
                 const SizedBox(width: 10),
-                const Text(
+                Text(
                   'Start Adding Items',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
+                  style: text16(
+                    color: AppColors.white,
+
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
+                  ).copyWith(letterSpacing: 0.5),
                 ),
               ],
             ),
@@ -1144,10 +1131,9 @@ class _CustomizePoojaKitScreenState
           Text(
             title,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
+            style: text12(
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: AppColors.grey700,
             ),
           ),
         ],

@@ -140,8 +140,9 @@ class MyFavProducts extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(10),
                 width: 75,
                 height: 75,
-                imageUrl:
-                    "http://192.168.1.40:8000/${product?.media?.image.isNotEmpty == true ? product!.media!.image.first : ''}",
+                imageUrl: product?.media?.image.isNotEmpty == true
+                    ? product!.media!.image.first
+                    : '',
               ),
 
               const SizedBox(width: 12),

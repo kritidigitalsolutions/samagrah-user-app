@@ -1,4 +1,5 @@
 // lib/views/widgets/product_card_widget.dart
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
@@ -6,9 +7,12 @@ import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
+import 'package:samagrah/utils/service/helper_methods.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/wishlist_provider.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class ProductCard extends ConsumerWidget {
   final Product product;
@@ -21,6 +25,7 @@ class ProductCard extends ConsumerWidget {
     final quantity = ref.watch(cartQuantityProvider(product.id ?? ''));
     final cartNotifier = ref.read(cartProvider.notifier);
     final isWishlisted = ref.watch(isWishlistedProvider(product.id ?? ''));
+    final currentIndex = ref.watch(imageSliderIndexProvider(product.id ?? ''));
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -34,30 +39,46 @@ class ProductCard extends ConsumerWidget {
           Expanded(
             child: Stack(
               children: [
-                Center(
-                  child: InkWell(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(12),
+                InkWell(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.productDetails,
+                      arguments: product,
+                    );
+                  },
+                  child: CarouselSlider(
+                    options: CarouselOptions(
+                      autoPlay: false,
+                      viewportFraction: 1,
+
+                      enlargeCenterPage: false,
+                      onPageChanged: (index, reason) {
+                        ref
+                                .read(
+                                  imageSliderIndexProvider(
+                                    product.id ?? '',
+                                  ).notifier,
+                                )
+                                .state =
+                            index;
+                      },
                     ),
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.productDetails,
-                        arguments: product,
-                      );
-                    },
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(12),
-                      ),
-                      child: CustomCachedImage(
-                        imageUrl:
-                            "http://192.168.1.40:8000/${product.thumbnail}",
-                        height: 90,
-                        width: double.infinity,
+                    items: product.images.map((image) {
+                      final cleanImage = image.replaceAll("\\", "/");
+
+                      return CustomCachedImage(
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(12),
+                        ),
+                        imageUrl: cleanImage,
                         fit: BoxFit.cover,
-                      ),
-                    ),
+                        width: double.infinity,
+                      );
+                    }).toList(),
                   ),
                 ),
                 Positioned(
@@ -73,6 +94,40 @@ class ProductCard extends ConsumerWidget {
                       isWishlisted ? Icons.favorite : Icons.favorite_border,
                       size: 16,
                       color: isWishlisted ? AppColors.error : AppColors.grey,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 5,
+                  left: 5,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 8,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: AnimatedSmoothIndicator(
+                      activeIndex: currentIndex,
+                      count: product.images.length,
+                      effect: product.images.length <= 5
+                          ? WormEffect(
+                              dotHeight: 7,
+                              dotWidth: 7,
+                              activeDotColor: AppColors.black,
+                              dotColor: AppColors.white.withOpacity(0.5),
+                            )
+                          : ScrollingDotsEffect(
+                              activeDotColor: AppColors.black,
+                              dotColor: AppColors.white.withOpacity(0.5),
+                              dotHeight: 7,
+                              dotWidth: 7,
+                              spacing: 4,
+                              maxVisibleDots: 5,
+                            ),
                     ),
                   ),
                 ),
@@ -92,7 +147,7 @@ class ProductCard extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        product.title ?? 'N/A',
+                        capitalizeWords(product.title ?? ''),
                         overflow: TextOverflow.ellipsis,
                         style: text11(fontWeight: FontWeight.w500),
                       ),
@@ -109,36 +164,53 @@ class ProductCard extends ConsumerWidget {
                   children: [
                     Text(
                       'Rs. ${product.oldPrice}/-',
-                      style: const TextStyle(
-                        fontSize: 8,
-                        color: Colors.grey,
-                        decoration: TextDecoration.lineThrough,
-                      ),
+                      style: text8(
+                        color: AppColors.grey,
+                      ).copyWith(decoration: TextDecoration.lineThrough),
                     ),
                     Text(
                       'Rs. ${product.price}/-',
-                      style: const TextStyle(
-                        fontSize: 11,
+                      style: text11(
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFFB71C1C),
+                        color: AppColors.button,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 5),
 
-                // 🔥 Quantity Control
-                _QuantityControl(
-                  quantity: quantity,
-                  productId: product.id ?? '',
-                  isLoading: cartState.isLoading,
-                  product: product,
-                  cartNotifier: cartNotifier,
-                ),
+                product.inStock == true
+                    ? _QuantityControl(
+                        quantity: quantity,
+                        productId: product.id ?? '',
+                        isLoading: cartState.isLoading,
+                        product: product,
+                        cartNotifier: cartNotifier,
+                      )
+                    : _OutOfStockWidget(),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _OutOfStockWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 32,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.error.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: AppColors.error),
+      ),
+      child: Text(
+        "Out of Stock",
+        style: text11(color: AppColors.error, fontWeight: FontWeight.w600),
       ),
     );
   }

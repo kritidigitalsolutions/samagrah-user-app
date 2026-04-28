@@ -30,13 +30,13 @@ import 'package:samagrah/views/after_login/product/checkout/address_page.dart';
 import 'package:samagrah/views/after_login/product/checkout/order_summary_page.dart';
 import 'package:samagrah/views/after_login/product/checkout/payment_page.dart';
 import 'package:samagrah/views/after_login/product/checkout/success_page.dart';
-import 'package:samagrah/views/after_login/product/daliy_pooja_essential_page.dart';
 import 'package:samagrah/views/after_login/product/my_cart_page.dart';
 import 'package:samagrah/views/after_login/product/product_details.dart';
 import 'package:samagrah/views/after_login/profile/about_us_page.dart';
 import 'package:samagrah/views/after_login/profile/delete_account_page.dart';
 import 'package:samagrah/views/after_login/profile/my_fav_products.dart';
 import 'package:samagrah/views/after_login/profile/my_profile_Page.dart';
+import 'package:samagrah/views/after_login/profile/profile%20_edit_Page.dart';
 import 'package:samagrah/views/after_login/profile/saved_address_page.dart';
 import 'package:samagrah/views/after_login/search_product_page.dart';
 import 'package:samagrah/views/after_login/wallet/my_wallet_screen.dart';
@@ -65,10 +65,10 @@ class AppPages {
     AppRoutes.addressPage: (context) => const AddressPage(),
     AppRoutes.paymentPage: (context) => const PaymentPage(),
     AppRoutes.successPage: (context) => const SuccessPage(),
-    AppRoutes.dalityPujaE: (context) => DailyPujaEssentialsScreen(),
     AppRoutes.myCart: (context) => MyCartPage(),
 
     AppRoutes.profile: (context) => const ProfilePage(),
+    AppRoutes.editProfile: (context) => const ProfileEditPage(),
     AppRoutes.savedAddress: (context) => const SavedAddressesScreen(),
     AppRoutes.favProduct: (context) => const MyFavProducts(),
     AppRoutes.accoundDelete: (context) => const DeleteAccountScreen(),

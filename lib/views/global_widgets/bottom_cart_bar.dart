@@ -61,8 +61,7 @@ class BottomCartBar extends ConsumerWidget {
                             child: ClipOval(
                               child: displayItems[i].thumbnail.isNotEmpty
                                   ? CustomCachedImage(
-                                      imageUrl:
-                                          "http://192.168.1.40:8000/${displayItems[i].thumbnail}",
+                                      imageUrl: displayItems[i].thumbnail,
                                       width: 32,
                                       height: 32,
                                       fit: BoxFit.cover,
@@ -79,7 +78,7 @@ class BottomCartBar extends ConsumerWidget {
                           top: 5,
                           child: CircleAvatar(
                             radius: 14,
-                            backgroundColor: Colors.black,
+                            backgroundColor: AppColors.black,
                             child: Text(
                               "+$remainingCount",
                               style: text10(
