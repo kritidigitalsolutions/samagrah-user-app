@@ -24,11 +24,26 @@ class BookingRepo {
     try {
       final token = await AuthLocalstorageService.getToken() ?? '';
       _api.setToken(token);
-      final uri = "${AppUrls.trackOrder}/$orderId/tracking";
+      final uri = "${AppUrls.order}/$orderId/tracking";
       final res = await _api.getApi(uri);
       return TrackOrderResModel.fromJson(res);
     } catch (e) {
       rethrow;
+    }
+  }
+
+  // order cancel
+
+  Future<bool> cancelOrder(String orderId, String reason) async {
+    try {
+      final token = await AuthLocalstorageService.getToken() ?? '';
+      _api.setToken(token);
+      final uri = "${AppUrls.order}/$orderId/cancel";
+      await _api.pacthApi(uri, {"reason": reason});
+      return true;
+    } catch (e) {
+      print("cancel order  ${e.toString()}");
+      return false;
     }
   }
 }

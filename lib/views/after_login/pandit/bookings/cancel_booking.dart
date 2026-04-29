@@ -49,7 +49,7 @@ class _CancelBookingState extends State<CancelBooking>
           child: Card(
             elevation: 2,
             color: AppColors.white,
-            shadowColor: AppColors.backgroundCardDark,
+            shadowColor: AppColors.grey50,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
@@ -97,13 +97,9 @@ class _CancelBookingState extends State<CancelBooking>
                     radius: 8,
                     title: "Back To Home",
                     onTap: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MyHomeScreen(index: 0),
-                        ),
-                        (route) => false, // removes all previous routes
-                      );
+                      Navigator.pop(context); // close bottom sheet
+                      Navigator.pop(context); // back previous screen
+                      Navigator.pop(context);
                     },
                   ),
                 ],

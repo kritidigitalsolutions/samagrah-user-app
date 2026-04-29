@@ -1,9 +1,11 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_pages.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/localStogare_service/location_storage.dart';
+import 'package:samagrah/utils/service/firebase_notification.dart';
 import 'package:samagrah/utils/service/location_checker.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/views/after_login/category_page.dart';
@@ -12,7 +14,14 @@ import 'package:samagrah/views/after_login/home_screen.dart';
 import 'package:samagrah/views/after_login/pandit/book_retual_page.dart';
 import 'package:samagrah/views/service_pages/location_provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp();
+
+  // Initialize FCM Service
+  await FCMNotificationService().initialize();
   runApp(
     const ProviderScope(
       // ← Must wrap the entire app

@@ -42,8 +42,8 @@ class Datum {
     required this.createdAt,
     required this.updatedAt,
     required this.v,
-    required this.mandir,
-    required this.mandirSnapshot,
+    required this.cancellationRequests,
+    required this.rescheduleRequests,
   });
 
   final Payment? payment;
@@ -56,9 +56,9 @@ class Datum {
   final String? bookingMode;
   final String? bookingDate;
   final DatumDateAndTime? dateAndTime;
-  final Address? address;
-  final dynamic temple;
-  final Snapshot? templeSnapshot;
+  final DatumAddress? address;
+  final Temple? temple;
+  final TempleSnapshot? templeSnapshot;
   final int? dakshinaAmount;
   final dynamic recommendedKit;
   final String? bookingStatus;
@@ -66,8 +66,8 @@ class Datum {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final int? v;
-  final dynamic mandir;
-  final Snapshot? mandirSnapshot;
+  final List<CancellationRequest> cancellationRequests;
+  final List<dynamic> rescheduleRequests;
 
   factory Datum.fromJson(Map<String, dynamic> json) {
     return Datum(
@@ -91,11 +91,11 @@ class Datum {
           : DatumDateAndTime.fromJson(json["dateAndTime"]),
       address: json["address"] == null
           ? null
-          : Address.fromJson(json["address"]),
-      temple: json["temple"],
+          : DatumAddress.fromJson(json["address"]),
+      temple: json["temple"] == null ? null : Temple.fromJson(json["temple"]),
       templeSnapshot: json["templeSnapshot"] == null
           ? null
-          : Snapshot.fromJson(json["templeSnapshot"]),
+          : TempleSnapshot.fromJson(json["templeSnapshot"]),
       dakshinaAmount: json["dakshinaAmount"],
       recommendedKit: json["recommendedKit"],
       bookingStatus: json["bookingStatus"],
@@ -103,19 +103,27 @@ class Datum {
       createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
       updatedAt: DateTime.tryParse(json["updatedAt"] ?? ""),
       v: json["__v"],
-      mandir: json["mandir"],
-      mandirSnapshot: json["mandirSnapshot"] == null
-          ? null
-          : Snapshot.fromJson(json["mandirSnapshot"]),
+      cancellationRequests: json["cancellationRequests"] == null
+          ? []
+          : List<CancellationRequest>.from(
+              json["cancellationRequests"]!.map(
+                (x) => CancellationRequest.fromJson(x),
+              ),
+            ),
+      rescheduleRequests: json["rescheduleRequests"] == null
+          ? []
+          : List<dynamic>.from(json["rescheduleRequests"]!.map((x) => x)),
     );
   }
 }
 
-class Address {
-  Address({
+class DatumAddress {
+  DatumAddress({
     required this.name,
     required this.phone,
+    required this.secondPhone,
     required this.fullAddress,
+    required this.email,
     required this.addressType,
     required this.city,
     required this.state,
@@ -124,21 +132,51 @@ class Address {
 
   final String? name;
   final String? phone;
+  final String? secondPhone;
   final String? fullAddress;
+  final String? email;
   final String? addressType;
   final String? city;
   final String? state;
   final String? pincode;
 
-  factory Address.fromJson(Map<String, dynamic> json) {
-    return Address(
+  factory DatumAddress.fromJson(Map<String, dynamic> json) {
+    return DatumAddress(
       name: json["name"],
       phone: json["phone"],
+      secondPhone: json["secondPhone"],
       fullAddress: json["fullAddress"],
+      email: json["email"],
       addressType: json["addressType"],
       city: json["city"],
       state: json["state"],
       pincode: json["pincode"],
+    );
+  }
+}
+
+class CancellationRequest {
+  CancellationRequest({
+    required this.reason,
+    required this.notes,
+    required this.requestedBy,
+    required this.requestedAt,
+    required this.id,
+  });
+
+  final String? reason;
+  final String? notes;
+  final String? requestedBy;
+  final DateTime? requestedAt;
+  final String? id;
+
+  factory CancellationRequest.fromJson(Map<String, dynamic> json) {
+    return CancellationRequest(
+      reason: json["reason"],
+      notes: json["notes"],
+      requestedBy: json["requestedBy"],
+      requestedAt: DateTime.tryParse(json["requestedAt"] ?? ""),
+      id: json["_id"],
     );
   }
 }
@@ -167,35 +205,6 @@ class DateAndTimeElement {
 
   factory DateAndTimeElement.fromJson(Map<String, dynamic> json) {
     return DateAndTimeElement(date: json["date"], time: json["time"]);
-  }
-}
-
-class Snapshot {
-  Snapshot({
-    required this.name,
-    required this.image,
-    required this.city,
-    required this.state,
-    required this.line1,
-    required this.landmark,
-  });
-
-  final String? name;
-  final String? image;
-  final String? city;
-  final String? state;
-  final String? line1;
-  final String? landmark;
-
-  factory Snapshot.fromJson(Map<String, dynamic> json) {
-    return Snapshot(
-      name: json["name"],
-      image: json["image"],
-      city: json["city"],
-      state: json["state"],
-      line1: json["line1"],
-      landmark: json["landmark"],
-    );
   }
 }
 
@@ -263,8 +272,8 @@ class Payment {
   Payment({
     required this.status,
     required this.method,
-    required this.gateway,
     required this.transactionId,
+    required this.gateway,
     required this.razorpayOrderId,
     required this.razorpayPaymentId,
     required this.razorpaySignature,
@@ -273,8 +282,8 @@ class Payment {
 
   final String? status;
   final String? method;
-  final String? gateway;
   final String? transactionId;
+  final String? gateway;
   final String? razorpayOrderId;
   final String? razorpayPaymentId;
   final String? razorpaySignature;
@@ -284,8 +293,8 @@ class Payment {
     return Payment(
       status: json["status"],
       method: json["method"],
-      gateway: json["gateway"],
       transactionId: json["transactionId"],
+      gateway: json["gateway"],
       razorpayOrderId: json["razorpayOrderId"],
       razorpayPaymentId: json["razorpayPaymentId"],
       razorpaySignature: json["razorpaySignature"],
@@ -335,6 +344,98 @@ class RitualRef {
       image: json["image"],
       durationHours: json["durationHours"],
       status: json["status"],
+    );
+  }
+}
+
+class Temple {
+  Temple({
+    required this.id,
+    required this.name,
+    required this.image,
+    required this.description,
+    required this.contactPhone,
+    required this.contactPerson,
+    required this.address,
+  });
+
+  final String? id;
+  final String? name;
+  final String? image;
+  final String? description;
+  final String? contactPhone;
+  final String? contactPerson;
+  final TempleAddress? address;
+
+  factory Temple.fromJson(Map<String, dynamic> json) {
+    return Temple(
+      id: json["_id"],
+      name: json["name"],
+      image: json["image"],
+      description: json["description"],
+      contactPhone: json["contactPhone"],
+      contactPerson: json["contactPerson"],
+      address: json["address"] == null
+          ? null
+          : TempleAddress.fromJson(json["address"]),
+    );
+  }
+}
+
+class TempleAddress {
+  TempleAddress({
+    required this.line1,
+    required this.line2,
+    required this.city,
+    required this.state,
+    required this.pinCode,
+    required this.landmark,
+  });
+
+  final String? line1;
+  final String? line2;
+  final String? city;
+  final String? state;
+  final String? pinCode;
+  final String? landmark;
+
+  factory TempleAddress.fromJson(Map<String, dynamic> json) {
+    return TempleAddress(
+      line1: json["line1"],
+      line2: json["line2"],
+      city: json["city"],
+      state: json["state"],
+      pinCode: json["pinCode"],
+      landmark: json["landmark"],
+    );
+  }
+}
+
+class TempleSnapshot {
+  TempleSnapshot({
+    required this.name,
+    required this.image,
+    required this.city,
+    required this.state,
+    required this.line1,
+    required this.landmark,
+  });
+
+  final String? name;
+  final String? image;
+  final String? city;
+  final String? state;
+  final String? line1;
+  final String? landmark;
+
+  factory TempleSnapshot.fromJson(Map<String, dynamic> json) {
+    return TempleSnapshot(
+      name: json["name"],
+      image: json["image"],
+      city: json["city"],
+      state: json["state"],
+      line1: json["line1"],
+      landmark: json["landmark"],
     );
   }
 }

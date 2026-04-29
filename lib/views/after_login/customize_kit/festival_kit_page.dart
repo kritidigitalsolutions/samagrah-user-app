@@ -9,6 +9,7 @@ import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/festival_kit_provider.dart';
+import 'package:samagrah/views/custom_loader.dart/fastival_kit_loader.dart';
 
 class FestivalKitPage extends ConsumerStatefulWidget {
   const FestivalKitPage({super.key});
@@ -99,15 +100,10 @@ class _FestivalKitPageState extends ConsumerState<FestivalKitPage> {
               Expanded(
                 child: festivalAsync.when(
                   loading: () => ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: 4,
-                    itemBuilder: (_, __) => Container(
-                      margin: const EdgeInsets.only(bottom: 14),
-                      height: 140,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
+                    itemBuilder: (_, __) => const FestivalCardSkeleton(),
                   ),
 
                   error: (e, _) => Center(child: Text("Something went wrong")),
@@ -217,13 +213,14 @@ class FestivalCard extends ConsumerWidget {
             const SizedBox(width: 10),
 
             /// Image
-            Image.network(
-              image,
-              height: 110,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return Icon(Icons.image, size: 80);
-              },
+            CustomCachedImage(
+              imageUrl: image,
+              width: 120,
+              height: double.infinity,
+
+              borderRadius: BorderRadius.circular(12),
+
+              fit: BoxFit.cover,
             ),
           ],
         ),

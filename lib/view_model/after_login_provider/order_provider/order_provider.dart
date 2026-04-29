@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:samagrah/model/response/product_booked_res/product_booked_res_modle.dart';
 import 'package:intl/intl.dart';
 import 'package:samagrah/model/response/product_booked_res/track_order_res_model.dart';
@@ -45,13 +46,13 @@ class OrderUtils {
         return AppColors.green;
       case 'out for delivery':
       case 'shipped':
-        return AppColors.borderFocus;
+        return AppColors.info;
       case 'preparing':
       case 'processing':
       case 'confirmed':
         return AppColors.warning;
       case 'cancelled':
-        return AppColors.errorDark;
+        return AppColors.error;
       case 'placed':
         return Colors.amber;
       default:
@@ -155,3 +156,31 @@ final trackOrderProvider = FutureProvider.family<TrackOrderResModel, String>((
   final repo = ref.read(trackOrderRepo);
   return repo.trackOrder(id);
 });
+
+// cancel order
+
+final selectedCancelReasonProvider = StateProvider<String?>((ref) => null);
+
+final cancelOrderProvider =
+    StateNotifierProvider<CancelOrderNotifier, AsyncValue<bool>>((ref) {
+      return CancelOrderNotifier();
+    });
+
+class CancelOrderNotifier extends StateNotifier<AsyncValue<bool>> {
+  CancelOrderNotifier() : super(const AsyncData(false));
+
+  final BookingRepo _repository = BookingRepo();
+
+  Future<bool> cancelOrder(String orderId, String reason) async {
+    state = const AsyncLoading();
+
+    try {
+      final result = await _repository.cancelOrder(orderId, reason);
+      state = AsyncData(result);
+      return result;
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      return false;
+    }
+  }
+}

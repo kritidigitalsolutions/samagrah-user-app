@@ -87,10 +87,7 @@ class AppOutlineButton extends StatelessWidget {
           title,
           style:
               textStyle ??
-              const TextStyle(
-                color: AppColors.button,
-                fontWeight: FontWeight.w600,
-              ),
+              text14(color: AppColors.button, fontWeight: FontWeight.w600),
         ),
       ),
     );

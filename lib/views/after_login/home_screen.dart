@@ -14,6 +14,7 @@ import 'package:samagrah/view_model/after_login_provider/home_provider/cart_prov
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/wishlist_provider.dart';
 import 'package:samagrah/views/after_login/product/daliy_pooja_essential_page.dart';
+import 'package:samagrah/views/custom_loader.dart/product_loader.dart';
 import 'package:samagrah/views/custom_widget/Product_card.dart';
 import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
 import 'package:samagrah/views/service_pages/location_provider.dart';
@@ -225,8 +226,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               Expanded(
                 child: productState.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 6,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 0.75,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
+                    itemBuilder: (_, __) => const ProductCardSkeleton(),
+                  ),
 
                   error: (e, _) =>
                       const Center(child: Text("Something went wrong")),

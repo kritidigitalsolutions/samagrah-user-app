@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:samagrah/model/request/payment_req/pandit_create_order_req_model.dart';
+import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_booked_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
+import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/service/helper_methods.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/booking_provider.dart';
@@ -41,6 +44,7 @@ class MyBookingDetails extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final type = ref.watch(typeSelected);
     final booking = ref.watch(selectedBookingProvider);
+    final rescheduleState = ref.watch(rescheduleBookingProvider);
 
     // If no booking is selected, show error
     if (booking == null) {
@@ -93,16 +97,75 @@ class MyBookingDetails extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     /// IMAGE
-                    CustomCachedImage(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(18),
-                      ),
-                      imageUrl: pandit?.profileImage ?? '',
-                      width: double.infinity,
-                      height: 180,
-                    ),
+                    Stack(
+                      children: [
+                        CustomCachedImage(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(18),
+                          ),
+                          imageUrl: pandit?.profileImage ?? '',
+                          width: double.infinity,
+                          height: 180,
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _getStatusColor(booking.bookingStatus),
+                                  borderRadius: BorderRadius.horizontal(
+                                    right: Radius.circular(20),
+                                  ),
+                                ),
+                                child: Text(
+                                  _getStatusText(booking.bookingStatus),
+                                  style: text12(
+                                    color: AppColors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
 
-                    // const SizedBox(height: 12),
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _getStatusColor(booking.bookingStatus),
+                                  borderRadius: BorderRadius.horizontal(
+                                    right: Radius.circular(20),
+                                  ),
+                                ),
+                                child: Text(
+                                  _getBookingModeStatusText(
+                                    booking.bookingMode,
+                                  ),
+                                  style: text12(
+                                    color: AppColors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
 
                     /// NAME + CALL BUTTON
                     Padding(
@@ -120,6 +183,10 @@ class MyBookingDetails extends ConsumerWidget {
 
                           GestureDetector(
                             onTap: () {
+                              if ((booking.bookingStatus == "cancelled")) {
+                                print("cancelled booking");
+                                return;
+                              }
                               makePhoneCall(pandit?.phone);
                             },
                             child: Container(
@@ -229,6 +296,10 @@ class MyBookingDetails extends ConsumerWidget {
                           Expanded(
                             child: GestureDetector(
                               onTap: () {
+                                if ((booking.bookingStatus == "cancelled")) {
+                                  print("cancelled booking");
+                                  return;
+                                }
                                 openWhatsApp(pandit?.phone);
                               },
                               child: Container(
@@ -261,37 +332,37 @@ class MyBookingDetails extends ConsumerWidget {
                           const SizedBox(width: 10),
 
                           /// TRACK LOCATION
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                // TODO: Implement location tracking
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.shade50,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(
-                                      Icons.location_on,
-                                      color: AppColors.error,
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      "Track location",
-                                      style: text11(color: AppColors.error),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
+                          // Expanded(
+                          //   child: GestureDetector(
+                          //     onTap: () {
+                          //       // TODO: Implement location tracking
+                          //     },
+                          //     child: Container(
+                          //       padding: const EdgeInsets.symmetric(
+                          //         vertical: 8,
+                          //       ),
+                          //       decoration: BoxDecoration(
+                          //         color: Colors.red.shade50,
+                          //         borderRadius: BorderRadius.circular(20),
+                          //       ),
+                          //       child: Row(
+                          //         mainAxisAlignment: MainAxisAlignment.center,
+                          //         children: [
+                          //           const Icon(
+                          //             Icons.location_on,
+                          //             color: AppColors.error,
+                          //             size: 16,
+                          //           ),
+                          //           const SizedBox(width: 6),
+                          //           Text(
+                          //             "Track location",
+                          //             style: text11(color: AppColors.error),
+                          //           ),
+                          //         ],
+                          //       ),
+                          //     ),
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),
@@ -398,9 +469,7 @@ class MyBookingDetails extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              booking.templeSnapshot?.name ??
-                                  booking.mandirSnapshot?.name ??
-                                  "Temple Location",
+                              booking.temple?.name ?? "Temple Location",
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -408,14 +477,12 @@ class MyBookingDetails extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              "${booking.templeSnapshot?.city ?? booking.mandirSnapshot?.city ?? ""}, ${booking.templeSnapshot?.state ?? booking.mandirSnapshot?.state ?? ""}",
+                              "${booking.templeSnapshot?.city ?? ""}, ${booking.templeSnapshot?.state ?? ""}",
                               style: text12(color: AppColors.grey),
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              booking.templeSnapshot?.landmark ??
-                                  booking.mandirSnapshot?.landmark ??
-                                  "",
+                              booking.templeSnapshot?.landmark ?? "",
                               style: text12(color: AppColors.grey),
                             ),
                           ],
@@ -424,10 +491,7 @@ class MyBookingDetails extends ConsumerWidget {
 
                       /// RIGHT IMAGE
                       CustomCachedImage(
-                        imageUrl:
-                            booking.templeSnapshot?.image ??
-                            booking.mandirSnapshot?.image ??
-                            '',
+                        imageUrl: booking.templeSnapshot?.image ?? '',
                         width: 50,
                         height: 60,
                       ),
@@ -471,30 +535,81 @@ class MyBookingDetails extends ConsumerWidget {
                 ),
               ],
 
-              const SizedBox(height: 20),
-              if (type == "online")
+              if (!(booking.bookingStatus == "cancelled")) ...[
+                const SizedBox(height: 20),
+                if (type == "online")
+                  AppOutlineButton(
+                    title: "Join Video Call",
+                    onTap: () {
+                      // TODO: Implement video call functionality
+                    },
+                  ),
+                const SizedBox(height: 15),
+
                 AppOutlineButton(
-                  title: "Join Video Call",
-                  onTap: () {
-                    // TODO: Implement video call functionality
+                  title: rescheduleState.isLoading
+                      ? "Reschduleing..."
+                      : "Reschedule",
+                  onTap: () async {
+                    final selectedSlot = await handleDateTimeSelection(context);
+
+                    if (selectedSlot == null) {
+                      AppSnackbar.show(
+                        context,
+                        message: "Please Select date and time",
+                        type: SnackBarType.success,
+                      );
+                      return;
+                    }
+                    ;
+
+                    final model = PanditCreateOrderReqModel(
+                      ritualId: booking.ritualRef?.id ?? '',
+                      bookingMode: booking.bookingMode ?? '',
+                      panditId: pandit?.id ?? '',
+                      templeId: booking.temple?.id ?? '',
+                      dateAndTime: DateAndTimeWrapper(
+                        dateAndTime: [selectedSlot],
+                      ),
+                      address: Address(
+                        name: booking.address?.name ?? '',
+                        phone: booking.address?.phone ?? '',
+                        fullAddress: booking.address?.fullAddress ?? '',
+                        city: booking.address?.city ?? '',
+                        state: booking.address?.state ?? '',
+                        pincode: booking.address?.pincode ?? '',
+                      ),
+                      onlineDetails: OnlineDetails(
+                        name: booking.address?.name ?? '',
+                        phone: booking.address?.phone ?? '',
+                        secPhone: booking.address?.secondPhone ?? '',
+                        email: booking.address?.email ?? '',
+                      ),
+                      price: booking.dakshinaAmount ?? 0,
+                    );
+
+                    final success = await ref
+                        .read(rescheduleBookingProvider.notifier)
+                        .bookingReschedule(booking.id ?? '', model);
+
+                    if (success && context.mounted) {
+                      AppSnackbar.show(
+                        context,
+                        message: "Booking rescheduled successfully",
+                        type: SnackBarType.success,
+                      );
+                    }
                   },
                 ),
-              const SizedBox(height: 15),
+                const SizedBox(height: 15),
 
-              AppOutlineButton(
-                title: "Reschedule",
-                onTap: () {
-                  // TODO: Implement reschedule functionality
-                },
-              ),
-              const SizedBox(height: 15),
-
-              AppButton(
-                title: "Cancel Booking",
-                onTap: () {
-                  Navigator.pushNamed(context, AppRoutes.cancelBooking);
-                },
-              ),
+                AppButton(
+                  title: "Cancel Booking",
+                  onTap: () {
+                    showCancelOrderBottomSheet(context, ref, booking.id ?? '');
+                  },
+                ),
+              ],
             ],
           ),
         ),
@@ -502,29 +617,262 @@ class MyBookingDetails extends ConsumerWidget {
     );
   }
 
-  // Widget _buildImage(String imageUrl, double height, double width) {
-  //   if (imageUrl.startsWith('http')) {
-  //     return Image.network(
-  //       imageUrl,
-  //       height: height,
-  //       width: width is double && width == double.infinity ? width : width,
-  //       fit: BoxFit.cover,
-  //       errorBuilder: (context, error, stack) {
-  //         return Image.asset(
-  //           "assets/retual.png",
-  //           height: height,
-  //           width: width is double && width == double.infinity ? width : width,
-  //           fit: BoxFit.cover,
-  //         );
-  //       },
-  //     );
-  //   } else {
-  //     return Image.asset(
-  //       imageUrl,
-  //       height: height,
-  //       width: width is double && width == double.infinity ? width : width,
-  //       fit: BoxFit.cover,
-  //     );
-  //   }
-  // }
+  String formatDate(DateTime date) {
+    return "${date.day} ${getMonth(date.month)} ${date.year}";
+  }
+
+  /// Format TimeOfDay to "HH:MM AM/PM" format
+  String formatTime(TimeOfDay time) {
+    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+    return "$hour:$minute $period";
+  }
+
+  /// Handle date and time selection from search button
+  Future<DateTimeSlot?> handleDateTimeSelection(BuildContext context) async {
+    DateTime? selectedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+
+    if (selectedDate == null) return null;
+
+    TimeOfDay? startTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      helpText: 'Select Start Time',
+    );
+
+    if (startTime == null) return null;
+
+    TimeOfDay? endTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: (startTime.hour + 1) % 24,
+        minute: startTime.minute,
+      ),
+      helpText: 'Select End Time',
+    );
+
+    if (endTime == null) return null;
+
+    String timeSlot = "${formatTime(startTime)} - ${formatTime(endTime)}";
+
+    String formattedDate = formatDate(selectedDate);
+
+    return DateTimeSlot(date: formattedDate, time: timeSlot);
+  }
+}
+
+String getMonth(int month) {
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  return months[month - 1];
+}
+
+Color _getStatusColor(String? status) {
+  switch (status?.toLowerCase()) {
+    case "confirmed":
+      return AppColors.green;
+    case "pending":
+    case "requested":
+      return AppColors.warning;
+    case "completed":
+      return AppColors.info;
+    case "cancelled":
+      return AppColors.error;
+    default:
+      return AppColors.grey;
+  }
+}
+
+String _getStatusText(String? status) {
+  switch (status?.toLowerCase()) {
+    case "confirmed":
+      return "Confirmed";
+    case "pending":
+    case "requested":
+      return "Pending";
+    case "completed":
+      return "Completed";
+    case "cancelled":
+      return "Cancelled";
+    default:
+      return "Pending";
+  }
+}
+
+String _getBookingModeStatusText(String? status) {
+  switch (status?.toLowerCase()) {
+    case "home":
+      return "Home Pooja";
+    case "temple":
+      return "Temple Pooja";
+    case "online":
+      return "Online Pooja";
+    default:
+      return "Travel Pooja";
+  }
+}
+
+void showCancelOrderBottomSheet(
+  BuildContext context,
+  WidgetRef ref,
+  String orderId,
+) {
+  final reasons = [
+    "Change of plans",
+    "Booked by mistake",
+    "Found another pandit",
+    "Selected wrong date or time",
+    "Pooja no longer required",
+    "Location issue",
+    "Pandit unavailable preference",
+    "Other",
+  ];
+
+  ref.read(selectedCancelReasonProvider.notifier).state = null;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (_) {
+      return Consumer(
+        builder: (context, ref, child) {
+          final selectedReason = ref.watch(selectedCancelReasonProvider);
+          final cancelState = ref.watch(cancelBookingProvider);
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 20,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.grey300,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                Text(
+                  "Cancel Order",
+                  style: text18(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+
+                Text(
+                  "Please select a reason for cancellation",
+                  style: text14(color: AppColors.grey600),
+                ),
+
+                const SizedBox(height: 16),
+
+                ...reasons.map(
+                  (reason) => Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: selectedReason == reason
+                            ? AppColors.button
+                            : AppColors.grey200,
+                      ),
+                    ),
+                    child: RadioListTile<String>(
+                      activeColor: AppColors.button,
+                      fillColor: WidgetStateProperty.resolveWith<Color>((
+                        states,
+                      ) {
+                        if (states.contains(WidgetState.selected)) {
+                          return AppColors.button;
+                        }
+                        return AppColors.grey400;
+                      }),
+                      value: reason,
+                      groupValue: selectedReason,
+                      title: Text(
+                        reason,
+                        style: text14(fontWeight: FontWeight.w500),
+                      ),
+                      onChanged: (value) {
+                        ref.read(selectedCancelReasonProvider.notifier).state =
+                            value;
+                      },
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                AppButton(
+                  title: cancelState.isLoading ? "Cancelling..." : "Submit",
+                  onTap: cancelState.isLoading
+                      ? null
+                      : () async {
+                          if (selectedReason == null) {
+                            AppSnackbar.show(
+                              context,
+                              message: "Please select reason",
+                              type: SnackBarType.warning,
+                            );
+
+                            return;
+                          }
+
+                          final success = await ref
+                              .read(cancelBookingProvider.notifier)
+                              .cancelOrder(orderId, selectedReason);
+
+                          if (success) {
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.cancelBooking,
+                            );
+                            ref.invalidate(panditBookingProvider);
+
+                            AppSnackbar.show(
+                              context,
+                              message: "Booking Cancelled Successfully",
+                              type: SnackBarType.success,
+                            );
+                          }
+                        },
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
 }

@@ -147,7 +147,7 @@ class MyOrdersPage extends ConsumerWidget {
 }
 
 // Order Card Widget
-class OrderCard extends StatelessWidget {
+class OrderCard extends ConsumerWidget {
   final Order order;
   final VoidCallback onTap;
 
@@ -188,7 +188,7 @@ class OrderCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final displayItems = _getDisplayItems();
     final isMultiItem = displayItems.length > 1;
     final statusColor = OrderUtils.getStatusColor(
@@ -197,6 +197,8 @@ class OrderCard extends StatelessWidget {
     final statusText = OrderUtils.getStatusText(
       order.tracking?.currentStatus ?? order.orderStatus,
     );
+
+    final status = order.tracking?.currentStatus ?? order.orderStatus;
 
     return GestureDetector(
       onTap: onTap,
@@ -389,7 +391,35 @@ class OrderCard extends StatelessWidget {
                       ],
                     ),
                   const SizedBox(height: 12),
-                  AppButton(title: "View Details", onTap: onTap),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: AppButton(
+                          height: 38,
+                          radius: 15,
+                          title: "View Details",
+                          onTap: onTap,
+                        ),
+                      ),
+                      if (!(status?.toLowerCase() == "cancelled")) ...[
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: AppOutlineButton(
+                            height: 38,
+                            radius: 15,
+                            title: "Cancel",
+                            onTap: () {
+                              showCancelOrderBottomSheet(
+                                context,
+                                ref,
+                                order.id ?? '',
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -398,6 +428,146 @@ class OrderCard extends StatelessWidget {
       ),
     );
   }
+}
+
+void showCancelOrderBottomSheet(
+  BuildContext context,
+  WidgetRef ref,
+  String orderId,
+) {
+  final reasons = [
+    "Changed my mind",
+    "Found better price elsewhere",
+    "Ordered by mistake",
+    "Delivery taking too long",
+    "Other",
+  ];
+
+  ref.read(selectedCancelReasonProvider.notifier).state = null;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (_) {
+      return Consumer(
+        builder: (context, ref, child) {
+          final selectedReason = ref.watch(selectedCancelReasonProvider);
+          final cancelState = ref.watch(cancelOrderProvider);
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 20,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                Text(
+                  "Cancel Order",
+                  style: text18(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+
+                Text(
+                  "Please select a reason for cancellation",
+                  style: text14(color: AppColors.grey600),
+                ),
+
+                const SizedBox(height: 16),
+
+                ...reasons.map(
+                  (reason) => Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: selectedReason == reason
+                            ? AppColors.button
+                            : AppColors.grey200,
+                      ),
+                    ),
+                    child: RadioListTile<String>(
+                      activeColor: AppColors.button,
+                      fillColor: WidgetStateProperty.resolveWith<Color>((
+                        states,
+                      ) {
+                        if (states.contains(WidgetState.selected)) {
+                          return AppColors.button;
+                        }
+                        return AppColors.grey400;
+                      }),
+                      value: reason,
+                      groupValue: selectedReason,
+                      title: Text(
+                        reason,
+                        style: text14(fontWeight: FontWeight.w500),
+                      ),
+                      onChanged: (value) {
+                        ref.read(selectedCancelReasonProvider.notifier).state =
+                            value;
+                      },
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                AppButton(
+                  title: cancelState.isLoading ? "Cancelling..." : "Submit",
+                  onTap: cancelState.isLoading
+                      ? null
+                      : () async {
+                          if (selectedReason == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Please select reason"),
+                              ),
+                            );
+                            return;
+                          }
+
+                          final success = await ref
+                              .read(cancelOrderProvider.notifier)
+                              .cancelOrder(orderId, selectedReason);
+
+                          if (success) {
+                            Navigator.pop(context);
+                            ref.invalidate(orderProvider);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Order cancelled successfully"),
+                              ),
+                            );
+                          }
+                        },
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
 }
 
 class ProductDisplayItem {

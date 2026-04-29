@@ -358,7 +358,9 @@ class BookingCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: _getStatusColor(),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.horizontal(
+                  left: Radius.circular(20),
+                ),
               ),
               child: Text(
                 status,

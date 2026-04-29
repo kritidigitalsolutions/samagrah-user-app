@@ -29,7 +29,7 @@ class AppUrls {
   //==========================bokked order =================================
 
   static const String myOrder = "$baseUrl/order/my";
-  static const String trackOrder = "$baseUrl/order";
+  static const String order = "$baseUrl/order";
 
   //========================== Address pages =================================
 

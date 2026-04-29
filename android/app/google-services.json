@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "39473910923",
+    "project_id": "samagran-80a19",
+    "storage_bucket": "samagran-80a19.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:39473910923:android:858ba97fcef87511dc308e",
+        "android_client_info": {
+          "package_name": "com.samagran.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZSlXpte4jBVudY502BfFItAl7AuevnvI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

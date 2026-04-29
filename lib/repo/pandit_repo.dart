@@ -1,4 +1,5 @@
 import 'package:samagrah/data/network/network_api_service.dart';
+import 'package:samagrah/model/request/payment_req/pandit_create_order_req_model.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_booked_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/ritual_res_model.dart';
@@ -76,6 +77,39 @@ class PanditRepo {
       return PanditBookedResModel.fromJson(res);
     } catch (e) {
       rethrow;
+    }
+  }
+
+  // ====================== booking cancel ====================================
+
+  Future<bool> cancelBooking(String bookingId, String reason) async {
+    try {
+      final token = await AuthLocalstorageService.getToken() ?? '';
+      _api.setToken(token);
+      final uri = "${AppUrls.panditCreateOrder}/$bookingId/cancel";
+      await _api.pacthApi(uri, {"reason": reason});
+      return true;
+    } catch (e) {
+      print("cancel order  ${e.toString()}");
+      return false;
+    }
+  }
+
+  // ====================== booking reschedule ====================================
+
+  Future<bool> bookingReschedule(
+    String bookingId,
+    PanditCreateOrderReqModel req,
+  ) async {
+    try {
+      final token = await AuthLocalstorageService.getToken() ?? '';
+      _api.setToken(token);
+      final uri = "${AppUrls.panditCreateOrder}/$bookingId/reschedule";
+      await _api.pacthApi(uri, req.toJson());
+      return true;
+    } catch (e) {
+      print("cancel order  ${e.toString()}");
+      return false;
     }
   }
 }

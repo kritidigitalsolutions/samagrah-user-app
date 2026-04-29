@@ -26,7 +26,7 @@ class ProfileApi {
       print("➡️ Email: $email");
       print("➡️ Address: $address");
       print("➡️ Image: ${imageFile?.path}");
-      print("➡️ Image: ${userId}");
+      print("➡️ Image: $userId");
       print("➡️ Token: $token");
 
       /// 📦 Form Data
