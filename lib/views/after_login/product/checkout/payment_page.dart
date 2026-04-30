@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
+import 'package:samagrah/repo/payment_repo.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
@@ -691,8 +692,28 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                   }
 
                   if (selectedPaymentMethod == 'cod') {
+                    final PaymentRepo repo = PaymentRepo();
+                    final verifyReq = VerifyPaymentReqModel(
+                      paymentMethod: "COD",
+                      deliveryFee: codCharges,
+                      address: address,
+                      items: items,
+                    );
+
+                    debugPrint("📤 Verify Request JSON:");
+                    debugPrint("${verifyReq.toJson()}");
+
+                    debugPrint("🌐 Calling verifyPayment API...");
+
+                    final success = await repo.productVerifyPayment(verifyReq);
+
+                    if (success) {
+                      Navigator.pushNamed(context, AppRoutes.successPage);
+                      debugPrint("✅ PAYMENT VERIFIED SUCCESSFULLY");
+                    } else {
+                      debugPrint("❌ PAYMENT VERIFICATION FAILED");
+                    }
                     // COD Order
-                    Navigator.pushNamed(context, AppRoutes.successPage);
                   } else if (selectedPaymentMethod == 'wallet') {
                     // Wallet Payment
                     if (walletBalance >= totalAmount) {

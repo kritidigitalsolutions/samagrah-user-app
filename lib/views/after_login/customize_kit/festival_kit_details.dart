@@ -579,9 +579,9 @@ class CustomizeAddItemsBottomSheet extends ConsumerWidget {
               ),
               _buildChip(
                 'Mala(Gralands)',
-                "mala",
+                "garland",
                 "assets/home/mala.png",
-                selectedKitCategory == "mala",
+                selectedKitCategory == "garland",
                 ref,
               ),
             ],

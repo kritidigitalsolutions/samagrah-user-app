@@ -561,7 +561,6 @@ class MyBookingDetails extends ConsumerWidget {
                       );
                       return;
                     }
-                    ;
 
                     final model = PanditCreateOrderReqModel(
                       ritualId: booking.ritualRef?.id ?? '',

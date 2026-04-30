@@ -155,7 +155,7 @@ class _TypeOfCategoryPageState extends ConsumerState<TypeOfCategoryPage> {
     } else if (categoryLower.contains('flower') ||
         categoryLower.contains('flowes')) {
       return "assets/home/flower.png";
-    } else if (categoryLower.contains('mala')) {
+    } else if (categoryLower.contains('garland')) {
       return "assets/home/mala.png";
     } else if (categoryLower.contains('diya')) {
       return "assets/home/incense.png";

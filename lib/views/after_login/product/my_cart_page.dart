@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/res/app_colors.dart';
+import 'package:samagrah/res/app_image.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
 import 'package:samagrah/views/after_login/product/checkout/order_summary_page.dart';
+import 'package:samagrah/views/custom_widget/empty_data_widget.dart';
 import 'package:samagrah/views/global_widgets/product_details_bottom_sheet.dart';
 
 class MyCartPage extends ConsumerStatefulWidget {
@@ -62,7 +64,12 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
               ),
               Expanded(
                 child: cartItems.items.isEmpty
-                    ? const Center(child: Text("Your cart is empty"))
+                    ? const EmptyDataWidget(
+                        title: "Cart is Empty",
+                        subtitle:
+                            "Add products to your cart and start shopping",
+                        animationPath: AppImages.empty,
+                      )
                     : ListView.builder(
                         padding: const EdgeInsets.all(15),
                         itemCount: cartItems.items.length,

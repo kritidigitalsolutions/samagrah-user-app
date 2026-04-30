@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_booked_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
+import 'package:samagrah/res/app_image.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/booking_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:samagrah/views/custom_loader.dart/booking_card_loader.dart';
+import 'package:samagrah/views/custom_widget/empty_data_widget.dart';
 
 final bookingFilterProvider = StateProvider<String>((ref) => "All");
 
@@ -114,11 +117,10 @@ class MyBookingsPage extends ConsumerWidget {
                 /// ✅ LIST
                 Expanded(
                   child: filteredBookings.isEmpty
-                      ? Center(
-                          child: Text(
-                            "No bookings found",
-                            style: text14(color: AppColors.grey),
-                          ),
+                      ? EmptyDataWidget(
+                          title: "No Bookings Found",
+                          subtitle: "Your upcoming bookings will appear here",
+                          animationPath: AppImages.nothing,
                         )
                       : ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -164,9 +166,12 @@ class MyBookingsPage extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Scaffold(
-          backgroundColor: AppColors.background,
-          body: Center(child: CircularProgressIndicator()),
+        loading: () => ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: 5,
+          itemBuilder: (context, index) {
+            return const BookingCardSkeleton();
+          },
         ),
         error: (error, stack) => Scaffold(
           backgroundColor: AppColors.background,

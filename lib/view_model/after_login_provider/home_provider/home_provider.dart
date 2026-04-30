@@ -186,3 +186,6 @@ final bannerProvider = FutureProvider<BannerResModel>((ref) async {
   final repo = ref.read(productRepoProvider);
   return repo.getBanner();
 });
+
+// =========== product details =======================
+final showAllDetailsProvider = StateProvider<bool>((ref) => false);

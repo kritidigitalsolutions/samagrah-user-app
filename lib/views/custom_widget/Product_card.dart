@@ -142,31 +142,31 @@ class ProductCard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        capitalizeWords(product.title ?? ''),
-                        overflow: TextOverflow.ellipsis,
-                        style: text11(fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                    Text(
-                      '${product.discountPercent}% off',
-                      style: text10(color: AppColors.grey500),
-                    ),
-                  ],
+                Text(
+                  capitalizeWords(product.title ?? ''),
+                  overflow: TextOverflow.ellipsis,
+                  style: text11(fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 2),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  //mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Rs. ${product.oldPrice}/-',
-                      style: text8(
-                        color: AppColors.grey,
-                      ).copyWith(decoration: TextDecoration.lineThrough),
+                    Row(
+                      children: [
+                        Text(
+                          'Rs. ${product.oldPrice}/-',
+                          style: text8(
+                            color: AppColors.grey,
+                          ).copyWith(decoration: TextDecoration.lineThrough),
+                        ),
+                        SizedBox(width: 8),
+
+                        Text(
+                          '${product.discountPercent}% off',
+                          style: text10(color: AppColors.grey500),
+                        ),
+                      ],
                     ),
                     Text(
                       'Rs. ${product.price}/-',

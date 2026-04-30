@@ -16,34 +16,45 @@ class CreateOrderReqModel {
 
 class VerifyPaymentReqModel {
   final String paymentMethod;
-  final int deliveryFee;
+  final num deliveryFee;
   final Address address;
   final List<VerifyItem> items;
 
-  final String razorpayOrderId;
-  final String razorpayPaymentId;
-  final String razorpaySignature;
+  final String? razorpayOrderId;
+  final String? razorpayPaymentId;
+  final String? razorpaySignature;
 
   VerifyPaymentReqModel({
     required this.paymentMethod,
     required this.deliveryFee,
     required this.address,
     required this.items,
-    required this.razorpayOrderId,
-    required this.razorpayPaymentId,
-    required this.razorpaySignature,
+    this.razorpayOrderId,
+    this.razorpayPaymentId,
+    this.razorpaySignature,
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    final data = {
       "paymentMethod": paymentMethod,
       "deliveryFee": deliveryFee,
       "address": address.toJson(),
       "items": items.map((e) => e.toJson()).toList(),
-      "razorpayOrderId": razorpayOrderId,
-      "razorpayPaymentId": razorpayPaymentId,
-      "razorpaySignature": razorpaySignature,
     };
+
+    if (razorpayOrderId != null && razorpayOrderId!.isNotEmpty) {
+      data["razorpayOrderId"] = razorpayOrderId!;
+    }
+
+    if (razorpayPaymentId != null && razorpayPaymentId!.isNotEmpty) {
+      data["razorpayPaymentId"] = razorpayPaymentId!;
+    }
+
+    if (razorpaySignature != null && razorpaySignature!.isNotEmpty) {
+      data["razorpaySignature"] = razorpaySignature!;
+    }
+
+    return data;
   }
 }
 

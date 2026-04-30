@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/main.dart';
 import 'package:samagrah/model/response/product_booked_res/product_booked_res_modle.dart';
 import 'package:samagrah/res/app_colors.dart';
+import 'package:samagrah/res/app_image.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/order_provider/order_provider.dart';
+import 'package:samagrah/views/custom_loader.dart/order_card_loader.dart';
+import 'package:samagrah/views/custom_widget/empty_data_widget.dart';
 
 // My Orders Page
 class MyOrdersPage extends ConsumerWidget {
@@ -27,30 +30,10 @@ class MyOrdersPage extends ConsumerWidget {
               data: (data) {
                 final orders = data.orders?.data?.orders ?? [];
                 if (orders.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.shopping_bag_outlined,
-                          size: 80,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No orders yet',
-                          style: text18(
-                            color: AppColors.grey600,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Start shopping to see your orders here',
-                          style: text14(color: AppColors.grey),
-                        ),
-                      ],
-                    ),
+                  return EmptyDataWidget(
+                    title: "No Orders Yet",
+                    subtitle: "Your placed orders will appear here",
+                    animationPath: AppImages.nothing,
                   );
                 }
 
@@ -76,8 +59,10 @@ class MyOrdersPage extends ConsumerWidget {
                   ),
                 );
               },
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: AppColors.button),
+              loading: () => ListView.builder(
+                itemCount: 5,
+                padding: const EdgeInsets.all(16),
+                itemBuilder: (_, __) => const OrderCardSkeleton(),
               ),
               error: (error, stack) => Center(
                 child: Column(

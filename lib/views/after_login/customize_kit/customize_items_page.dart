@@ -104,9 +104,9 @@ class _CustomizeItemsPageState extends ConsumerState<CustomizeItemsPage> {
                 ),
                 _buildChip(
                   'Mala(Gralands)',
-                  "mala",
+                  "garland",
                   "assets/home/mala.png",
-                  selectedKitCategory == "mala",
+                  selectedKitCategory == "garland",
                   ref,
                 ),
               ],
@@ -306,7 +306,7 @@ class _CustomizeItemsPageState extends ConsumerState<CustomizeItemsPage> {
                         top: Radius.circular(12),
                       ),
                       child: CustomCachedImage(
-                        imageUrl: product.thumbnail,
+                        imageUrl: product.thumbnail ?? '',
                         height: 90,
                         width: double.infinity,
                         fit: BoxFit.cover,

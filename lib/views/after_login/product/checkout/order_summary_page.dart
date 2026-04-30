@@ -171,7 +171,7 @@ class OrderSummaryScreen extends ConsumerWidget {
                       final verifyItems = items.map((item) {
                         return VerifyItem(
                           productId: item.productId,
-                          quantity: itemTotal,
+                          quantity: item.quantity,
                         );
                       }).toList();
 

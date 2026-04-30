@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/response/product_res/cart_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
+import 'package:samagrah/res/app_image.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/wishlist_provider.dart';
+import 'package:samagrah/views/custom_widget/empty_data_widget.dart';
 import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
 import 'package:samagrah/views/global_widgets/product_details_bottom_sheet.dart';
 
@@ -61,15 +63,24 @@ class MyFavProducts extends ConsumerWidget {
               decoration: BoxDecoration(color: AppColors.background),
               child: Column(
                 children: [
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(15),
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        return _buildCartItem(context, ref, items[index]);
-                      },
-                    ),
-                  ),
+                  items.isEmpty
+                      ? Expanded(
+                          child: EmptyDataWidget(
+                            title: "Your Wishlist is Empty",
+                            subtitle: "Save items you love to view them later",
+                            animationPath: AppImages.empty,
+                            height: 250,
+                          ),
+                        )
+                      : Expanded(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.all(15),
+                            itemCount: items.length,
+                            itemBuilder: (context, index) {
+                              return _buildCartItem(context, ref, items[index]);
+                            },
+                          ),
+                        ),
 
                   Padding(
                     padding: const EdgeInsets.symmetric(

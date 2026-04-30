@@ -56,6 +56,8 @@ class Product {
   Product({
     required this.id,
     required this.title,
+    required this.description,
+    required this.details,
     required this.price,
     required this.oldPrice,
     required this.discountPercent,
@@ -63,6 +65,7 @@ class Product {
     required this.images,
     required this.category,
     required this.inStock,
+    required this.ratings,
     required this.isRecommended,
     required this.isMostPoojaEssentials,
     required this.isMostUsed,
@@ -72,13 +75,16 @@ class Product {
 
   final String? id;
   final String? title;
+  final String? description;
+  final Details? details;
   final int? price;
   final int? oldPrice;
   final int? discountPercent;
-  final dynamic thumbnail;
+  final String? thumbnail;
   final List<String> images;
   final String? category;
   final bool? inStock;
+  final Ratings? ratings;
   final bool? isRecommended;
   final bool? isMostPoojaEssentials;
   final bool? isMostUsed;
@@ -89,6 +95,10 @@ class Product {
     return Product(
       id: json["id"],
       title: json["title"],
+      description: json["description"],
+      details: json["details"] == null
+          ? null
+          : Details.fromJson(json["details"]),
       price: json["price"],
       oldPrice: json["oldPrice"],
       discountPercent: json["discountPercent"],
@@ -98,11 +108,110 @@ class Product {
           : List<String>.from(json["products"]!.map((x) => x)),
       category: json["category"],
       inStock: json["inStock"],
+      ratings: json["ratings"] == null
+          ? null
+          : Ratings.fromJson(json["ratings"]),
       isRecommended: json["isRecommended"],
       isMostPoojaEssentials: json["isMostPoojaEssentials"],
       isMostUsed: json["isMostUsed"],
       isEveryDayRitual: json["isEveryDayRitual"],
       isRitualItems: json["isRitualItems"],
+    );
+  }
+}
+
+class Details {
+  Details({
+    required this.brand,
+    required this.sku,
+    required this.unit,
+    required this.weight,
+    required this.dimensions,
+    required this.material,
+    required this.color,
+    required this.manufacturer,
+    required this.countryOfOrigin,
+    required this.packageContents,
+    required this.usageInstructions,
+    required this.careInstructions,
+    required this.expiryInfo,
+  });
+
+  final String? brand;
+  final String? sku;
+  final String? unit;
+  final String? weight;
+  final String? dimensions;
+  final String? material;
+  final String? color;
+  final String? manufacturer;
+  final String? countryOfOrigin;
+  final String? packageContents;
+  final String? usageInstructions;
+  final String? careInstructions;
+  final String? expiryInfo;
+
+  factory Details.fromJson(Map<String, dynamic> json) {
+    return Details(
+      brand: json["brand"],
+      sku: json["sku"],
+      unit: json["unit"],
+      weight: json["weight"],
+      dimensions: json["dimensions"],
+      material: json["material"],
+      color: json["color"],
+      manufacturer: json["manufacturer"],
+      countryOfOrigin: json["countryOfOrigin"],
+      packageContents: json["packageContents"],
+      usageInstructions: json["usageInstructions"],
+      careInstructions: json["careInstructions"],
+      expiryInfo: json["expiryInfo"],
+    );
+  }
+}
+
+class Ratings {
+  Ratings({
+    required this.counts,
+    required this.average,
+    required this.totalReviews,
+  });
+
+  final Counts? counts;
+  final int? average;
+  final int? totalReviews;
+
+  factory Ratings.fromJson(Map<String, dynamic> json) {
+    return Ratings(
+      counts: json["counts"] == null ? null : Counts.fromJson(json["counts"]),
+      average: json["average"],
+      totalReviews: json["totalReviews"],
+    );
+  }
+}
+
+class Counts {
+  Counts({
+    required this.rating1,
+    required this.rating2,
+    required this.rating3,
+    required this.rating4,
+    required this.rating5,
+  });
+
+  final int? rating1;
+  final int? rating2;
+  final int? rating3;
+  final int? rating4;
+  final int? rating5;
+
+  factory Counts.fromJson(Map<String, dynamic> json) {
+    return Counts(
+      rating1: json["rating1"],
+      rating2: json["rating2"],
+      rating3: json["rating3"],
+      rating4: json["rating4"],
+      rating5: json["rating5"],
     );
   }
 }
