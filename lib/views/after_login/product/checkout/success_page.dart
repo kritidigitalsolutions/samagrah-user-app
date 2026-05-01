@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/main.dart';
 import 'package:samagrah/res/app_colors.dart';
+import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
 
-class SuccessPage extends StatefulWidget {
+class SuccessPage extends ConsumerStatefulWidget {
   const SuccessPage({super.key});
 
   @override
-  State<SuccessPage> createState() => _SuccessPageState();
+  ConsumerState<SuccessPage> createState() => _SuccessPageState();
 }
 
-class _SuccessPageState extends State<SuccessPage>
+class _SuccessPageState extends ConsumerState<SuccessPage>
     with SingleTickerProviderStateMixin {
   late AnimationController controller;
   late Animation<double> scaleAnimation;
@@ -41,80 +45,125 @@ class _SuccessPageState extends State<SuccessPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Card(
-            elevation: 1,
-            color: AppColors.background,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // ✅ Animated Success Icon
-                  ScaleTransition(
-                    scale: scaleAnimation,
-                    child: Container(
-                      width: 70,
-                      height: 70,
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withAlpha(50),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check,
-                        size: 40,
-                        color: AppColors.success,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+
+        await _handleBackToHome();
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Card(
+              elevation: 1,
+              color: AppColors.background,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 24,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // ✅ Animated Success Icon
+                    ScaleTransition(
+                      scale: scaleAnimation,
+                      child: Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withAlpha(50),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check,
+                          size: 40,
+                          color: AppColors.success,
+                        ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                  Text(
-                    'Order Confirmed',
-                    style: text20(fontWeight: FontWeight.bold),
-                  ),
+                    Text(
+                      'Order Confirmed',
+                      style: text20(fontWeight: FontWeight.bold),
+                    ),
 
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  Text(
-                    'Your order is confirmed now\nand will reach you soon',
-                    textAlign: TextAlign.center,
-                    style: text15(color: Colors.grey).copyWith(height: 1.4),
-                  ),
+                    Text(
+                      'Your order is confirmed now\nand will reach you soon',
+                      textAlign: TextAlign.center,
+                      style: text15(color: Colors.grey).copyWith(height: 1.4),
+                    ),
 
-                  const SizedBox(height: 30),
+                    const SizedBox(height: 30),
 
-                  AppButton(radius: 8, title: "Track Order", onTap: () {}),
+                    AppButton(
+                      radius: 8,
+                      title: "My Order",
+                      onTap: () {
+                        Navigator.pushNamed(context, AppRoutes.myOrder);
+                      },
+                    ),
 
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  AppOutlineButton(
-                    radius: 8,
-                    title: "Back To Home",
-                    onTap: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MyHomeScreen(index: 0),
-                        ),
-                        (route) => false, // removes all previous routes
-                      );
-                    },
-                  ),
-                ],
+                    AppOutlineButton(
+                      radius: 8,
+                      title: "Back To Home",
+                      onTap: () async {
+                        await _handleBackToHome();
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _handleBackToHome() async {
+    final bookingItems = ref.read(bookingItemProvider);
+    final cartState = ref.read(cartProvider);
+
+    for (final bookingItem in bookingItems) {
+      final matchedCartItem = cartState.items.firstWhere(
+        (cartItem) => cartItem.productId == bookingItem.productId,
+        orElse: () =>
+            CartItem(productId: '', title: '', thumbnail: '', price: 0),
+      );
+
+      if (matchedCartItem.productId.isNotEmpty) {
+        debugPrint(
+          '🗑 Deleting ordered cart item: ${matchedCartItem.productId}',
+        );
+
+        await ref
+            .read(cartProvider.notifier)
+            .deleteCart(matchedCartItem.productId);
+      }
+    }
+
+    ref.invalidate(bookingItemProvider);
+    ref.invalidate(cartProvider);
+
+    if (!mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => MyHomeScreen(index: 0)),
+      (route) => false,
     );
   }
 }

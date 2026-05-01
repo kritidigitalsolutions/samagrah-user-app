@@ -1,3 +1,5 @@
+import 'package:samagrah/model/response/product_res/product_response_model.dart';
+
 class ProductBookedResModel {
   ProductBookedResModel({
     required this.success,
@@ -424,20 +426,6 @@ class Pricing {
       price: json["price"],
       mrp: json["mrp"],
       currency: json["currency"],
-    );
-  }
-}
-
-class Ratings {
-  Ratings({required this.average, required this.totalReviews});
-
-  final int? average;
-  final int? totalReviews;
-
-  factory Ratings.fromJson(Map<String, dynamic> json) {
-    return Ratings(
-      average: json["average"],
-      totalReviews: json["totalReviews"],
     );
   }
 }

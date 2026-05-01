@@ -1,6 +1,8 @@
 class AppUrls {
   static const String baseUrl = "http://192.168.1.40:8000/api";
 
+  // static const String  baseUrl = "https://samagran-backend.vercel.app/api";
+
   // ================ Auth =====================================
 
   static const String registerUser = "$baseUrl/auth/signup";
@@ -66,4 +68,12 @@ class AppUrls {
   //========================== profile edit api =================================
 
   static const String editProfile = "$baseUrl/user";
+
+  //========================== wallet and offers =================================
+
+  static const String offers = "$baseUrl/user/offers/active";
+  static const String wallet = "$baseUrl/user/wallet/transactions";
+  static const String walletCreateOrder =
+      "$baseUrl/user/wallet/topup/razorpay/order";
+  static const String walletVerify = "$baseUrl/user/wallet/topup/confirm";
 }

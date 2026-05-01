@@ -246,127 +246,71 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     if (allEmpty) {
                       return const Center(child: Text("No Products Found"));
                     }
-                    return ListView(
-                      padding: EdgeInsets.only(top: 8),
-                      children: [
-                        // Promotional Banner
-                        bannerAsync.when(
-                          data: (res) {
-                            final banners = res.data;
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        ref.invalidate(productProvider);
+                        await ref.read(productProvider.future);
+                      },
+                      child: ListView(
+                        padding: EdgeInsets.only(top: 8),
+                        children: [
+                          // Promotional Banner
+                          bannerAsync.when(
+                            data: (res) {
+                              final banners = res.data;
 
-                            return CarouselSlider(
-                              options: CarouselOptions(
-                                height: 120,
-                                autoPlay: true,
-                                enlargeCenterPage: true,
-                                viewportFraction: 1,
-                                autoPlayInterval: Duration(seconds: 3),
-                              ),
-                              items: banners.map((banner) {
-                                return poojaOfferBanner(banner); // ✅ pass data
-                              }).toList(),
-                            );
-                          },
-                          loading: () =>
-                              const Center(child: CircularProgressIndicator()),
-                          error: (e, _) => const Text("Something went wrong"),
-                        ),
-                        const SizedBox(height: 10),
-
-                        AnimationLimiter(
-                          key: ValueKey(
-                            "grid_${products.length}",
-                          ), // 🔥 re-animation on change
-                          child: GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            padding: const EdgeInsets.all(12),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 3,
-                                  childAspectRatio: 0.75,
-                                  crossAxisSpacing: 10,
-                                  mainAxisSpacing: 10,
+                              return CarouselSlider(
+                                options: CarouselOptions(
+                                  height: 120,
+                                  autoPlay: true,
+                                  enlargeCenterPage: true,
+                                  viewportFraction: 1,
+                                  autoPlayInterval: Duration(seconds: 3),
                                 ),
-                            itemCount: products.length,
-                            itemBuilder: (context, index) {
-                              final product = products[index];
-
-                              return AnimationConfiguration.staggeredGrid(
-                                position: index,
-                                columnCount: 3, // ⚠️ MUST match crossAxisCount
-                                duration: const Duration(milliseconds: 400),
-                                child: SlideAnimation(
-                                  horizontalOffset: 50, // 👇 bottom se aayega
-                                  child: FadeInAnimation(
-                                    child: ScaleAnimation(
-                                      scale: 0.9, // 🔥 slight zoom-in effect
-                                      child: ProductCard(product: product),
-                                    ),
-                                  ),
-                                ),
+                                items: banners.map((banner) {
+                                  return poojaOfferBanner(
+                                    banner,
+                                  ); // ✅ pass data
+                                }).toList(),
                               );
                             },
+                            loading: () => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                            error: (e, _) => const Text("Something went wrong"),
                           ),
-                        ),
+                          const SizedBox(height: 10),
 
-                        // Daily Pooja Essentials
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Daily Pooja Essentials',
-                                style: text15(fontWeight: FontWeight.bold),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const TypeOfCategoryPage(
-                                            title: 'Daily Pooja Essentials',
-                                            categoryType: 'daily',
-                                          ),
-                                    ),
-                                  );
-                                },
-                                child: Text(
-                                  'View all >',
-                                  style: text13(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.warningDark,
+                          AnimationLimiter(
+                            key: ValueKey(
+                              "grid_${products.length}",
+                            ), // 🔥 re-animation on change
+                            child: GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(12),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 3,
+                                    childAspectRatio: 0.75,
+                                    crossAxisSpacing: 10,
+                                    mainAxisSpacing: 10,
                                   ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          height: 160,
-                          child: AnimationLimiter(
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              itemCount: dailyEss.length,
+                              itemCount: products.length,
                               itemBuilder: (context, index) {
-                                final product = dailyEss[index];
+                                final product = products[index];
 
-                                return AnimationConfiguration.staggeredList(
+                                return AnimationConfiguration.staggeredGrid(
                                   position: index,
+                                  columnCount:
+                                      3, // ⚠️ MUST match crossAxisCount
                                   duration: const Duration(milliseconds: 400),
                                   child: SlideAnimation(
-                                    horizontalOffset: 50, // 👉 right se aayega
+                                    horizontalOffset: 50, // 👇 bottom se aayega
                                     child: FadeInAnimation(
-                                      child: buildDiyaCard(
-                                        product,
-                                        ref,
-                                        context,
+                                      child: ScaleAnimation(
+                                        scale: 0.9, // 🔥 slight zoom-in effect
+                                        child: ProductCard(product: product),
                                       ),
                                     ),
                                   ),
@@ -374,73 +318,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               },
                             ),
                           ),
-                        ),
 
-                        const SizedBox(height: 20),
-
-                        // Most Used Items
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Most Used Items in Pooja',
-                                style: text15(fontWeight: FontWeight.bold),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const TypeOfCategoryPage(
-                                            title: 'Most Used Items in Pooja',
-                                            categoryType: 'mostUsed',
-                                          ),
+                          // Daily Pooja Essentials
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Daily Pooja Essentials',
+                                  style: text15(fontWeight: FontWeight.bold),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const TypeOfCategoryPage(
+                                              title: 'Daily Pooja Essentials',
+                                              categoryType: 'daily',
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    'View all >',
+                                    style: text13(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.warningDark,
                                     ),
-                                  );
-                                },
-                                child: Text(
-                                  'View all >',
-                                  style: text13(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.warningDark,
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          height: 140,
-                          child: AnimationLimiter(
-                            key: ValueKey(
-                              "mostUsed_${mostUsed.length}",
-                            ), // 🔥 re-animation support
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              itemCount: mostUsed.length,
-                              itemBuilder: (context, index) {
-                                final product = mostUsed[index];
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: 160,
+                            child: AnimationLimiter(
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                itemCount: dailyEss.length,
+                                itemBuilder: (context, index) {
+                                  final product = dailyEss[index];
 
-                                return AnimationConfiguration.staggeredList(
-                                  position: index,
-                                  duration: const Duration(milliseconds: 400),
-                                  child: SlideAnimation(
-                                    horizontalOffset: 50, // 👉 right se slide
-                                    child: FadeInAnimation(
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          Navigator.pushNamed(
-                                            context,
-                                            AppRoutes.productDetails,
-                                          );
-                                        },
+                                  return AnimationConfiguration.staggeredList(
+                                    position: index,
+                                    duration: const Duration(milliseconds: 400),
+                                    child: SlideAnimation(
+                                      horizontalOffset:
+                                          50, // 👉 right se aayega
+                                      child: FadeInAnimation(
                                         child: buildDiyaCard(
                                           product,
                                           ref,
@@ -448,15 +380,94 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         ),
                                       ),
                                     ),
-                                  ),
-                                );
-                              },
+                                  );
+                                },
+                              ),
                             ),
                           ),
-                        ),
 
-                        const SizedBox(height: 100),
-                      ],
+                          const SizedBox(height: 20),
+
+                          // Most Used Items
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Most Used Items in Pooja',
+                                  style: text15(fontWeight: FontWeight.bold),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const TypeOfCategoryPage(
+                                              title: 'Most Used Items in Pooja',
+                                              categoryType: 'mostUsed',
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    'View all >',
+                                    style: text13(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.warningDark,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: 160,
+                            child: AnimationLimiter(
+                              key: ValueKey(
+                                "mostUsed_${mostUsed.length}",
+                              ), // 🔥 re-animation support
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                itemCount: mostUsed.length,
+                                itemBuilder: (context, index) {
+                                  final product = mostUsed[index];
+
+                                  return AnimationConfiguration.staggeredList(
+                                    position: index,
+                                    duration: const Duration(milliseconds: 400),
+                                    child: SlideAnimation(
+                                      horizontalOffset: 50, // 👉 right se slide
+                                      child: FadeInAnimation(
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.pushNamed(
+                                              context,
+                                              AppRoutes.productDetails,
+                                            );
+                                          },
+                                          child: buildDiyaCard(
+                                            product,
+                                            ref,
+                                            context,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 100),
+                        ],
+                      ),
                     );
                   },
                 ),

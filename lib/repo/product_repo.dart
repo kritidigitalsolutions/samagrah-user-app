@@ -2,6 +2,7 @@
 
 import 'package:samagrah/data/network/network_api_service.dart';
 import 'package:samagrah/model/response/banner_res_model.dart';
+import 'package:samagrah/model/response/product_booked_res/review_res_model.dart';
 import 'package:samagrah/model/response/product_res/cart_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_details_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
@@ -104,6 +105,23 @@ class ProductRepo {
       _api.setToken(token);
       final res = await _api.getApi(AppUrls.banner);
       return BannerResModel.fromJson(res);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // =======================  Review api ===========================
+
+  Future<ReviewResModel> getReview(String id, int page, int limit) async {
+    try {
+      final token = await _getToken();
+      _api.setToken(token);
+
+      final uri = '${AppUrls.getProduct}/$id/ratings?page=$page&limit=$limit';
+
+      final res = await _api.getApi(uri);
+
+      return ReviewResModel.fromJson(res);
     } catch (e) {
       rethrow;
     }

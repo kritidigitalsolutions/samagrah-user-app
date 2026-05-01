@@ -678,26 +678,4 @@ class _AddressSelectionScreenState
       ),
     );
   }
-
-  Widget buildCustomStepper() {
-    return Column(
-      children: [
-        const SizedBox(height: 8),
-
-        /// 🔴 DOT + LINE ROW
-        Row(
-          children: [
-            buildCircle("1", true),
-            buildDottedLine(),
-            buildCircle("2", true),
-            buildDottedLine(),
-            buildCircle("3", true),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        bottomLable(),
-      ],
-    );
-  }
 }

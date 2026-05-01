@@ -184,3 +184,31 @@ class CancelOrderNotifier extends StateNotifier<AsyncValue<bool>> {
     }
   }
 }
+
+// rating ========================
+
+final selectedRatingProvider = StateProvider<int>((ref) => 0);
+
+final ratingOrderProvider =
+    StateNotifierProvider<RatingOrderNotifier, AsyncValue<bool>>((ref) {
+      return RatingOrderNotifier();
+    });
+
+class RatingOrderNotifier extends StateNotifier<AsyncValue<bool>> {
+  RatingOrderNotifier() : super(const AsyncData(false));
+
+  final BookingRepo _repository = BookingRepo();
+
+  Future<bool> postRating(String productId, int rate, String comment) async {
+    state = const AsyncLoading();
+
+    try {
+      final result = await _repository.postRating(productId, rate, comment);
+      state = AsyncData(result);
+      return result;
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      return false;
+    }
+  }
+}

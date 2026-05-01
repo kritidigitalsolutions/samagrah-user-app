@@ -46,4 +46,21 @@ class BookingRepo {
       return false;
     }
   }
+
+  // =================== rating ===============================
+
+  // order cancel
+
+  Future<bool> postRating(String productId, int rate, String comments) async {
+    try {
+      final token = await AuthLocalstorageService.getToken() ?? '';
+      _api.setToken(token);
+      final uri = "${AppUrls.getProduct}/$productId/ratings";
+      await _api.postApi(uri, {"rating": rate, "comment": comments});
+      return true;
+    } catch (e) {
+      print("cancel order  ${e.toString()}");
+      return false;
+    }
+  }
 }

@@ -1,3 +1,5 @@
+// lib/view/after_login/orders/order_details_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/response/product_booked_res/product_booked_res_modle.dart';
@@ -15,7 +17,6 @@ class OrderDetailsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Get orderId from arguments if not passed directly
     final orderAsync = ModalRoute.of(context)?.settings.arguments as Order?;
 
     if (orderAsync == null) {
@@ -46,49 +47,23 @@ class OrderDetailsPage extends ConsumerWidget {
         centerTitle: true,
       ),
       body: OrderDetailsContent(order: orderAsync),
-
-      // loading: () => const Center(
-      //   child: CircularProgressIndicator(
-      //     color: AppColors.button,
-      //   ),
-      // ),
-      // error: (error, stack) => Center(
-      //   child: Column(
-      //     mainAxisAlignment: MainAxisAlignment.center,
-      //     children: [
-      //       Icon(
-      //         Icons.error_outline,
-      //         size: 60,
-      //         color: Colors.red.shade300,
-      //       ),
-      //       const SizedBox(height: 16),
-      //       Text(
-      //         'Failed to load order details',
-      //         style: text16(
-      //           color: AppColors.grey600,
-      //           fontWeight: FontWeight.w500,
-      //         ),
-      //       ),
-      //       const SizedBox(height: 8),
-      //       Padding(
-      //         padding: const EdgeInsets.symmetric(horizontal: 32),
-      //         child: Text(
-      //           error.toString(),
-      //           textAlign: TextAlign.center,
-      //           style: text12(color: AppColors.grey),
-      //         ),
-      //       ),
-      //     ],
-      //   ),
-      // ),
     );
   }
 }
 
-class OrderDetailsContent extends StatelessWidget {
+// ---------------------------------------------------------------------------
+
+class OrderDetailsContent extends ConsumerWidget {
   final Order order;
 
   const OrderDetailsContent({super.key, required this.order});
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  bool _isKit() {
+    if (order.items.isEmpty) return false;
+    return (order.items.first.productType ?? '').toLowerCase() != 'item';
+  }
 
   List<ProductDisplayItem> _getDisplayItems() {
     List<ProductDisplayItem> displayItems = [];
@@ -96,28 +71,30 @@ class OrderDetailsContent extends StatelessWidget {
     for (var orderItem in order.items) {
       if (orderItem.product?.items != null &&
           orderItem.product!.items.isNotEmpty) {
-        // Booked kit with multiple products
+        // Kit → expand kit items
         for (var kitItem in orderItem.product!.items) {
           displayItems.add(
             ProductDisplayItem(
               name: kitItem.product?.title ?? 'Unknown',
-              emoji: kitItem.product?.media?.image.first ?? '',
+              emoji: kitItem.product?.media?.image.firstOrNull ?? '',
               quantity: kitItem.quantity ?? 1,
               price: kitItem.priceAtTime ?? 0,
+              productId: kitItem.product?.id ?? '',
             ),
           );
         }
       } else {
-        // Single product or kit itself
+        // Single product
         displayItems.add(
           ProductDisplayItem(
             name:
                 orderItem.product?.title ??
                 orderItem.product?.name ??
                 'Unknown',
-            emoji: orderItem.product?.media?.image.first ?? '',
+            emoji: orderItem.product?.media?.image.firstOrNull ?? '',
             quantity: orderItem.quantity ?? 1,
             price: orderItem.price ?? 0,
+            productId: orderItem.product?.id ?? '',
           ),
         );
       }
@@ -126,16 +103,186 @@ class OrderDetailsContent extends StatelessWidget {
     return displayItems;
   }
 
+  void _showRatingSheet(
+    BuildContext context,
+    WidgetRef ref,
+    ProductDisplayItem item,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ProviderScope(
+        child: RatingBottomSheet(orderId: order.id ?? '', item: item),
+      ),
+    );
+  }
+
+  // ── Header Builders ───────────────────────────────────────────────────────
+
+  Widget _buildKitHeader() {
+    final kitProduct = order.items.first.product;
+    final kitName = kitProduct?.name ?? kitProduct?.title ?? 'Kit';
+    final kitImage =
+        kitProduct?.media?.image.firstOrNull ?? kitProduct?.image ?? '';
+    final totalItems = kitProduct?.items.length ?? 0;
+    final kitQty = order.items.first.quantity ?? 1;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // "KIT" badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.button.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'KIT',
+                  style: text10(
+                    color: AppColors.button,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                kitName,
+                style: text24(fontWeight: FontWeight.bold),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text('Quantity: $kitQty', style: text14(color: AppColors.grey)),
+              Text(
+                '$totalItems items in this kit',
+                style: text12(color: AppColors.grey600),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.button,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  OrderUtils.formatCurrency(order.totalAmount),
+                  style: text16(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        kitImage.isEmpty
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  color: Colors.orange.shade50,
+                  child: Image.asset("assets/icon/plate.png"),
+                ),
+              )
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  color: Colors.orange.shade50,
+                  child: CustomCachedImage(imageUrl: kitImage),
+                ),
+              ),
+      ],
+    );
+  }
+
+  Widget _buildItemHeader(List<ProductDisplayItem> displayItems) {
+    if (displayItems.isEmpty) return const SizedBox.shrink();
+    final mainItem = displayItems.first;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                mainItem.name,
+                style: text24(fontWeight: FontWeight.bold),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Quantity: ${mainItem.quantity}',
+                style: text14(color: AppColors.grey),
+              ),
+              if (displayItems.length > 1)
+                Text(
+                  '+${displayItems.length - 1} more items',
+                  style: text12(color: AppColors.button),
+                ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.button,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  OrderUtils.formatCurrency(order.totalAmount),
+                  style: text16(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: 80,
+            height: 80,
+            color: Colors.orange.shade50,
+            child: CustomCachedImage(imageUrl: mainItem.emoji),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final displayItems = _getDisplayItems();
-    final mainItem = displayItems.isNotEmpty ? displayItems[0] : null;
+    final isKit = _isKit();
     final statusColor = OrderUtils.getStatusColor(
       order.tracking?.currentStatus ?? order.orderStatus,
     );
     final statusText = OrderUtils.getStatusText(
       order.tracking?.currentStatus ?? order.orderStatus,
     );
+    final isDelivered = (order.orderStatus ?? '').toLowerCase() == 'delivered';
 
     return SafeArea(
       child: Card(
@@ -150,40 +297,11 @@ class OrderDetailsContent extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with status badge and date
+                // ── Header ──────────────────────────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: statusColor),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: statusColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Status: $statusText',
-                            style: text10(
-                              color: statusColor,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _StatusBadge(color: statusColor, text: statusText),
                     Text(
                       'Placed on ${OrderUtils.formatDateShort(order.createdAt)}',
                       style: text12(color: AppColors.grey600),
@@ -192,75 +310,15 @@ class OrderDetailsContent extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Main product display (first item)
-                if (mainItem != null)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              mainItem.name,
-                              style: text24(fontWeight: FontWeight.bold),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Quantity: ${mainItem.quantity}',
-                              style: text14(color: AppColors.grey),
-                            ),
-                            if (displayItems.length > 1)
-                              Text(
-                                '+${displayItems.length - 1} more items',
-                                style: text12(color: AppColors.button),
-                              ),
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.button,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                OrderUtils.formatCurrency(order.totalAmount),
-                                style: text16(
-                                  color: AppColors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          color: Colors.orange.shade50,
-                          child: CustomCachedImage(
-                            imageUrl: displayItems[0].emoji,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                // ── Main product / Kit header ─────────────────────────────
+                isKit ? _buildKitHeader() : _buildItemHeader(displayItems),
                 const SizedBox(height: 24),
 
-                // Divider
-                Divider(color: Colors.grey.shade300, height: 1),
-                const SizedBox(height: 24),
+                _divider(),
 
-                // Items Ordered
+                // ── Items Ordered ────────────────────────────────────────────
                 Text(
-                  'Items Ordered',
+                  isKit ? 'Kit Contains' : 'Items Ordered',
                   style: text16(
                     fontWeight: FontWeight.bold,
                     color: AppColors.button,
@@ -279,11 +337,9 @@ class OrderDetailsContent extends StatelessWidget {
                             color: Colors.orange.shade50,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Center(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: CustomCachedImage(imageUrl: item.emoji),
-                            ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: CustomCachedImage(imageUrl: item.emoji),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -296,27 +352,56 @@ class OrderDetailsContent extends StatelessWidget {
                                 style: text14(fontWeight: FontWeight.w500),
                               ),
                               Text(
-                                'Quantity: ${item.quantity}',
+                                'Qty: ${item.quantity}',
                                 style: text12(color: AppColors.grey600),
                               ),
                             ],
                           ),
                         ),
-                        Text(
-                          OrderUtils.formatCurrency(item.price),
-                          style: text14(fontWeight: FontWeight.w600),
-                        ),
+                        // Rate button (delivered) OR price
+                        if (isDelivered)
+                          GestureDetector(
+                            onTap: () => _showRatingSheet(context, ref, item),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: AppColors.button),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.star_rounded,
+                                    size: 14,
+                                    color: AppColors.button,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Rate',
+                                    style: text12(color: AppColors.button),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        else
+                          Text(
+                            OrderUtils.formatCurrency(item.price),
+                            style: text14(fontWeight: FontWeight.w600),
+                          ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
 
-                // Divider
-                Divider(color: Colors.grey.shade300, height: 1),
-                const SizedBox(height: 24),
+                _divider(),
 
-                // Order Information
+                // ── Order Information ────────────────────────────────────────
                 Text(
                   'Order Information',
                   style: text16(
@@ -340,11 +425,9 @@ class OrderDetailsContent extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
 
-                // Divider
-                Divider(color: Colors.grey.shade300, height: 1),
-                const SizedBox(height: 24),
+                _divider(),
 
-                // Order Summary
+                // ── Order Summary ────────────────────────────────────────────
                 Text(
                   'Order Summary',
                   style: text16(
@@ -380,11 +463,9 @@ class OrderDetailsContent extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
 
-                // Divider
-                Divider(color: Colors.grey.shade300, height: 1),
-                const SizedBox(height: 24),
+                _divider(),
 
-                // Delivery Address
+                // ── Delivery Address ─────────────────────────────────────────
                 Text(
                   'Delivery Address',
                   style: text16(
@@ -406,7 +487,9 @@ class OrderDetailsContent extends StatelessWidget {
                     Text(order.address!.fullAddress!, style: text14()),
                   const SizedBox(height: 4),
                   Text(
-                    '${order.address!.city ?? ''}, ${order.address!.state ?? ''} - ${order.address!.pincode ?? ''}',
+                    '${order.address!.city ?? ''}, '
+                    '${order.address!.state ?? ''} - '
+                    '${order.address!.pincode ?? ''}',
                     style: text14(),
                   ),
                 ] else
@@ -416,26 +499,54 @@ class OrderDetailsContent extends StatelessWidget {
                   ),
                 const SizedBox(height: 32),
 
-                // Track Order Button
+                // ── Track Order button ───────────────────────────────────────
                 if (order.tracking != null &&
                     order.tracking!.currentStatus != 'delivered' &&
                     !(order.tracking!.isCancelled ?? false))
                   Center(
                     child: CustomElevatedIconButton(
-                      text: "Track Order",
+                      text: 'Track Order',
                       icon: Icons.location_on,
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.trackOrder,
-                          arguments: order.id,
-                        );
-                      },
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.trackOrder,
+                        arguments: order.id,
+                      ),
                     ),
                   ),
-                const SizedBox(height: 24),
 
-                // Thank you message
+                // ── Rate Your Order button (delivered only) ──────────────────
+                if (isDelivered) ...[
+                  const SizedBox(height: 12),
+                  Center(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppColors.button),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                      ),
+                      icon: Icon(
+                        Icons.star_rounded,
+                        color: AppColors.button,
+                        size: 20,
+                      ),
+                      label: Text(
+                        'Rate Your Order',
+                        style: text14(color: AppColors.button),
+                      ),
+                      onPressed: () => displayItems.isNotEmpty
+                          ? _showRatingSheet(context, ref, displayItems[0])
+                          : null,
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 24),
                 Center(
                   child: Text(
                     'Thank you for ordering your pooja\nessentials with us ^_^',
@@ -455,19 +566,321 @@ class OrderDetailsContent extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(String label, String? value) {
+  Widget _divider() => Column(
+    children: [
+      Divider(color: Colors.grey.shade300, height: 1),
+      const SizedBox(height: 24),
+    ],
+  );
+
+  Widget _buildInfoRow(String label, String? value) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: text14(color: AppColors.grey600)),
+        Flexible(
+          child: Text(
+            value ?? 'N/A',
+            style: text14(fontWeight: FontWeight.w500),
+            textAlign: TextAlign.right,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Rating Bottom Sheet
+// ---------------------------------------------------------------------------
+
+class RatingBottomSheet extends ConsumerStatefulWidget {
+  final String orderId;
+  final ProductDisplayItem item;
+
+  const RatingBottomSheet({
+    super.key,
+    required this.orderId,
+    required this.item,
+  });
+
+  @override
+  ConsumerState<RatingBottomSheet> createState() => _RatingBottomSheetState();
+}
+
+class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
+  final TextEditingController _reviewController = TextEditingController();
+
+  @override
+  void dispose() {
+    _reviewController.dispose();
+    super.dispose();
+  }
+
+  String _starLabel(int stars) {
+    switch (stars) {
+      case 1:
+        return 'Poor';
+      case 2:
+        return 'Fair';
+      case 3:
+        return 'Good';
+      case 4:
+        return 'Very Good';
+      case 5:
+        return 'Excellent';
+      default:
+        return 'Tap a star to rate';
+    }
+  }
+
+  Future<void> _submit() async {
+    final selectedRating = ref.read(selectedRatingProvider);
+
+    debugPrint('⭐ SUBMIT CLICKED -> selected rating: $selectedRating');
+
+    if (selectedRating == 0) {
+      debugPrint('❌ No rating selected');
+      return;
+    }
+
+    final notifier = ref.read(ratingOrderProvider.notifier);
+
+    debugPrint(
+      '🚀 Sending API request -> productId: ${widget.item.productId}, rating: $selectedRating, review: ${_reviewController.text.trim()}',
+    );
+
+    final success = await notifier.postRating(
+      widget.item.productId,
+      selectedRating,
+      _reviewController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      debugPrint('✅ Rating submitted successfully');
+
+      ref.read(selectedRatingProvider.notifier).state = 0;
+
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Thank you for your rating! 🙏'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      debugPrint('❌ Rating submission failed');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ratingAsync = ref.watch(ratingOrderProvider);
+    final selectedRating = ref.watch(selectedRatingProvider);
+
+    final isLoading = ratingAsync is AsyncLoading;
+    final hasError = ratingAsync is AsyncError;
+    final errorMessage = hasError
+        ? (ratingAsync as AsyncError).error.toString()
+        : null;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: text14(color: AppColors.grey600)),
-          Flexible(
-            child: Text(
-              value ?? 'N/A',
-              style: text14(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.right,
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
+            const SizedBox(height: 20),
+
+            Text(
+              'Rate this Product',
+              style: text18(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+
+            Text(
+              widget.item.name,
+              style: text14(color: AppColors.grey600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 20),
+
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: CustomCachedImage(imageUrl: widget.item.emoji),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (index) {
+                final starValue = index + 1;
+                final filled = starValue <= selectedRating;
+
+                return GestureDetector(
+                  onTap: () {
+                    debugPrint('⭐ User selected star: $starValue');
+
+                    ref.read(selectedRatingProvider.notifier).state = starValue;
+                  },
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      filled ? Icons.star_rounded : Icons.star_outline_rounded,
+                      key: ValueKey('$starValue-$filled'),
+                      size: 44,
+                      color: filled
+                          ? const Color(0xFFFFA000)
+                          : Colors.grey.shade300,
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 8),
+
+            Text(
+              _starLabel(selectedRating),
+              style: text14(
+                color: selectedRating > 0
+                    ? AppColors.button
+                    : AppColors.grey600,
+                fontWeight: selectedRating > 0
+                    ? FontWeight.w600
+                    : FontWeight.normal,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            TextField(
+              controller: _reviewController,
+              maxLines: 3,
+              maxLength: 300,
+              decoration: InputDecoration(
+                hintText: 'Write a review (optional)...',
+                hintStyle: text14(color: Colors.grey.shade400),
+                contentPadding: const EdgeInsets.all(14),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.button),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            if (hasError)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  errorMessage ?? 'Something went wrong',
+                  style: text12(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: selectedRating > 0
+                      ? AppColors.button
+                      : Colors.grey.shade300,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: selectedRating == 0 || isLoading ? null : _submit,
+                child: isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'Submit Rating',
+                        style: text16(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+class _StatusBadge extends StatelessWidget {
+  final Color color;
+  final String text;
+
+  const _StatusBadge({required this.color, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        border: Border.all(color: color),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Status: $text',
+            style: text10(color: color, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -480,11 +893,13 @@ class ProductDisplayItem {
   final String emoji;
   final int quantity;
   final int price;
+  final String productId; // needed for rating submission
 
   ProductDisplayItem({
     required this.name,
     required this.emoji,
     required this.quantity,
     required this.price,
+    required this.productId,
   });
 }
