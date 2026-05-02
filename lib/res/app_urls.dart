@@ -76,4 +76,10 @@ class AppUrls {
   static const String walletCreateOrder =
       "$baseUrl/user/wallet/topup/razorpay/order";
   static const String walletVerify = "$baseUrl/user/wallet/topup/confirm";
+
+  // video call
+
+  static const String video = '$baseUrl/user/video';
+  static const String videoToken = '$baseUrl/user/video/token';
+  static const String videoStart = '$baseUrl/user/video/start';
 }

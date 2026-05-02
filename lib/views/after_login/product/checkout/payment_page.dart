@@ -11,6 +11,8 @@ import 'package:samagrah/view_model/after_login_provider/checkout_providers/addr
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/payment_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/state/payment_state.dart';
 
+import '../../../../view_model/after_login_provider/wallet_provider/wallet_provider.dart';
+
 class PaymentPage extends ConsumerStatefulWidget {
   const PaymentPage({super.key});
 
@@ -22,7 +24,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
   String selectedPaymentMethod = 'online'; // 'online', 'wallet', 'cod'
 
   // Wallet balance (you can fetch this from provider)
-  final double walletBalance = 250.00;
+  var walletBalance = 0;
 
   // COD charges
   final double codCharges = 25.00;
@@ -36,6 +38,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
 
   @override
   Widget build(BuildContext context) {
+    final walletAsync = ref.watch(walletProvider);
     ref.listen<PaymentState>(paymentProvider, (prev, next) {
       if (!mounted) return;
 
@@ -97,7 +100,16 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     const SizedBox(height: 12),
 
                     // Wallet Option
-                    _buildWalletOption(totalAmount),
+                    walletAsync.when(
+                      data: (data) {
+                        final amount = data.data?.wallet?.balance;
+                        walletBalance = amount ?? 0;
+                        return _buildWalletOption(totalAmount);
+                      },
+                      loading: () => const _ShimmerBox(height: 140),
+                      error: (_, __) =>
+                          _ErrorText(message: "Offers load nahi ho paye"),
+                    ),
                     const SizedBox(height: 12),
 
                     // Online Payment Option
@@ -303,6 +315,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
             selectedPaymentMethod = 'wallet';
           });
         } else {
+          Navigator.pushNamed(context, AppRoutes.myWallet);
           AppSnackbar.show(
             context,
             message: "Insufficient wallet balance. Please recharge!",
@@ -633,6 +646,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     List<VerifyItem> items,
   ) {
     final paymentState = ref.watch(paymentProvider);
+    final loading = ref.watch(loadingProvider);
 
     // Calculate final amount
     final finalAmount = selectedPaymentMethod == 'cod'
@@ -668,7 +682,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
         child: AppButton(
           height: 52,
           isLoading: paymentState.isLoading,
-          title: buttonText,
+          title: loading ? "Placing Order..." : buttonText,
           color: buttonColor,
           onTap: paymentState.isLoading
               ? null
@@ -692,6 +706,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                   }
 
                   if (selectedPaymentMethod == 'cod') {
+                    ref.read(loadingProvider.notifier).state = true;
                     final PaymentRepo repo = PaymentRepo();
                     final verifyReq = VerifyPaymentReqModel(
                       paymentMethod: "COD",
@@ -708,17 +723,44 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     final success = await repo.productVerifyPayment(verifyReq);
 
                     if (success) {
+                      ref.read(loadingProvider.notifier).state = false;
                       Navigator.pushNamed(context, AppRoutes.successPage);
                       debugPrint("✅ PAYMENT VERIFIED SUCCESSFULLY");
                     } else {
+                      ref.read(loadingProvider.notifier).state = false;
                       debugPrint("❌ PAYMENT VERIFICATION FAILED");
                     }
                     // COD Order
                   } else if (selectedPaymentMethod == 'wallet') {
                     // Wallet Payment
                     if (walletBalance >= totalAmount) {
-                      // Process wallet payment
-                      Navigator.pushNamed(context, AppRoutes.successPage);
+                      ref.read(loadingProvider.notifier).state = true;
+                      final PaymentRepo repo = PaymentRepo();
+                      final verifyReq = VerifyPaymentReqModel(
+                        paymentMethod: "WALLET",
+                        deliveryFee: codCharges,
+                        walletAmount: walletBalance,
+                        address: address,
+                        items: items,
+                      );
+
+                      debugPrint("📤 Verify Request JSON:");
+                      debugPrint("${verifyReq.toJson()}");
+
+                      debugPrint("🌐 Calling verifyPayment API...");
+
+                      final success = await repo.productVerifyPayment(
+                        verifyReq,
+                      );
+
+                      if (success) {
+                        ref.read(loadingProvider.notifier).state = false;
+                        Navigator.pushNamed(context, AppRoutes.successPage);
+                        debugPrint("✅ PAYMENT VERIFIED SUCCESSFULLY");
+                      } else {
+                        ref.read(loadingProvider.notifier).state = false;
+                        debugPrint("❌ PAYMENT VERIFICATION FAILED");
+                      }
                     } else {
                       AppSnackbar.show(
                         context,
@@ -734,6 +776,44 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                   }
                 },
         ),
+      ),
+    );
+  }
+}
+
+class _ShimmerBox extends StatelessWidget {
+  final double height;
+  const _ShimmerBox({required this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.grey100,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(
+          color: AppColors.button,
+          strokeWidth: 2,
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorText extends StatelessWidget {
+  final String message;
+  const _ErrorText({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: Text(message, style: text13(color: AppColors.error)),
       ),
     );
   }

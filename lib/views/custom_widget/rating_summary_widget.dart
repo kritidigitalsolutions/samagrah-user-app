@@ -229,8 +229,7 @@ class RatingSummaryWidget extends ConsumerWidget {
             const SizedBox(height: 10),
             ...reviewState.reviews
                 .take(2) // show only 2 preview reviews
-                .map((r) => _PreviewReviewCard(review: r))
-                .toList(),
+                .map((r) => _PreviewReviewCard(review: r)),
 
             // View All reviews button
             const SizedBox(height: 8),

@@ -8,7 +8,7 @@ class PanditCreateOrderReqModel {
   final DateAndTimeWrapper dateAndTime;
   final Address? address;
   final OnlineDetails? onlineDetails;
-  final int price;
+  final num price;
 
   PanditCreateOrderReqModel({
     required this.ritualId,

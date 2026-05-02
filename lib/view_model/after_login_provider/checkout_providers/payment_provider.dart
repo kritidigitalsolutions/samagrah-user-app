@@ -6,6 +6,8 @@ import 'package:samagrah/repo/payment_repo.dart';
 import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/state/payment_state.dart';
 
+final loadingProvider = StateProvider<bool>((ref) => false);
+
 final paymentProvider = StateNotifierProvider<PaymentNotifier, PaymentState>(
   (ref) => PaymentNotifier(),
 );

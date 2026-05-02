@@ -7,6 +7,7 @@ import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/wallet_provider/wallet_provider.dart';
 
 class SuccessPage extends ConsumerStatefulWidget {
   const SuccessPage({super.key});
@@ -157,6 +158,8 @@ class _SuccessPageState extends ConsumerState<SuccessPage>
 
     ref.invalidate(bookingItemProvider);
     ref.invalidate(cartProvider);
+    ref.invalidate(walletProvider);
+    ref.invalidate(offerProvider);
 
     if (!mounted) return;
 

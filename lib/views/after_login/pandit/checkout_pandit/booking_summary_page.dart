@@ -9,6 +9,7 @@ import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/pandit_payment_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/wallet_provider/wallet_provider.dart';
 
 class BookingSummaryScreen extends ConsumerStatefulWidget {
   const BookingSummaryScreen({super.key});
@@ -22,19 +23,11 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize Razorpay
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
           .read(panditPaymentBookingProvider.notifier)
           .initializeRazorpay(context);
     });
-  }
-
-  @override
-  void dispose() {
-    // Dispose Razorpay
-    // ref.read(panditPaymentBookingProvider.notifier).disposeRazorpay();
-    super.dispose();
   }
 
   @override
@@ -48,9 +41,14 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
     final dateTimeList = ref.read(selectedDateProvider);
     final selectedService = ref.read(selectedServiceProvider);
     final templeId = ref.read(selectedTempleIdProvider);
+    final useWallet = ref.watch(useWalletProvider);
+    final walletAsync = ref.watch(walletProvider);
+
+    // ✅ Read balance safely from async state — no side effects in build
+    final int walletBalance =
+        walletAsync.asData?.value.data?.wallet?.balance ?? 0;
 
     String fullAddress = '';
-
     if (address != null) {
       fullAddress = [
         address.fullAddress,
@@ -64,7 +62,6 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
       backgroundColor: AppColors.headerCard,
       appBar: CustomAppBar(
         title: "Booking Summary",
-
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),
@@ -72,14 +69,12 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
               'assets/panditLogo.png',
               width: 70,
               height: 70,
-              errorBuilder: (context, exception, stackTrace) {
-                return Container(
-                  width: 70,
-                  height: 70,
-                  color: AppColors.grey500,
-                  child: const Icon(Icons.image),
-                );
-              },
+              errorBuilder: (_, __, ___) => Container(
+                width: 70,
+                height: 70,
+                color: AppColors.grey500,
+                child: const Icon(Icons.image),
+              ),
             ),
           ),
         ],
@@ -92,13 +87,13 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Confirm Booking Section
                 const Text(
                   'Confirm Booking',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
-                // Pandit Details Card
+
+                // ── Ritual details card ──────────────────────────────────
                 Container(
                   decoration: BoxDecoration(
                     color: AppColors.white,
@@ -114,7 +109,6 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                         height: 60,
                         borderRadius: BorderRadius.circular(8),
                       ),
-
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -124,20 +118,19 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                               ritual?.title ?? '',
                               style: text16(fontWeight: FontWeight.bold),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             if (dateTimeList.isNotEmpty)
                               Column(
                                 children: List.generate(dateTimeList.length, (
                                   index,
                                 ) {
                                   final item = dateTimeList[index];
-
                                   return Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        "Date -${item['date'] ?? ''}",
+                                        "Date - ${item['date'] ?? ''}",
                                         style: text14(
                                           fontWeight: FontWeight.bold,
                                           color: AppColors.grey500,
@@ -145,7 +138,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        "Time -${item['time_slot'] ?? ''}",
+                                        "Time - ${item['time_slot'] ?? ''}",
                                         style: text13(
                                           fontWeight: FontWeight.normal,
                                           color: AppColors.textSecondary,
@@ -168,7 +161,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Pandit Dakshina Section
+
+                // ── Pandit card ──────────────────────────────────────────
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -184,11 +178,10 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                         height: 60,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          /// 👤 NAME
                           Text(
                             pandit?.fullName ?? '',
                             style: text16(
@@ -196,10 +189,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                               color: AppColors.white,
                             ),
                           ),
-
                           const SizedBox(height: 6),
-
-                          /// ⭐ RATING + EXPERIENCE
                           Row(
                             children: [
                               const Icon(
@@ -212,19 +202,14 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                                 "${pandit?.ratingAverage ?? 0} (${pandit?.ratingCount ?? 0}),",
                                 style: text12(color: AppColors.white),
                               ),
-
                               const SizedBox(width: 8),
-
                               Text(
                                 "${pandit?.yearsOfExperience ?? 0} yrs exp",
                                 style: text12(color: AppColors.white),
                               ),
                             ],
                           ),
-
                           const SizedBox(height: 6),
-
-                          /// 🌐 LANGUAGES
                           if (pandit?.languagesSpoken.isNotEmpty == true)
                             Text(
                               pandit!.languagesSpoken.join(', '),
@@ -236,7 +221,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Booking Process
+
+                // ── Booking process ──────────────────────────────────────
                 Text(
                   'Booking Process',
                   style: text18(fontWeight: FontWeight.bold),
@@ -258,7 +244,161 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                   true,
                 ),
                 const SizedBox(height: 24),
-                // Total Amount
+
+                // ── WALLET SECTION ───────────────────────────────────────
+                Text(
+                  'Payment Options',
+                  style: text18(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.grey200),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header: wallet icon + balance chip
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.account_balance_wallet_outlined,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Wallet',
+                                style: text15(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+
+                          // ✅ Balance chip — purely display, no side effects
+                          walletAsync.when(
+                            data: (data) {
+                              final amount = data.data?.wallet?.balance ?? 0;
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.success.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  'Balance: ₹$amount',
+                                  style: text12(
+                                    color: AppColors.success,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
+                            },
+                            loading: () => const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            error: (_, __) => Text(
+                              'Balance unavailable',
+                              style: text12(color: AppColors.grey),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Toggle row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              walletBalance > 0
+                                  ? 'Use wallet balance for this payment'
+                                  : 'No wallet balance available',
+                              style: text13(color: AppColors.textSecondary),
+                            ),
+                          ),
+                          Switch(
+                            value: useWallet,
+                            activeThumbColor: AppColors.success,
+                            // ✅ Disable toggle when no balance
+                            onChanged: walletBalance > 0
+                                ? (val) =>
+                                      ref
+                                              .read(useWalletProvider.notifier)
+                                              .state =
+                                          val
+                                : null,
+                          ),
+                        ],
+                      ),
+
+                      // ✅ Price breakdown — variables now properly scoped
+                      if (useWallet && walletBalance > 0)
+                        slotPrice.when(
+                          data: (priceData) {
+                            final double total = (priceData["price"] as num)
+                                .toDouble();
+                            final double deduction = walletBalance >= total
+                                ? total
+                                : walletBalance.toDouble();
+                            final double remaining = total - deduction;
+
+                            return Column(
+                              children: [
+                                const Divider(height: 20),
+                                _buildPriceRow(
+                                  'Ritual fee',
+                                  '₹${total.toStringAsFixed(0)}',
+                                  AppColors.textSecondary,
+                                ),
+                                const SizedBox(height: 6),
+                                _buildPriceRow(
+                                  'Wallet deduction',
+                                  '- ₹${deduction.toStringAsFixed(0)}',
+                                  AppColors.success,
+                                ),
+                                const Divider(height: 16),
+                                _buildPriceRow(
+                                  'To pay via Razorpay',
+                                  '₹${remaining.toStringAsFixed(0)}',
+                                  AppColors.textPrimary,
+                                  bold: true,
+                                ),
+                              ],
+                            );
+                          },
+                          loading: () => const Padding(
+                            padding: EdgeInsets.only(top: 12),
+                            child: Center(
+                              child: SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ),
+                    ],
+                  ),
+                ),
+
+                // ── END WALLET SECTION ───────────────────────────────────
+                const SizedBox(height: 24),
+
+                // ── Total amount ─────────────────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -274,7 +414,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           color: AppColors.button,
                         ),
                       ),
-                      error: (error, stackTrace) => Text("0"),
+                      error: (_, __) => const Text("0"),
                       loading: () => SizedBox(
                         width: 20,
                         height: 20,
@@ -286,81 +426,89 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                // Payment Methods
+
+                // Payment method icons
                 Row(
                   children: [
                     Image.asset(
                       'assets/gPay.png',
                       height: 24,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.payment, size: 24);
-                      },
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.payment, size: 24),
                     ),
                     const SizedBox(width: 8),
                     Image.asset(
                       'assets/paytm.png',
                       height: 24,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(
-                          Icons.account_balance_wallet,
-                          size: 24,
-                        );
-                      },
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.account_balance_wallet, size: 24),
                     ),
                     const SizedBox(width: 8),
                     Image.asset(
                       'assets/phonePe.png',
                       height: 24,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.payment, size: 24);
-                      },
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.payment, size: 24),
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
 
-                // Pay Button
+                // ── Pay button ───────────────────────────────────────────
                 slotPrice.when(
-                  data: (data) => AppButton(
-                    isLoading: paymentState.isLoading,
-                    title: 'Pay ₹${data["price"]} & Request Booking',
-                    onTap: () {
-                      final List<DateTimeSlot> slots = dateTimeList.map((d) {
-                        return DateTimeSlot(
-                          date: d["date"] ?? "",
-                          time: d["time_slot"] ?? "",
+                  data: (data) {
+                    // ✅ walletBalance is a plain int — no .asData needed
+                    final double total = (data["price"] as num).toDouble();
+                    final double deduction = useWallet
+                        ? (walletBalance >= total
+                              ? total
+                              : walletBalance.toDouble())
+                        : 0.0;
+                    final double toPay = total - deduction;
+
+                    return AppButton(
+                      isLoading: paymentState.isLoading,
+                      title: toPay > 0
+                          ? 'Pay ₹${toPay.toStringAsFixed(0)} & Request Booking'
+                          : 'Confirm Booking (Wallet)',
+                      onTap: () {
+                        final List<DateTimeSlot> slots = dateTimeList.map((d) {
+                          return DateTimeSlot(
+                            date: d["date"] ?? "",
+                            time: d["time_slot"] ?? "",
+                          );
+                        }).toList();
+
+                        final model = PanditCreateOrderReqModel(
+                          ritualId: ritual?.id ?? '',
+                          bookingMode: selectedService?.type ?? '',
+                          panditId: pandit?.id ?? '',
+                          templeId: templeId,
+                          dateAndTime: DateAndTimeWrapper(dateAndTime: slots),
+                          address: Address(
+                            name: address?.name ?? '',
+                            phone: address?.phone ?? '',
+                            fullAddress: address?.fullAddress ?? '',
+                            city: address?.city ?? '',
+                            state: address?.state ?? '',
+                            pincode: address?.pincode ?? '',
+                          ),
+                          onlineDetails: onlineDetails,
+                          price: toPay,
                         );
-                      }).toList();
-                      final model = PanditCreateOrderReqModel(
-                        ritualId: ritual?.id ?? '',
-                        bookingMode: selectedService?.type ?? '',
 
-                        panditId: pandit?.id ?? '',
-                        templeId: templeId,
-
-                        dateAndTime: DateAndTimeWrapper(dateAndTime: slots),
-                        address: Address(
-                          name: address?.name ?? '',
-                          phone: address?.phone ?? '',
-                          fullAddress: address?.fullAddress ?? '',
-                          city: address?.city ?? '',
-                          state: address?.state ?? '',
-                          pincode: address?.pincode ?? '',
-                        ),
-                        onlineDetails: onlineDetails,
-                        price: data["price"],
-                      );
-                      ref
-                          .read(panditPaymentBookingProvider.notifier)
-                          .createOrderAndPay(context: context, model: model);
-                    },
-                    color: AppColors.success,
-                    textStyle: text15(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  error: (error, stackTrace) => Text("0"),
+                        ref
+                            .read(panditPaymentBookingProvider.notifier)
+                            .createOrderAndPay(context: context, model: model);
+                      },
+                      color: AppColors.success,
+                      textStyle: text15(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
+                  error: (_, __) => const Text("0"),
                   loading: () => Center(
                     child: SizedBox(
                       width: 20,
@@ -400,6 +548,35 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
           Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
         ],
       ),
+    );
+  }
+
+  Widget _buildPriceRow(
+    String label,
+    String value,
+    Color color, {
+    bool bold = false,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            color: color,
+            fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13,
+            color: color,
+            fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ],
     );
   }
 }

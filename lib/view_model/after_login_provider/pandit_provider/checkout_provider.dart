@@ -37,3 +37,13 @@ final templeProvider = FutureProvider<TempleResModel>((ref) async {
   final repo = ref.read(panditRepoProvider);
   return repo.getTemple();
 });
+
+// wallet_provider.dart
+final useWalletProvider = StateProvider<bool>((ref) => false);
+
+final walletBalanceProvider = FutureProvider<double>((ref) async {
+  // Replace with your actual API call
+  // final res = await YourApiService().getWalletBalance();
+  // return res.balance;
+  return 350.0; // placeholder
+});

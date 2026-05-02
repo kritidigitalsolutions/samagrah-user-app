@@ -17,6 +17,7 @@ class CreateOrderReqModel {
 class VerifyPaymentReqModel {
   final String paymentMethod;
   final num deliveryFee;
+  final num? walletAmount;
   final Address address;
   final List<VerifyItem> items;
 
@@ -29,6 +30,7 @@ class VerifyPaymentReqModel {
     required this.deliveryFee,
     required this.address,
     required this.items,
+    this.walletAmount,
     this.razorpayOrderId,
     this.razorpayPaymentId,
     this.razorpaySignature,
@@ -52,6 +54,10 @@ class VerifyPaymentReqModel {
 
     if (razorpaySignature != null && razorpaySignature!.isNotEmpty) {
       data["razorpaySignature"] = razorpaySignature!;
+    }
+
+    if (paymentMethod == "WALLET") {
+      data["walletAmount"] = walletAmount!;
     }
 
     return data;

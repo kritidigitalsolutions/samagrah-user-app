@@ -721,9 +721,7 @@ class _ReviewBottomSheetState extends ConsumerState<_ReviewBottomSheet> {
                             ),
                           )
                         else
-                          ...state.reviews
-                              .map((r) => _ReviewCard(review: r))
-                              .toList(),
+                          ...state.reviews.map((r) => _ReviewCard(review: r)),
 
                         // ── Load more indicator ─────────────────────────
                         if (state.isLoadingMore)
