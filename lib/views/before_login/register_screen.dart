@@ -38,25 +38,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen(authProvider, (previous, next) {
+      if (previous == next) return;
+
       next.whenOrNull(
         data: (data) {
           final register = data.registerModel;
 
           if (register == null) return;
+          if (data.verifyModel != null)
+            return; // ← bail out if OTP verify triggered this
 
           final isNewUser = register.isNewUser;
 
           if (isNewUser == true) {
-            // ✅ NEW USER
             AppSnackbar.show(
               context,
               message: "OTP Sent Successfully",
               type: SnackBarType.success,
             );
-
             Navigator.pushNamed(context, AppRoutes.otp);
           } else {
-            // ❌ ALREADY REGISTERED
             AppSnackbar.show(
               context,
               message:
@@ -65,7 +66,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             );
           }
         },
-
         error: (e, _) {
           AppSnackbar.show(
             context,
@@ -186,7 +186,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             phone: _mobileCtrl.text.trim(),
             email: _emailCtrl.text.trim(),
             address: _addressCtrl.text.trim(),
-            profileImage: imageFile?.path
+            profileImage: imageFile?.path,
           );
 
           ref.read(phoneProvider.notifier).state = _mobileCtrl.text;

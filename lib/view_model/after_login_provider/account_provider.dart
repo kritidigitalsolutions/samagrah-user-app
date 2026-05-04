@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:samagrah/repo/policy_repo.dart';
 import 'package:samagrah/repo/profile_repo.dart';
 import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
 
@@ -68,6 +69,32 @@ class UpdateProfileNotifier extends StateNotifier<AsyncValue<void>> {
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
+    }
+  }
+}
+
+// =============== delete account ============================
+
+final deleteAccountProvider =
+    StateNotifierProvider<DeleteAccountNotifier, AsyncValue<void>>(
+      (ref) => DeleteAccountNotifier(PolicyRepo()),
+    );
+
+class DeleteAccountNotifier extends StateNotifier<AsyncValue<void>> {
+  DeleteAccountNotifier(this._repository) : super(const AsyncData(null));
+
+  final PolicyRepo _repository;
+
+  Future<bool> deleteAccount(String reason) async {
+    state = const AsyncLoading();
+
+    try {
+      await _repository.deleteAccount(reason);
+      state = const AsyncData(null);
+      return true;
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      return false;
     }
   }
 }

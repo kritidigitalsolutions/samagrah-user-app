@@ -174,7 +174,7 @@ class PoojaOffering {
   final bool? travelForSpecialPooja;
   final bool? standardSamagri;
   final bool? customSamagri;
-  final List<dynamic> customSamagriItems;
+  final List<CustomSamagriItem> customSamagriItems;
 
   factory PoojaOffering.fromJson(Map<String, dynamic> json) {
     return PoojaOffering(
@@ -187,7 +187,45 @@ class PoojaOffering {
       customSamagri: json["customSamagri"],
       customSamagriItems: json["customSamagriItems"] == null
           ? []
-          : List<dynamic>.from(json["customSamagriItems"]!.map((x) => x)),
+          : List<CustomSamagriItem>.from(
+              json["customSamagriItems"].map(
+                (x) => CustomSamagriItem.fromJson(x),
+              ),
+            ),
+    );
+  }
+}
+
+class CustomSamagriItem {
+  CustomSamagriItem({
+    required this.itemName,
+    required this.quantity,
+    required this.size,
+    required this.approvalStatus,
+    required this.reviewedAt,
+    required this.reviewedBy,
+    required this.id,
+  });
+
+  final String? itemName;
+  final int? quantity;
+  final String? size;
+  final String? approvalStatus;
+  final DateTime? reviewedAt;
+  final String? reviewedBy;
+  final String? id;
+
+  factory CustomSamagriItem.fromJson(Map<String, dynamic> json) {
+    return CustomSamagriItem(
+      itemName: json["itemName"],
+      quantity: json["quantity"],
+      size: json["size"],
+      approvalStatus: json["approvalStatus"],
+      reviewedAt: json["reviewedAt"] == null
+          ? null
+          : DateTime.parse(json["reviewedAt"]),
+      reviewedBy: json["reviewedBy"],
+      id: json["_id"],
     );
   }
 }

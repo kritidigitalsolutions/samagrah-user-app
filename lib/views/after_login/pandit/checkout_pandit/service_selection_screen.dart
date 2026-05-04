@@ -53,16 +53,16 @@ class ServiceSelectionScreen extends ConsumerWidget {
       );
     }
 
-    if (pandit.serviceTypes?.travelForSpecialPoojas == true) {
-      serviceList.add(
-        ServiceModel(
-          title: 'Special Travel Pooja',
-          type: "special",
-          description: 'Pandit will travel for special pooja.',
-          image: 'assets/special_pooja.jpg',
-        ),
-      );
-    }
+    // if (pandit.serviceTypes?.travelForSpecialPoojas == true) {
+    //   serviceList.add(
+    //     ServiceModel(
+    //       title: 'Special Travel Pooja',
+    //       type: "special",
+    //       description: 'Pandit will travel for special pooja.',
+    //       image: 'assets/special_pooja.jpg',
+    //     ),
+    //   );
+    // }
 
     return Scaffold(
       backgroundColor: AppColors.background,

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/model/response/product_booked_res/review_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_details_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart'
@@ -103,3 +104,9 @@ final reviewProvider =
     StateNotifierProvider.autoDispose<ReviewNotifier, ReviewState>((ref) {
       return ReviewNotifier(ProductRepo());
     });
+
+// =================== custom samagri kit ========================
+
+final selectedSamagriItemsProvider = StateProvider<List<CustomSamagriItem>>(
+  (ref) => [],
+);

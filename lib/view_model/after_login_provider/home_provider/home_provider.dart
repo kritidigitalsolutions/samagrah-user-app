@@ -19,6 +19,10 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
     final res = await _repo.getProducts();
     final products = res.data?.products ?? [];
 
+    print(
+      "product lenght jks ajh --------------------------------- ${products.length}",
+    );
+
     /// ✅ Extract special lists
     final dailyEssentials = products
         .where((p) => p.isMostPoojaEssentials == true)

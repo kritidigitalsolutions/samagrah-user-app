@@ -31,16 +31,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     ref.listen(authProvider, (previous, next) {
+      // ← Skip if state didn't actually change
+      if (previous == next) return;
+
       next.whenOrNull(
         data: (data) {
           final register = data.registerModel;
 
           if (register == null) return;
 
+          // ← Only react to login response, not OTP verify response
+          if (data.verifyModel != null) return; // ← ADD THIS
+
           final isNewUser = register.isNewUser;
 
           if (isNewUser == true) {
-            // ✅ NEW USER
             AppSnackbar.show(
               context,
               message: "This number is not registered. Please sign up first.",

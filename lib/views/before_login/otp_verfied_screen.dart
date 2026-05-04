@@ -1,4 +1,5 @@
-import 'package:flutter/gestures.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,8 +20,40 @@ class VerifyOtpScreen extends ConsumerStatefulWidget {
 
 class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
   static const int _otpLength = 6;
+  static const int _resendSeconds = 60; // ← timer duration
 
-   late TapGestureRecognizer _resendRecognizer;
+  int _secondsLeft = _resendSeconds; // ← countdown value
+  Timer? _timer; // ← timer instance
+
+  // ... existing controllers and focusNodes ...
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer(); // ← start on page load
+  }
+
+  // ← start/restart countdown
+  void _startTimer() {
+    _timer?.cancel();
+    setState(() => _secondsLeft = _resendSeconds);
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (_secondsLeft == 0) {
+        t.cancel();
+      } else {
+        setState(() => _secondsLeft--);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // ← always cancel timer
+    for (final c in _controllers) c.dispose();
+    for (final f in _focusNodes) f.dispose();
+    super.dispose();
+  }
 
   final List<TextEditingController> _controllers = List.generate(
     _otpLength,
@@ -30,30 +63,6 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
     _otpLength,
     (_) => FocusNode(),
   );
-
-  @override
-  void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    for (final f in _focusNodes) {
-      f.dispose();
-    }
-     _resendRecognizer.dispose();
-    super.dispose();
-  }
-
- 
-
-@override
-void initState() {
-  super.initState();
-  _resendRecognizer = TapGestureRecognizer()
-    ..onTap = () {
-      print("Resend clicked");
-    };
-}
-
 
   void _onOtpChanged(int index, String value) {
     final otpList = [...ref.read(otpProvider)];
@@ -176,7 +185,7 @@ void initState() {
 
                     // Helper text
                     Text(
-                      'Enter the 4-digit code sent to\nyour mobile number',
+                      'Enter the 6-digit code sent to\nyour mobile number',
                       textAlign: TextAlign.center,
                       style: text13(),
                     ),
@@ -189,28 +198,52 @@ void initState() {
                     const SizedBox(height: 30),
 
                     // Resend
-                    GestureDetector(
-                      onTap: () {},
-                      child: RichText(
-                        text: TextSpan(
-                          text: "Didn't receive code? ",
-                          style: text13(),
-                          children: [
+                    // Resend — show timer OR resend button
+                    _secondsLeft > 0
+                        ? Text.rich(
                             TextSpan(
-                              text: 'Resend',
-                              style: TextStyle(
-                                color: AppColors.button,
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.underline,
-                                decorationColor: AppColors.button,
-                              
-                              ),
-                              recognizer: _resendRecognizer
+                              text: "Resend OTP in ",
+                              style: text13(),
+                              children: [
+                                TextSpan(
+                                  text:
+                                      "00:${_secondsLeft.toString().padLeft(2, '0')}",
+                                  style: TextStyle(
+                                    color: AppColors.button,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
+                          )
+                        : GestureDetector(
+                            onTap: () {
+                              final phone = ref
+                                  .read(phoneProvider.notifier)
+                                  .state;
+                              ref
+                                  .read(authProvider.notifier)
+                                  .resend(mobile: phone);
+                              _startTimer(); // ← restart timer on resend tap
+                            },
+                            child: RichText(
+                              text: TextSpan(
+                                text: "Didn't receive code? ",
+                                style: text13(),
+                                children: [
+                                  TextSpan(
+                                    text: 'Resend',
+                                    style: TextStyle(
+                                      color: AppColors.button,
+                                      fontWeight: FontWeight.w600,
+                                      decoration: TextDecoration.underline,
+                                      decorationColor: AppColors.button,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                   ],
                 ),
               ),

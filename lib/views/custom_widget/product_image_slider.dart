@@ -52,6 +52,7 @@ class _ProductImageSliderState extends State<ProductImageSlider> {
                 child: CustomCachedImage(
                   imageUrl: cleanImage,
                   fit: BoxFit.cover,
+                  width: double.infinity,
                 ),
               );
             }).toList(),
@@ -68,7 +69,7 @@ class _ProductImageSliderState extends State<ProductImageSlider> {
               jumpScale: 1.4,
               verticalOffset: 10,
               activeDotColor: AppColors.button,
-              dotColor: Colors.grey.shade400,
+              dotColor: AppColors.grey400,
             ),
           ),
         ],

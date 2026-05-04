@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
+import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
@@ -27,19 +28,12 @@ class PanditDetailsPage extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               /// 🔴 IMAGE
-              ClipRRect(
+              CustomCachedImage(
+                imageUrl: pandit.profileImage ?? "",
+                height: 250,
+                width: double.infinity,
+                fit: BoxFit.cover,
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  pandit.profileImage ?? "",
-                  height: 250,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    height: 250,
-                    color: Colors.grey.shade300,
-                    child: const Icon(Icons.person, size: 50),
-                  ),
-                ),
               ),
 
               const SizedBox(height: 12),
@@ -198,51 +192,36 @@ class PanditDetailsPage extends ConsumerWidget {
                               _buildKeyValue("Travel", "Available"),
 
                             /// 🔴 CUSTOM ITEMS (if any)
-                            if (pooja.customSamagriItems.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 6),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Custom Items:",
-                                      style: text12(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    ...pooja.customSamagriItems.map((item) {
-                                      return Text("• $item", style: text12());
-                                    }),
-                                  ],
-                                ),
+                            if (pooja.customSamagriItems.isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              Text(
+                                "Recommended Pooja Kit",
+                                style: text15(fontWeight: FontWeight.bold),
                               ),
+
+                              const SizedBox(height: 10),
+
+                              buildRecommendationCard(
+                                'Keep this required',
+                                'Pooja Samagri',
+                                'ready before the pandit arrives',
+                                true,
+                                () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.panditRecKit,
+                                    arguments: pooja
+                                        .customSamagriItems, // ← pass items
+                                  );
+                                },
+                              ),
+                            ],
                           ],
                         ),
                       );
                     }).toList(),
                   ),
                 ),
-
-              const SizedBox(height: 15),
-
-              /// 🔴 RECOMMENDED KIT
-              Text(
-                "Recommended Pooja Kit",
-                style: text15(fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 10),
-
-              buildRecommendationCard(
-                'Keep this required',
-                'Pooja Samagri',
-                'ready before the pandit arrives',
-                true,
-                () {
-                  Navigator.pushNamed(context, AppRoutes.panditRecKit);
-                },
-              ),
 
               const SizedBox(height: 15),
 

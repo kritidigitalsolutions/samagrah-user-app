@@ -124,6 +124,7 @@ final isFestivalProvider = StateProvider<bool>((ref) => true);
 // kit name
 
 final kitNameProvider = StateProvider<String>((ref) => '');
+final searchQueryProvider = StateProvider<String>((ref) => '');
 
 //========================== kit history =========================================
 

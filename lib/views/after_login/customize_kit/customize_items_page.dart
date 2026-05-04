@@ -19,10 +19,22 @@ class CustomizeItemsPage extends ConsumerStatefulWidget {
 }
 
 class _CustomizeItemsPageState extends ConsumerState<CustomizeItemsPage> {
+  final TextEditingController _searchController = TextEditingController();
+
+  // ② Dispose the controller
+  @override
+  void dispose() {
+    _searchController.dispose();
+    // Reset search when leaving page
+    ref.read(searchQueryProvider.notifier).state = '';
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final nameOfKit = ref.read(kitNameProvider);
     final productState = ref.watch(productProvider);
+    final searchQuery = ref.watch(searchQueryProvider);
     final cart = ref.watch(customizeKitCartProvider); // ← Watch cart
     final cartNotifier = ref.read(customizeKitCartProvider.notifier);
     final selectedKitCategory =
@@ -39,179 +51,222 @@ class _CustomizeItemsPageState extends ConsumerState<CustomizeItemsPage> {
         ],
       ),
 
-      body: Column(
-        children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: TextField(
-              style: text14(
-                fontWeight: FontWeight.normal,
-                color: AppColors.black,
-              ),
-              cursorColor: AppColors.black,
-              decoration: InputDecoration(
-                hintText: 'diya, puja thali...',
-                hintStyle: text14(color: AppColors.grey),
-                prefixIcon: const Icon(Icons.search, color: AppColors.grey),
-                filled: true,
-                fillColor: AppColors.white,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
+      body: GestureDetector(
+        onTap: () =>
+            FocusScope.of(context).unfocus(), // ← unfocus on tap outside
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          children: [
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (v) {
+                  // ← Write to provider, no setState
+                  ref.read(searchQueryProvider.notifier).state = v
+                      .toLowerCase()
+                      .trim();
+                },
+                style: text14(
+                  fontWeight: FontWeight.normal,
+                  color: AppColors.black,
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-          ),
-
-          // Tabs
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                _buildChip(
-                  'All',
-                  "All",
-                  "assets/home/select-all.png",
-                  selectedKitCategory == "All",
-                  ref,
-                ),
-                _buildChip(
-                  'Agri batti',
-                  "agarbatti",
-                  "assets/home/incense.png",
-                  selectedKitCategory == "agarbatti",
-                  ref,
-                ),
-                _buildChip(
-                  'Fruits',
-                  "fruits",
-                  "assets/home/fruit.png",
-                  selectedKitCategory == "fruits",
-                  ref,
-                ),
-                _buildChip(
-                  'Flowers',
-                  "flowes",
-                  "assets/home/flower.png",
-                  selectedKitCategory == "flowes",
-                  ref,
-                ),
-                _buildChip(
-                  'Mala(Gralands)',
-                  "garland",
-                  "assets/home/mala.png",
-                  selectedKitCategory == "garland",
-                  ref,
-                ),
-              ],
-            ),
-          ),
-          // Promotional Banners
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12.0, 10, 12, 0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildPromoBanner(
-                    Icons.local_offer,
-                    'Get 5% Off on your first\npooja package order',
+                cursorColor: AppColors.black,
+                decoration: InputDecoration(
+                  hintText: 'diya, puja thali...',
+                  hintStyle: text14(color: AppColors.grey),
+                  prefixIcon: const Icon(Icons.search, color: AppColors.grey),
+                  // ← Clear button driven by provider value
+                  suffixIcon: searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(
+                            Icons.clear,
+                            color: AppColors.grey,
+                            size: 18,
+                          ),
+                          onPressed: () {
+                            _searchController.clear();
+                            ref.read(searchQueryProvider.notifier).state = '';
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: AppColors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildPromoBanner(
-                    Icons.delivery_dining,
-                    'Free Delivery on Puja Essentials\nOn orders above ₹499',
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+            // Tabs
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  _buildChip(
+                    'All',
+                    "All",
+                    "assets/home/select-all.png",
+                    selectedKitCategory == "All",
+                    ref,
+                  ),
+                  _buildChip(
+                    'Agri batti',
+                    "agarbatti",
+                    "assets/home/incense.png",
+                    selectedKitCategory == "agarbatti",
+                    ref,
+                  ),
+                  _buildChip(
+                    'Fruits',
+                    "fruits",
+                    "assets/home/fruit.png",
+                    selectedKitCategory == "fruits",
+                    ref,
+                  ),
+                  _buildChip(
+                    'Flowers',
+                    "flowes",
+                    "assets/home/flower.png",
+                    selectedKitCategory == "flowes",
+                    ref,
+                  ),
+                  _buildChip(
+                    'Mala(Gralands)',
+                    "garland",
+                    "assets/home/mala.png",
+                    selectedKitCategory == "garland",
+                    ref,
+                  ),
+                ],
+              ),
+            ),
+            // Promotional Banners
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12.0, 10, 12, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildPromoBanner(
+                      Icons.local_offer,
+                      'Get 5% Off on your first\npooja package order',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildPromoBanner(
+                      Icons.delivery_dining,
+                      'Free Delivery on Puja Essentials\nOn orders above ₹499',
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-          // Products Grid
-          Expanded(
-            child: productState.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+            // Products Grid
+            Expanded(
+              child: productState.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
 
-              error: (e, _) =>
-                  const Center(child: Text("Something went wrong")),
+                error: (e, _) =>
+                    const Center(child: Text("Something went wrong")),
 
-              data: (state) {
-                final products = state.categoryKitProducts;
+                data: (state) {
+                  final allProducts = state.categoryKitProducts;
 
-                if (products.isEmpty) {
-                  return const Center(child: Text("No Products Found"));
-                }
-                return AnimationLimiter(
-                  key: ValueKey(
-                    "grid_${products.length}",
-                  ), // 🔥 re-animation on change
-                  child: GridView.builder(
-                    // shrinkWrap: true,
-                    // physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(12),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          childAspectRatio: 0.75,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                        ),
-                    itemCount: products.length,
-                    itemBuilder: (context, index) {
-                      final product = products[index];
-                      final quantity = cart[product.id] ?? 0;
+                  // ← Filter using provider value, no setState involved
+                  final products = searchQuery.isEmpty
+                      ? allProducts
+                      : allProducts
+                            .where(
+                              (p) => (p.title ?? '').toLowerCase().contains(
+                                searchQuery,
+                              ),
+                            )
+                            .toList();
 
-                      return AnimationConfiguration.staggeredGrid(
-                        position: index,
-                        columnCount: 3, // ⚠️ MUST match crossAxisCount
-                        duration: const Duration(milliseconds: 400),
-                        child: SlideAnimation(
-                          verticalOffset: 50, // 👇 bottom se aayega
-                          child: FadeInAnimation(
-                            child: ScaleAnimation(
-                              scale: 0.9, // 🔥 slight zoom-in effect
-                              child: _buildProductCard(
-                                product,
-                                quantity,
-                                cartNotifier,
+                  if (products.isEmpty) {
+                    return Center(
+                      child: Text(
+                        searchQuery.isEmpty
+                            ? "No Products Found"
+                            : 'No results for "$searchQuery"',
+                      ),
+                    );
+                  }
+
+                  return AnimationLimiter(
+                    key: ValueKey(
+                      "grid_${products.length}",
+                    ), // 🔥 re-animation on change
+                    child: GridView.builder(
+                      // shrinkWrap: true,
+                      // physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(12),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 0.75,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                          ),
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+                        final quantity = cart[product.id] ?? 0;
+
+                        return AnimationConfiguration.staggeredGrid(
+                          position: index,
+                          columnCount: 3, // ⚠️ MUST match crossAxisCount
+                          duration: const Duration(milliseconds: 400),
+                          child: SlideAnimation(
+                            verticalOffset: 50, // 👇 bottom se aayega
+                            child: FadeInAnimation(
+                              child: ScaleAnimation(
+                                scale: 0.9, // 🔥 slight zoom-in effect
+                                child: _buildProductCard(
+                                  product,
+                                  quantity,
+                                  cartNotifier,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-
-          //  SizedBox(height: 50),
-
-          // Next Button
-          SafeArea(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.button,
-                // borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              padding: const EdgeInsets.fromLTRB(16, 5, 16, 8),
-              child: AppButton(
-                title: "Next",
-                onTap: () {
-                  Navigator.pushNamed(context, AppRoutes.selectedCusKit);
+                        );
+                      },
+                    ),
+                  );
                 },
               ),
             ),
-          ),
-        ],
+
+            //  SizedBox(height: 50),
+
+            // Next Button
+            SafeArea(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.button,
+                  // borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                padding: const EdgeInsets.fromLTRB(16, 5, 16, 8),
+                child: AppButton(
+                  title: "Next",
+                  onTap: () {
+                    Navigator.pushNamed(context, AppRoutes.selectedCusKit);
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

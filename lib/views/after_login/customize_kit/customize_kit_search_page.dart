@@ -37,263 +37,271 @@ class _CustomizePoojaKitScreenState
     final defaultKits = ref.watch(userDraftKits);
 
     return SafeArea(
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppColors.background,
-              AppColors.background.withValues(alpha: 0.95),
-            ],
-          ),
-        ),
-        child: Column(
-          children: [
-            // ✅ Top bar - keeping it the same
-            Container(
-              color: AppColors.headerCard,
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 1),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Customize\nYour Pooja Kit',
-                          style: text18(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Image.asset(
-                    'assets/icon/plate.png',
-                    width: 70,
-                    height: 70,
-                    errorBuilder: (context, exception, stackTrace) {
-                      return Container(
-                        width: 65,
-                        height: 65,
-                        decoration: BoxDecoration(color: AppColors.grey500),
-                        child: Center(child: Icon(Icons.image)),
-                      );
-                    },
-                  ),
-                ],
-              ),
+      child: GestureDetector(
+        onTap: () =>
+            FocusScope.of(context).unfocus(), // ← unfocus on tap outside
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppColors.background,
+                AppColors.background.withValues(alpha: 0.95),
+              ],
             ),
-
-            // ✅ Premium body design
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
+          ),
+          child: Column(
+            children: [
+              // ✅ Top bar - keeping it the same
+              Container(
+                color: AppColors.headerCard,
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 1),
+                child: Row(
                   children: [
-                    // ✅ Floating premium card
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(28),
-                      child: Stack(
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // ✅ Main content
-                          Padding(
-                            padding: const EdgeInsets.all(28),
-                            child: Column(
-                              children: [
-                                // ✅ Premium icon with animation-ready design
-                                Container(
-                                  width: 90,
-                                  height: 90,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        Colors.orange.shade300,
-                                        Colors.deepOrange.shade400,
-                                      ],
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.orange.withValues(
-                                          alpha: 0.4,
-                                        ),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 8),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Container(
-                                    margin: const EdgeInsets.all(3),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white,
-                                    ),
-                                    child: Center(
-                                      child: Image.asset(
-                                        "assets/nav/cart.png",
-                                        width: 42,
-                                        height: 42,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 24),
-
-                                // ✅ Modern heading
-                                ShaderMask(
-                                  shaderCallback: (bounds) => LinearGradient(
-                                    colors: [
-                                      Colors.orange.shade700,
-                                      Colors.deepOrange.shade600,
-                                    ],
-                                  ).createShader(bounds),
-                                  child: Text(
-                                    'Create Your Custom Kit',
-                                    textAlign: TextAlign.center,
-                                    style: text24(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.white,
-                                    ).copyWith(letterSpacing: -0.5),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 12),
-
-                                Text(
-                                  'Handpick sacred items for your\npersonalized pooja ceremony',
-                                  textAlign: TextAlign.center,
-                                  style: text15(
-                                    color: AppColors.grey600,
-                                  ).copyWith(height: 1.6, letterSpacing: 0.2),
-                                ),
-
-                                const SizedBox(height: 36),
-
-                                // ✅ Premium search field
-                                _buildPremiumSearchField(
-                                  context,
-                                  ref,
-                                  defaultKits.value?.defaultKit?.data ?? [],
-                                ),
-
-                                const SizedBox(height: 20),
-
-                                // ✅ Premium name field
-                                _buildPremiumTextField(),
-
-                                const SizedBox(height: 28),
-
-                                // ✅ Premium button
-                                _buildPremiumButton(context, ref),
-                              ],
-                            ),
+                          Text(
+                            'Customize\nYour Pooja Kit',
+                            style: text18(fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
                     ),
-
-                    // ================== YOUR DRAFT KITS SECTION (UPDATED WITH TABS) ==================
-                    // Filtered Draft Kits Section with Customized TabBar
-                    userDraftKit.when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (e, _) =>
-                          const Center(child: Text("Failed to load kits")),
-                      data: (kitState) {
-                        final allKits = kitState.userKit?.data ?? [];
-
-                        if (allKits.isEmpty) {
-                          return SizedBox.shrink();
-                        }
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Your Draft Kit",
-                                style: text15(fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 16),
-
-                              AnimationLimiter(
-                                // 🔥 Removed ValueKey with tabController
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-
-                                  itemCount: allKits.length,
-                                  itemBuilder: (context, index) {
-                                    final kit = allKits[index];
-
-                                    return AnimationConfiguration.staggeredList(
-                                      position: index,
-                                      duration: const Duration(
-                                        milliseconds: 400,
-                                      ),
-                                      child: SlideAnimation(
-                                        horizontalOffset: 50,
-                                        child: FadeInAnimation(
-                                          child: ScaleAnimation(
-                                            scale: 0.95,
-                                            child: _buildDraftKitCard(
-                                              context,
-                                              kit,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
+                    Image.asset(
+                      'assets/icon/plate.png',
+                      width: 70,
+                      height: 70,
+                      errorBuilder: (context, exception, stackTrace) {
+                        return Container(
+                          width: 65,
+                          height: 65,
+                          decoration: BoxDecoration(color: AppColors.grey500),
+                          child: Center(child: Icon(Icons.image)),
                         );
                       },
                     ),
-                    // ✅ Feature cards
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _buildFeatureCard(
-                              icon: Icons.check_circle_outline,
-                              title: 'Customizable',
-                              color: Colors.green,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildFeatureCard(
-                              icon: Icons.auto_awesome,
-                              title: 'Premium Items',
-                              color: Colors.purple,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildFeatureCard(
-                              icon: Icons.verified,
-                              title: 'Authentic',
-                              color: Colors.blue,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 40),
                   ],
                 ),
               ),
-            ),
-          ],
+
+              // ✅ Premium body design
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: [
+                      // ✅ Floating premium card
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: Stack(
+                          children: [
+                            // ✅ Main content
+                            Padding(
+                              padding: const EdgeInsets.all(28),
+                              child: Column(
+                                children: [
+                                  // ✅ Premium icon with animation-ready design
+                                  Container(
+                                    width: 90,
+                                    height: 90,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          Colors.orange.shade300,
+                                          Colors.deepOrange.shade400,
+                                        ],
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.orange.withValues(
+                                            alpha: 0.4,
+                                          ),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Container(
+                                      margin: const EdgeInsets.all(3),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white,
+                                      ),
+                                      child: Center(
+                                        child: Image.asset(
+                                          "assets/nav/cart.png",
+                                          width: 42,
+                                          height: 42,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 24),
+
+                                  // ✅ Modern heading
+                                  ShaderMask(
+                                    shaderCallback: (bounds) => LinearGradient(
+                                      colors: [
+                                        Colors.orange.shade700,
+                                        Colors.deepOrange.shade600,
+                                      ],
+                                    ).createShader(bounds),
+                                    child: Text(
+                                      'Create Your Custom Kit',
+                                      textAlign: TextAlign.center,
+                                      style: text24(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.white,
+                                      ).copyWith(letterSpacing: -0.5),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  Text(
+                                    'Handpick sacred items for your\npersonalized pooja ceremony',
+                                    textAlign: TextAlign.center,
+                                    style: text15(
+                                      color: AppColors.grey600,
+                                    ).copyWith(height: 1.6, letterSpacing: 0.2),
+                                  ),
+
+                                  const SizedBox(height: 36),
+
+                                  // ✅ Premium search field
+                                  _buildPremiumSearchField(
+                                    context,
+                                    ref,
+                                    defaultKits.value?.defaultKit?.data ?? [],
+                                  ),
+
+                                  const SizedBox(height: 20),
+
+                                  // ✅ Premium name field
+                                  _buildPremiumTextField(),
+
+                                  const SizedBox(height: 28),
+
+                                  // ✅ Premium button
+                                  _buildPremiumButton(context, ref),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // ================== YOUR DRAFT KITS SECTION (UPDATED WITH TABS) ==================
+                      // Filtered Draft Kits Section with Customized TabBar
+                      userDraftKit.when(
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (e, _) =>
+                            const Center(child: Text("Failed to load kits")),
+                        data: (kitState) {
+                          final allKits = kitState.userKit?.data ?? [];
+
+                          if (allKits.isEmpty) {
+                            return SizedBox.shrink();
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Your Draft Kit",
+                                  style: text15(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 16),
+
+                                AnimationLimiter(
+                                  // 🔥 Removed ValueKey with tabController
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+
+                                    itemCount: allKits.length,
+                                    itemBuilder: (context, index) {
+                                      final kit = allKits[index];
+
+                                      return AnimationConfiguration.staggeredList(
+                                        position: index,
+                                        duration: const Duration(
+                                          milliseconds: 400,
+                                        ),
+                                        child: SlideAnimation(
+                                          horizontalOffset: 50,
+                                          child: FadeInAnimation(
+                                            child: ScaleAnimation(
+                                              scale: 0.95,
+                                              child: _buildDraftKitCard(
+                                                context,
+                                                kit,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      // ✅ Feature cards
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _buildFeatureCard(
+                                icon: Icons.check_circle_outline,
+                                title: 'Customizable',
+                                color: Colors.green,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildFeatureCard(
+                                icon: Icons.auto_awesome,
+                                title: 'Premium Items',
+                                color: Colors.purple,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildFeatureCard(
+                                icon: Icons.verified,
+                                title: 'Authentic',
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

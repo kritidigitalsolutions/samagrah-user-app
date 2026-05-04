@@ -1,21 +1,26 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/res/app_colors.dart';
+import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/custom_snackbar.dart';
+import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
 
-class DeleteAccountScreen extends StatefulWidget {
+class DeleteAccountScreen extends ConsumerStatefulWidget {
   const DeleteAccountScreen({super.key});
 
   @override
-  State<DeleteAccountScreen> createState() => _DeleteAccountScreenState();
+  ConsumerState<DeleteAccountScreen> createState() =>
+      _DeleteAccountScreenState();
 }
 
-class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
+class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
   bool _isConfirmChecked = false;
-  bool _isLoading = false;
   String? _selectedReason;
 
   final List<String> _deleteReasons = [
@@ -136,21 +141,38 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
     );
   }
 
-  void _deleteAccount() async {
+  Future<void> _deleteAccount() async {
     Navigator.pop(context);
-    setState(() => _isLoading = true);
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final isDeleted = await ref
+          .read(deleteAccountProvider.notifier)
+          .deleteAccount(_selectedReason!);
 
-    setState(() => _isLoading = false);
+      if (isDeleted) {
+        AppSnackbar.show(
+          context,
+          message: "Your account has been permanently deleted",
+          type: SnackBarType.success,
+        );
 
-    // TODO: Implement actual account deletion logic
-    AppSnackbar.show(
-      context,
-      message: "Your account has been permanently deleted",
-      type: SnackBarType.success,
-    );
+        ref.read(cartProvider.notifier).clearCart();
+        await AuthLocalstorageService.clear();
+        Navigator.pushReplacementNamed(context, AppRoutes.register);
+      } else {
+        AppSnackbar.show(
+          context,
+          message: "Failed to delete account",
+          type: SnackBarType.error,
+        );
+      }
+    } catch (e) {
+      AppSnackbar.show(
+        context,
+        message: "Failed to delete account",
+        type: SnackBarType.error,
+      );
+    }
   }
 
   @override
@@ -307,15 +329,12 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
               const SizedBox(height: 32),
 
               // Delete Button
-              _isLoading
-                  ? Center(
-                      child: CircularProgressIndicator(color: AppColors.error),
-                    )
-                  : AppButton(
-                      title: "Delete My Account",
-                      onTap: _showDeleteConfirmationDialog,
-                      color: AppColors.error,
-                    ),
+              AppButton(
+                title: "Delete My Account",
+                isLoading: ref.watch(deleteAccountProvider).isLoading,
+                onTap: _showDeleteConfirmationDialog,
+                color: AppColors.error,
+              ),
 
               const SizedBox(height: 16),
 

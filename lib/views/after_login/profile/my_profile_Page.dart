@@ -9,6 +9,7 @@ import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.da
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
+import 'package:samagrah/view_model/before_login_provider/auth_provider.dart';
 import 'package:samagrah/views/after_login/profile/policy_page.dart';
 
 class ProfilePage extends ConsumerWidget {
@@ -196,6 +197,7 @@ class ProfilePage extends ConsumerWidget {
                           onPressed: () async {
                             ref.read(cartProvider.notifier).clearCart();
                             await AuthLocalstorageService.clear();
+                            ref.read(authProvider.notifier).reset();
                             Navigator.pushReplacementNamed(
                               context,
                               AppRoutes.register,

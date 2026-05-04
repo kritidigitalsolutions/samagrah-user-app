@@ -292,9 +292,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               gridDelegate:
                                   const SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: 3,
-                                    childAspectRatio: 0.75,
-                                    crossAxisSpacing: 10,
-                                    mainAxisSpacing: 10,
+                                    childAspectRatio: 0.70,
+                                    crossAxisSpacing: 8,
+                                    mainAxisSpacing: 8,
                                   ),
                               itemCount: products.length,
                               itemBuilder: (context, index) {
@@ -673,46 +673,48 @@ Widget buildDiyaCard(Product product, WidgetRef ref, BuildContext context) {
         Expanded(
           child: Stack(
             children: [
-              InkWell(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.productDetails,
-                    arguments: product,
-                  );
-                },
-                child: CarouselSlider(
-                  options: CarouselOptions(
-                    autoPlay: false,
-                    viewportFraction: 1,
-
-                    enlargeCenterPage: false,
-                    onPageChanged: (index, reason) {
-                      ref
-                              .read(
-                                imageSliderIndexProvider(
-                                  product.id ?? '',
-                                ).notifier,
-                              )
-                              .state =
-                          index;
-                    },
+              Positioned.fill(
+                child: InkWell(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
                   ),
-                  items: product.images.map((image) {
-                    final cleanImage = image.replaceAll("\\", "/");
-
-                    return CustomCachedImage(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(12),
-                      ),
-                      imageUrl: cleanImage,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.productDetails,
+                      arguments: product,
                     );
-                  }).toList(),
+                  },
+                  child: CarouselSlider(
+                    options: CarouselOptions(
+                      autoPlay: false,
+                      viewportFraction: 1,
+
+                      enlargeCenterPage: false,
+                      onPageChanged: (index, reason) {
+                        ref
+                                .read(
+                                  imageSliderIndexProvider(
+                                    product.id ?? '',
+                                  ).notifier,
+                                )
+                                .state =
+                            index;
+                      },
+                    ),
+                    items: product.images.map((image) {
+                      final cleanImage = image.replaceAll("\\", "/");
+
+                      return CustomCachedImage(
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(12),
+                        ),
+                        imageUrl: cleanImage,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
               Positioned(
@@ -731,40 +733,45 @@ Widget buildDiyaCard(Product product, WidgetRef ref, BuildContext context) {
                   ),
                 ),
               ),
-              Positioned(
-                bottom: 5,
-                left: 5,
-                child: Container(
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.5),
-                        blurRadius: 8,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: AnimatedSmoothIndicator(
-                    activeIndex: currentIndex,
-                    count: product.images.length,
-                    effect: product.images.length <= 5
-                        ? WormEffect(
-                            dotHeight: 7,
-                            dotWidth: 7,
-                            activeDotColor: AppColors.black,
-                            dotColor: AppColors.white.withOpacity(0.5),
-                          )
-                        : ScrollingDotsEffect(
-                            activeDotColor: AppColors.black,
-                            dotColor: AppColors.white.withOpacity(0.5),
-                            dotHeight: 7,
-                            dotWidth: 7,
-                            spacing: 4,
-                            maxVisibleDots: 5,
-                          ),
+              if (product.images.length >
+                  1) // ← only show dots if more than 1 image
+                Positioned(
+                  bottom: 5,
+                  left: 5,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 8,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: AnimatedSmoothIndicator(
+                      activeIndex: currentIndex.clamp(
+                        0,
+                        product.images.length - 1,
+                      ), // ← clamp safety
+                      count: product.images.length,
+                      effect: product.images.length <= 5
+                          ? WormEffect(
+                              dotHeight: 7,
+                              dotWidth: 7,
+                              activeDotColor: AppColors.black,
+                              dotColor: AppColors.white.withOpacity(0.5),
+                            )
+                          : ScrollingDotsEffect(
+                              activeDotColor: AppColors.black,
+                              dotColor: AppColors.white.withOpacity(0.5),
+                              dotHeight: 7,
+                              dotWidth: 7,
+                              spacing: 4,
+                              maxVisibleDots: 5,
+                            ),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),

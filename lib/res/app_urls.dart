@@ -6,7 +6,7 @@ class AppUrls {
   // ================ Auth =====================================
 
   static const String registerUser = "$baseUrl/auth/signup";
-  static const String login = "$baseUrl/auth/login";
+  static const String login = "$baseUrl/auth/send-otp";
   static const String verifyOtp = "$baseUrl/auth/verify-otp";
   static const String resendOtp = "$baseUrl/auth/resend-otp";
 
@@ -68,6 +68,7 @@ class AppUrls {
   //========================== profile edit api =================================
 
   static const String editProfile = "$baseUrl/user";
+  static const String deleteAccount = "$baseUrl/user/delete-account";
 
   //========================== wallet and offers =================================
 
@@ -82,4 +83,8 @@ class AppUrls {
   static const String video = '$baseUrl/user/video';
   static const String videoToken = '$baseUrl/user/video/token';
   static const String videoStart = '$baseUrl/user/video/start';
+
+  // fcm token
+
+  static const String fcmToken = "$baseUrl/user/fcm-token";
 }

@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:samagrah/repo/notification_repo.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_pages.dart';
 import 'package:samagrah/routes/app_routes.dart';
@@ -13,6 +14,7 @@ import 'package:samagrah/views/after_login/customize_kit/customize_kit_search_pa
 import 'package:samagrah/views/after_login/home_screen.dart';
 import 'package:samagrah/views/after_login/pandit/book_retual_page.dart';
 import 'package:samagrah/views/service_pages/location_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,6 +64,7 @@ class MyHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
+  final NotificationRepo _repo = NotificationRepo();
   @override
   void initState() {
     super.initState();
@@ -74,6 +77,10 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
   }
 
   void _handleLocationCheck() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('fcm_token');
+
+    await _repo.postFCMToken(token ?? '');
     final hasPermission = await checkLocationPermission();
 
     if (!hasPermission && mounted) {

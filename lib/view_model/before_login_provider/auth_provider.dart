@@ -20,40 +20,41 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   }
 
   // ✅ REGISTER
+  // ✅ REGISTER
   Future<void> register({required UserRequestModel model}) async {
     state = const AsyncLoading();
-
     state = await AsyncValue.guard(() async {
       final res = await _repo.register(model);
-
       return state.value!.copyWith(
-        registerModel: res, // 👈 store register response
+        registerModel: res,
+        verifyModel: null, // ← clear others
+        resendModel: null,
       );
     });
   }
 
-  // 🔐 login
+  // 🔐 LOGIN
   Future<void> login({required String mobile}) async {
     state = const AsyncLoading();
-
     state = await AsyncValue.guard(() async {
       final res = await _repo.login(mobile);
-
       return state.value!.copyWith(
-        registerModel: res, // 👈 important
+        registerModel: res,
+        verifyModel: null, // ← clear others
+        resendModel: null,
       );
     });
   }
 
-   // 🔐 resend
+  // 🔐 RESEND
   Future<void> resend({required String mobile}) async {
     state = const AsyncLoading();
-
     state = await AsyncValue.guard(() async {
       final res = await _repo.resendOtp(mobile);
-
       return state.value!.copyWith(
-        registerModel: res, // 👈 important
+        resendModel: res,
+        registerModel: null, // ← clear others
+        verifyModel: null,
       );
     });
   }
@@ -61,15 +62,11 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   // 🔐 VERIFY OTP
   Future<void> verifyOtp({required String mobile, required String otp}) async {
     state = const AsyncLoading();
-
     state = await AsyncValue.guard(() async {
       final res = await _repo.verifyOtp(mobile, otp);
-
-      // ✅ SAVE DATA
       if (res.success == true && res.data != null) {
         final token = res.data!.token ?? "";
         final user = res.data!.user;
-
         await AuthLocalstorageService.saveUser(
           token: token,
           userJson: {
@@ -83,9 +80,18 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
           },
         );
       }
-
-      return state.value!.copyWith(verifyModel: res);
+      return state.value!.copyWith(
+        verifyModel: res,
+        registerModel: null, // ← clear others
+        resendModel: null,
+      );
     });
+  }
+
+  void reset() {
+    state = AsyncData(
+      AuthState(),
+    ); // ← clears registerModel, verifyModel, everything
   }
 }
 
