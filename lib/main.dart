@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/repo/notification_repo.dart';
@@ -8,6 +9,7 @@ import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/localStogare_service/location_storage.dart';
 import 'package:samagrah/utils/service/firebase_notification.dart';
 import 'package:samagrah/utils/service/location_checker.dart';
+import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/views/after_login/category_page.dart';
 import 'package:samagrah/views/after_login/customize_kit/customize_kit_search_page.dart';
@@ -78,9 +80,15 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
 
   void _handleLocationCheck() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('fcm_token');
+    String? token = prefs.getString('fcm_token');
 
-    await _repo.postFCMToken(token ?? '');
+    if (token == null || token.isEmpty) {
+      token = await FirebaseMessaging.instance.getToken();
+      await _repo.postFCMToken(token ?? '');
+    } else {
+      await _repo.postFCMToken(token);
+    }
+
     final hasPermission = await checkLocationPermission();
 
     if (!hasPermission && mounted) {
@@ -110,7 +118,7 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(bottomNavProvider);
-
+    final userAsync = ref.read(userProvider);
     return Scaffold(
       backgroundColor: AppColors.headerCard,
       body: IndexedStack(index: currentIndex, children: _screens),

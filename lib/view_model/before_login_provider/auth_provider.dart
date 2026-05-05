@@ -5,6 +5,8 @@ import 'package:samagrah/repo/auth_repo.dart';
 import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
 import 'package:samagrah/view_model/before_login_provider/auth_state.dart';
 
+import '../after_login_provider/account_provider.dart';
+
 final phoneProvider = StateProvider<String>((ref) => '');
 
 final authProvider = AsyncNotifierProvider<AuthNotifier, AuthState>(
@@ -80,6 +82,8 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
           },
         );
       }
+      ref.invalidate(userProvider);
+      await ref.read(userProvider.future);
       return state.value!.copyWith(
         verifyModel: res,
         registerModel: null, // ← clear others

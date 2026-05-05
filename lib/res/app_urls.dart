@@ -1,7 +1,7 @@
 class AppUrls {
-  static const String baseUrl = "http://192.168.1.40:8000/api";
+   static const String baseUrl = "http://192.168.1.40:8000/api";
 
-  // static const String  baseUrl = "https://samagran-backend.vercel.app/api";
+  //static const String baseUrl = "https://samagran-backend.vercel.app/api";
 
   // ================ Auth =====================================
 
@@ -84,7 +84,10 @@ class AppUrls {
   static const String videoToken = '$baseUrl/user/video/token';
   static const String videoStart = '$baseUrl/user/video/start';
 
-  // fcm token
+  // notification
 
   static const String fcmToken = "$baseUrl/user/fcm-token";
+   static const String notifications = '$baseUrl/user/notifications';
+   static String notificationRead(String id) => '$baseUrl/user/notifications/$id/read';
+   static String notificationDelete(String id) => '$baseUrl/user/notifications/$id';
 }

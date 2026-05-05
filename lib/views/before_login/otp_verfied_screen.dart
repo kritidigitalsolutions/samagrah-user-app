@@ -28,9 +28,25 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
   // ... existing controllers and focusNodes ...
 
   @override
+  @override
   void initState() {
     super.initState();
-    _startTimer(); // ← start on page load
+    _startTimer();
+
+    // ✅ Clear all controllers and reset OTP provider state
+    Future.microtask(() {
+      for (final c in _controllers) {
+        c.clear();
+      }
+      ref.read(otpProvider.notifier).state = List.filled(_otpLength, '');
+    });
+
+    // ✅ Auto-focus first field
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _focusNodes[0].requestFocus();
+      }
+    });
   }
 
   // ← start/restart countdown
@@ -50,8 +66,12 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
   @override
   void dispose() {
     _timer?.cancel(); // ← always cancel timer
-    for (final c in _controllers) c.dispose();
-    for (final f in _focusNodes) f.dispose();
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -66,16 +86,15 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
 
   void _onOtpChanged(int index, String value) {
     final otpList = [...ref.read(otpProvider)];
-
     otpList[index] = value;
     ref.read(otpProvider.notifier).state = otpList;
 
     if (value.isNotEmpty && index < _otpLength - 1) {
-      _focusNodes[index + 1].requestFocus();
+      // ✅ Small delay prevents focus conflict on re-entry
+      Future.microtask(() => _focusNodes[index + 1].requestFocus());
     }
 
     final otp = otpList.join();
-
     if (otp.length == _otpLength) {
       FocusScope.of(context).unfocus();
     }
@@ -87,12 +106,12 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
         _controllers[index].text.isEmpty &&
         index > 0) {
       final otpList = [...ref.read(otpProvider)];
-
       otpList[index - 1] = '';
       ref.read(otpProvider.notifier).state = otpList;
 
-      _focusNodes[index - 1].requestFocus();
       _controllers[index - 1].clear();
+      // ✅ Use microtask here too
+      Future.microtask(() => _focusNodes[index - 1].requestFocus());
     }
   }
 
@@ -109,6 +128,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
               AppRoutes.home,
               (route) => false,
             );
+
           } else if (res != null && res.success == false) {
             AppSnackbar.show(
               context,

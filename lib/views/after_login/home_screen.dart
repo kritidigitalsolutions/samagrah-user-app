@@ -21,6 +21,8 @@ import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
 import 'package:samagrah/views/service_pages/location_provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
+import '../../view_model/after_login_provider/home_provider/notification_provider.dart';
+
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -166,14 +168,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       },
                     ),
                     SizedBox(width: 8),
-                    _buildFeature(
-                      "assets/icon/noti.png",
-                      AppColors.warningLighter,
-
-                      "Notification",
-                      () {
-                        Navigator.pushNamed(context, AppRoutes.notification);
-                      },
+                    // Replace the notification _buildFeature call in HomeScreen
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        _buildFeature(
+                          "assets/icon/notification.png",
+                          AppColors.warningLighter,
+                          "Notification",
+                              () {
+                            Navigator.pushNamed(context, AppRoutes.notification);
+                          },
+                        ),
+                        // Unread badge
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final unreadCount = ref.watch(
+                              notificationProvider.select((s) => s.unreadCount),
+                            );
+                            if (unreadCount == 0) return const SizedBox.shrink();
+                            return Positioned(
+                              top: 4,
+                              right: 4,
+                              child: Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                child: Text(
+                                  unreadCount > 99 ? '99+' : '$unreadCount',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),

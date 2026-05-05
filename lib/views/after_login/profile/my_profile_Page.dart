@@ -198,6 +198,7 @@ class ProfilePage extends ConsumerWidget {
                             ref.read(cartProvider.notifier).clearCart();
                             await AuthLocalstorageService.clear();
                             ref.read(authProvider.notifier).reset();
+                            ref.invalidate(userProvider);
                             Navigator.pushReplacementNamed(
                               context,
                               AppRoutes.register,

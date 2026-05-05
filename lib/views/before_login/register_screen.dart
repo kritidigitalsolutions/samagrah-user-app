@@ -45,8 +45,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           final register = data.registerModel;
 
           if (register == null) return;
-          if (data.verifyModel != null)
+          if (data.verifyModel != null) {
             return; // ← bail out if OTP verify triggered this
+          }
 
           final isNewUser = register.isNewUser;
 
