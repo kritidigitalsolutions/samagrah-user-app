@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
 import 'package:samagrah/model/response/kit_response/default_kit_res_model.dart';
-import 'package:samagrah/model/response/kit_response/user_draft_kit_res_model.dart';
-import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
-import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
 
 class KitOrderSummaryPage extends ConsumerWidget {
   const KitOrderSummaryPage({super.key});
@@ -25,16 +22,6 @@ class KitOrderSummaryPage extends ConsumerWidget {
 
     final kit = mapToOrderSummary(args);
 
-    final itemTotal = kit.totalPrice;
-    final totalAmount = itemTotal;
-    final notifier = ref.read(customizeKitProvider.notifier);
-    final totalPrice = notifier.totalPrice;
-
-    final isCustomized = notifier.isCustomized;
-
-    print("$itemTotal");
-    print("$totalPrice");
-    print("$isCustomized");
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -177,7 +164,7 @@ class KitOrderSummaryPage extends ConsumerWidget {
                   const Divider(height: 20),
                   _buildSummaryRow(
                     'Total Amount',
-                    isCustomized ? "₹$totalPrice" : '₹$totalAmount',
+                    '₹${kit.totalPrice}',
                     isTotal: true,
                   ),
                   const SizedBox(height: 16),
@@ -189,13 +176,8 @@ class KitOrderSummaryPage extends ConsumerWidget {
                       ref.read(bookingItemProvider.notifier).state = [
                         verifyItems,
                       ];
-                      if (isCustomized) {
-                        ref.read(totalPriceProvider.notifier).state =
-                            totalPrice;
-                      } else {
-                        ref.read(totalPriceProvider.notifier).state =
-                            totalAmount;
-                      }
+                      ref.read(totalPriceProvider.notifier).state =
+                          kit.totalPrice;
 
                       Navigator.pushNamed(context, AppRoutes.addressPage);
                     },
@@ -310,28 +292,13 @@ class OrderItemModel {
 }
 
 OrderSummaryModel mapToOrderSummary(dynamic args) {
-  if (args is UserKitData) {
+  if (args is DefaultKitData) {
     return OrderSummaryModel(
       id: args.id ?? '',
       name: args.name ?? "",
-      totalPrice: args.totalPrice ?? 0,
-      items: args.items.map((e) {
-        return OrderItemModel(
-          id: e.product?.id ?? '',
-          title: e.product?.title ?? "",
-          image: (e.product?.media?.image.isNotEmpty == true)
-              ? e.product!.media!.image.first
-              : "",
-          quantity: e.quantity ?? 0,
-          price: e.priceAtTime ?? 0,
-        );
-      }).toList(),
-    );
-  } else if (args is DefaultKitData) {
-    return OrderSummaryModel(
-      id: args.id ?? '',
-      name: args.name ?? "",
-      totalPrice: args.kitPrice ?? 0,
+      totalPrice:
+          args.kitPrice ??
+          0, // kitPrice = actual price (customized ya original)
       items: args.items.map((e) {
         return OrderItemModel(
           id: e.product?.id ?? '',
@@ -344,7 +311,7 @@ OrderSummaryModel mapToOrderSummary(dynamic args) {
         );
       }).toList(),
     );
-  } else if (args is Product) {}
+  }
 
-  throw Exception("Invalid data passed");
+  throw Exception("Invalid data: expected DefaultKitData");
 }

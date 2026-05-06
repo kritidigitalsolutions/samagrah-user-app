@@ -69,7 +69,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
               'assets/panditLogo.png',
               width: 70,
               height: 70,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, _, _) => Container(
                 width: 70,
                 height: 70,
                 color: AppColors.grey500,
@@ -306,7 +306,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             ),
-                            error: (_, __) => Text(
+                            error: (_, _) => Text(
                               'Balance unavailable',
                               style: text12(color: AppColors.grey),
                             ),
@@ -389,7 +389,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                               ),
                             ),
                           ),
-                          error: (_, __) => const SizedBox.shrink(),
+                          error: (_, _) => const SizedBox.shrink(),
                         ),
                     ],
                   ),
@@ -414,7 +414,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           color: AppColors.button,
                         ),
                       ),
-                      error: (_, __) => const Text("0"),
+                      error: (_, _) => const Text("0"),
                       loading: () => SizedBox(
                         width: 20,
                         height: 20,
@@ -433,21 +433,21 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                     Image.asset(
                       'assets/gPay.png',
                       height: 24,
-                      errorBuilder: (_, __, ___) =>
+                      errorBuilder: (_, _, _) =>
                           const Icon(Icons.payment, size: 24),
                     ),
                     const SizedBox(width: 8),
                     Image.asset(
                       'assets/paytm.png',
                       height: 24,
-                      errorBuilder: (_, __, ___) =>
+                      errorBuilder: (_, _, _) =>
                           const Icon(Icons.account_balance_wallet, size: 24),
                     ),
                     const SizedBox(width: 8),
                     Image.asset(
                       'assets/phonePe.png',
                       height: 24,
-                      errorBuilder: (_, __, ___) =>
+                      errorBuilder: (_, _, _) =>
                           const Icon(Icons.payment, size: 24),
                     ),
                   ],
@@ -508,7 +508,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                       ),
                     );
                   },
-                  error: (_, __) => const Text("0"),
+                  error: (_, _) => const Text("0"),
                   loading: () => Center(
                     child: SizedBox(
                       width: 20,

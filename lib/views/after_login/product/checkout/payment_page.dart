@@ -107,7 +107,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                         return _buildWalletOption(totalAmount);
                       },
                       loading: () => const _ShimmerBox(height: 140),
-                      error: (_, __) =>
+                      error: (_, _) =>
                           _ErrorText(message: "Offers load nahi ho paye"),
                     ),
                     const SizedBox(height: 12),

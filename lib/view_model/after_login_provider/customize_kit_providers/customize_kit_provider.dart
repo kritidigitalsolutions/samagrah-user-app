@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:samagrah/model/request/kit/customize_kit_req_model.dart';
 import 'package:samagrah/model/response/kit_response/default_kit_res_model.dart';
-import 'package:samagrah/model/response/kit_response/user_draft_kit_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/repo/kit/customize_kit_repo.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/state/customizeKit_state.dart';
@@ -31,13 +29,13 @@ class CustomizeKitNotifier extends Notifier<List<Item>> {
     state = [...originalItems];
   }
 
-  void initializeFromUser(UserKitData kit) {
-    originalItems = kit.items
-        .map((item) => Item(product: item.product, quantity: item.quantity))
-        .toList();
+  // void initializeFromUser(UserKitData kit) {
+  //   originalItems = kit.items
+  //       .map((item) => Item(product: item.product, quantity: item.quantity))
+  //       .toList();
 
-    state = [...originalItems];
-  }
+  //   state = [...originalItems];
+  //}
 
   void updateQuantity(int index, int newQuantity) {
     if (newQuantity < 1 || index < 0 || index >= state.length) return;
@@ -82,6 +80,12 @@ class CustomizeKitNotifier extends Notifier<List<Item>> {
         .toList();
   }
 
+  void applyItems(List<Item> items) {
+    state = items
+        .map((e) => Item(product: e.product, quantity: e.quantity))
+        .toList();
+  }
+
   // Helper getters
   int get totalPrice => state.fold(0, (sum, item) {
     final price = item.product?.pricing?.price ?? 0;
@@ -119,7 +123,7 @@ final customizeKitProvider = NotifierProvider<CustomizeKitNotifier, List<Item>>(
   () => CustomizeKitNotifier(),
 );
 
-final isFestivalProvider = StateProvider<bool>((ref) => true);
+//final isFestivalProvider = StateProvider<bool>((ref) => true);
 
 // kit name
 
@@ -137,90 +141,89 @@ class UserKitNotifier extends AsyncNotifier<CustomizekitState> {
 
   @override
   Future<CustomizekitState> build() async {
-    final res = await _repo.getMyKit();
     final defaultKitRes = await _repo.defaultKit();
 
-    return CustomizekitState(userKit: res, defaultKit: defaultKitRes);
+    return CustomizekitState(defaultKit: defaultKitRes);
   }
 
   // referash my kit
 
-  Future<void> refreshUserKit() async {
-    final previousState = state.value;
+  // Future<void> refreshUserKit() async {
+  //   final previousState = state.value;
 
-    state = const AsyncLoading();
+  //   state = const AsyncLoading();
 
-    state = await AsyncValue.guard(() async {
-      final res = await _repo.getMyKit(); // 👈 only this API
-      return CustomizekitState(
-        userKit: res,
-        defaultKit: previousState?.defaultKit, // 👈 preserve old
-      );
-    });
-  }
+  //   state = await AsyncValue.guard(() async {
+  //     final res = await _repo.getMyKit(); // 👈 only this API
+  //     return CustomizekitState(
+  //       userKit: res,
+  //       defaultKit: previousState?.defaultKit, // 👈 preserve old
+  //     );
+  //   });
+  // }
 
   // Updated method - Accept CreateKitRequest
-  Future<UserKitData?> createDraftKit(CreateKitRequest request) async {
-    final previousState = state.value;
+  // Future<UserKitData?> createDraftKit(CreateKitRequest request) async {
+  //   final previousState = state.value;
 
-    state = const AsyncLoading();
+  //   state = const AsyncLoading();
 
-    try {
-      final res = await _repo.createCustoizeKits(request);
+  //   try {
+  //     final res = await _repo.createCustoizeKits(request);
 
-      // ✅ Extract actual kit
-      final createdKit = res.data;
+  //     // ✅ Extract actual kit
+  //     final createdKit = res.data;
 
-      // Refresh list
-      final userKitRes = await _repo.getMyKit();
+  //     // Refresh list
+  //     final userKitRes = await _repo.getMyKit();
 
-      state = AsyncData(
-        CustomizekitState(
-          userKit: userKitRes,
-          defaultKit: previousState?.defaultKit,
-        ),
-      );
+  //     state = AsyncData(
+  //       CustomizekitState(
+  //         userKit: userKitRes,
+  //         defaultKit: previousState?.defaultKit,
+  //       ),
+  //     );
 
-      return createdKit; // ✅ RETURN THIS
-    } catch (e, st) {
-      state = AsyncError(e, st);
-      rethrow;
-    }
-  }
+  //     return createdKit; // ✅ RETURN THIS
+  //   } catch (e, st) {
+  //     state = AsyncError(e, st);
+  //     rethrow;
+  //   }
+  // }
 
-  Future<void> deleteMyKit(String id) async {
-    final previousState = state.value;
-    if (previousState == null) return;
+  // Future<void> deleteMyKit(String id) async {
+  //   final previousState = state.value;
+  //   if (previousState == null) return;
 
-    try {
-      // ✅ Safe list handling
-      final updatedList = (previousState.userKit?.data ?? [])
-          .where((kit) => kit.id != id)
-          .toList();
+  //   try {
+  //     // ✅ Safe list handling
+  //     final updatedList = (previousState.userKit?.data ?? [])
+  //         .where((kit) => kit.id != id)
+  //         .toList();
 
-      // ✅ Preserve old fields
-      final updatedUserKit = UserDraftKitResModel(
-        data: updatedList,
-        success: previousState.userKit?.success,
-        count: updatedList.length, // 👈 optional better update
-      );
+  //     // ✅ Preserve old fields
+  //     final updatedUserKit = UserDraftKitResModel(
+  //       data: updatedList,
+  //       success: previousState.userKit?.success,
+  //       count: updatedList.length, // 👈 optional better update
+  //     );
 
-      // ✅ Update UI instantly
-      state = AsyncData(
-        CustomizekitState(
-          userKit: updatedUserKit,
-          defaultKit: previousState.defaultKit,
-        ),
-      );
+  //     // ✅ Update UI instantly
+  //     state = AsyncData(
+  //       CustomizekitState(
+  //         userKit: updatedUserKit,
+  //         defaultKit: previousState.defaultKit,
+  //       ),
+  //     );
 
-      // ✅ API call
-      await _repo.deleteMyKit(id);
-    } catch (e, st) {
-      // ❌ rollback
-      state = AsyncError(e, st);
-      state = AsyncData(previousState);
-    }
-  }
+  //     // ✅ API call
+  //     await _repo.deleteMyKit(id);
+  //   } catch (e, st) {
+  //     // ❌ rollback
+  //     state = AsyncError(e, st);
+  //     state = AsyncData(previousState);
+  //   }
+  // }
 }
 
 // add to cart

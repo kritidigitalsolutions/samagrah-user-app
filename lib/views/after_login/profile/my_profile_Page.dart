@@ -71,14 +71,14 @@ class ProfilePage extends ConsumerWidget {
                     MaterialPageRoute(builder: (_) => MyHomeScreen(index: 1)),
                   );
                 }),
-                _MenuItem(
-                  "assets/profile/fireworks.png",
-                  'Special Kit for Festivals',
-                  () {
-                    Navigator.pushNamed(context, AppRoutes.festivalKit);
-                  },
-                ),
 
+                // _MenuItem(
+                //   "assets/profile/fireworks.png",
+                //   'Special Kit for Festivals',
+                //   () {
+                //     Navigator.pushNamed(context, AppRoutes.festivalKit);
+                //   },
+                // ),
                 _MenuItem("assets/profile/box.png", 'Customer and Kit', () {
                   Navigator.push(
                     context,

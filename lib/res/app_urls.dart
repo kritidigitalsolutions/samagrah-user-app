@@ -1,5 +1,5 @@
 class AppUrls {
-   static const String baseUrl = "http://192.168.1.40:8000/api";
+  static const String baseUrl = "http://192.168.1.30:8000/api";
 
   //static const String baseUrl = "https://samagran-backend.vercel.app/api";
 
@@ -14,7 +14,7 @@ class AppUrls {
 
   static const String festivalKit = "$baseUrl/user/kits";
   static const String userKit = "$baseUrl/user-kits";
-  static const String getMyKit = "$baseUrl/user-kits/my-kits";
+  // static const String getMyKit = "$baseUrl/user-kits/my-kits";
   static const String defaultKit = "$baseUrl/default-kits";
 
   // ======================= product===================================
@@ -87,7 +87,9 @@ class AppUrls {
   // notification
 
   static const String fcmToken = "$baseUrl/user/fcm-token";
-   static const String notifications = '$baseUrl/user/notifications';
-   static String notificationRead(String id) => '$baseUrl/user/notifications/$id/read';
-   static String notificationDelete(String id) => '$baseUrl/user/notifications/$id';
+  static const String notifications = '$baseUrl/user/notifications';
+  static String notificationRead(String id) =>
+      '$baseUrl/user/notifications/$id/read';
+  static String notificationDelete(String id) =>
+      '$baseUrl/user/notifications/$id';
 }

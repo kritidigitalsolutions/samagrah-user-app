@@ -165,6 +165,7 @@ class PoojaOffering {
     required this.standardSamagri,
     required this.customSamagri,
     required this.customSamagriItems,
+    required this.customSamagriNotes,
   });
 
   final String? name;
@@ -175,6 +176,7 @@ class PoojaOffering {
   final bool? standardSamagri;
   final bool? customSamagri;
   final List<CustomSamagriItem> customSamagriItems;
+  final List<String> customSamagriNotes;
 
   factory PoojaOffering.fromJson(Map<String, dynamic> json) {
     return PoojaOffering(
@@ -188,14 +190,16 @@ class PoojaOffering {
       customSamagriItems: json["customSamagriItems"] == null
           ? []
           : List<CustomSamagriItem>.from(
-              json["customSamagriItems"].map(
-                (x) => CustomSamagriItem.fromJson(x),
-              ),
-            ),
+        json["customSamagriItems"].map(
+              (x) => CustomSamagriItem.fromJson(x),
+        ),
+      ),
+      customSamagriNotes: json["customSamagriNotes"] == null
+          ? []
+          : List<String>.from(json["customSamagriNotes"].map((x) => x)),
     );
   }
 }
-
 class CustomSamagriItem {
   CustomSamagriItem({
     required this.itemName,

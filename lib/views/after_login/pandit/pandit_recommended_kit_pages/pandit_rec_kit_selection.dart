@@ -170,7 +170,7 @@ class ProductCard extends ConsumerWidget {
                   height: 90,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     height: 90,
                     color: Colors.grey[200],
                     child: const Icon(

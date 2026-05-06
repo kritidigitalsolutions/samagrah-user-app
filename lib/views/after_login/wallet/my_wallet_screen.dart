@@ -76,7 +76,7 @@ class MyWalletScreen extends ConsumerWidget {
 
               offerAsync.when(
                 loading: () => const _ShimmerBox(height: 140),
-                error: (_, __) =>
+                error: (_, _) =>
                     _ErrorText(message: "Offers load nahi ho paye"),
                 data: (data) {
                   final offers = data.data?.offers ?? [];
@@ -104,7 +104,7 @@ class MyWalletScreen extends ConsumerWidget {
 
               walletAsync.when(
                 loading: () => const _ShimmerBox(height: 200),
-                error: (_, __) =>
+                error: (_, _) =>
                     _ErrorText(message: "Transactions load nahi ho paye"),
                 data: (walletData) {
                   final transactions = walletData.data?.transactions ?? [];
@@ -257,7 +257,7 @@ class _BalanceCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  error: (_, __) => Text(
+                  error: (_, _) => Text(
                     "Error loading balance",
                     style: text13(color: AppColors.error),
                   ),

@@ -1,5 +1,3 @@
-import 'package:samagrah/model/response/kit_response/user_draft_kit_res_model.dart';
-
 class DefaultKitResModel {
   DefaultKitResModel({
     required this.success,
@@ -35,10 +33,8 @@ class DefaultKitData {
     required this.kitPrice,
     required this.savings,
     required this.status,
-    required this.createdAt,
-    required this.updatedAt,
+
     required this.slug,
-    required this.v,
   });
 
   final String? id;
@@ -50,10 +46,8 @@ class DefaultKitData {
   final int? kitPrice;
   final int? savings;
   final String? status;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
+
   final String? slug;
-  final int? v;
 
   factory DefaultKitData.fromJson(Map<String, dynamic> json) {
     return DefaultKitData(
@@ -68,10 +62,8 @@ class DefaultKitData {
       kitPrice: json["kitPrice"],
       savings: json["savings"],
       status: json["status"],
-      createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
-      updatedAt: DateTime.tryParse(json["updatedAt"] ?? ""),
+
       slug: json["slug"],
-      v: json["__v"],
     );
   }
 }
@@ -88,6 +80,64 @@ class Item {
           ? null
           : UserDraftProduct.fromJson(json["product"]),
       quantity: json["quantity"],
+    );
+  }
+}
+
+class UserDraftProduct {
+  UserDraftProduct({
+    required this.pricing,
+    required this.media,
+    required this.id,
+    required this.title,
+    required this.slug,
+  });
+
+  final Pricing? pricing;
+  final Media? media;
+  final String? id;
+  final String? title;
+  final String? slug;
+
+  factory UserDraftProduct.fromJson(Map<String, dynamic> json) {
+    return UserDraftProduct(
+      pricing: json["pricing"] == null
+          ? null
+          : Pricing.fromJson(json["pricing"]),
+      media: json["media"] == null ? null : Media.fromJson(json["media"]),
+      id: json["_id"],
+      title: json["title"],
+      slug: json["slug"],
+    );
+  }
+}
+
+class Media {
+  Media({required this.image});
+
+  final List<String> image;
+
+  factory Media.fromJson(Map<String, dynamic> json) {
+    return Media(
+      image: json["image"] == null
+          ? []
+          : List<String>.from(json["image"]!.map((x) => x)),
+    );
+  }
+}
+
+class Pricing {
+  Pricing({required this.price, required this.mrp, required this.currency});
+
+  final int? price;
+  final int? mrp;
+  final String? currency;
+
+  factory Pricing.fromJson(Map<String, dynamic> json) {
+    return Pricing(
+      price: json["price"],
+      mrp: json["mrp"],
+      currency: json["currency"],
     );
   }
 }

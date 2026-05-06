@@ -62,7 +62,7 @@ class MyOrdersPage extends ConsumerWidget {
               loading: () => ListView.builder(
                 itemCount: 5,
                 padding: const EdgeInsets.all(16),
-                itemBuilder: (_, __) => const OrderCardSkeleton(),
+                itemBuilder: (_, _) => const OrderCardSkeleton(),
               ),
               error: (error, stack) => Center(
                 child: Column(

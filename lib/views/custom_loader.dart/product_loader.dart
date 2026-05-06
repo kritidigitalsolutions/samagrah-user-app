@@ -26,7 +26,7 @@ class ProductListingSkeleton extends StatelessWidget {
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
             ),
-            itemBuilder: (_, __) => const ProductCardSkeleton(),
+            itemBuilder: (_, _) => const ProductCardSkeleton(),
           ),
 
           const SizedBox(height: 20),
@@ -37,7 +37,7 @@ class ProductListingSkeleton extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: 6,
-              itemBuilder: (_, __) => Padding(
+              itemBuilder: (_, _) => Padding(
                 padding: const EdgeInsets.only(right: 10),
                 child: SizedBox(width: 120, child: const ProductCardSkeleton()),
               ),
@@ -52,7 +52,7 @@ class ProductListingSkeleton extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: 6,
-              itemBuilder: (_, __) => Padding(
+              itemBuilder: (_, _) => Padding(
                 padding: const EdgeInsets.only(right: 10),
                 child: SizedBox(width: 120, child: const ProductCardSkeleton()),
               ),
