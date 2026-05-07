@@ -18,11 +18,21 @@ class BookPanditPage extends ConsumerStatefulWidget {
 class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   int selectedOption = 2;
   Map<String, dynamic> assignedPanditBookingDetails = {};
+
+  // All controllers at state level — disposed safely in dispose()
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
 
   @override
   void dispose() {
     _searchController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -34,7 +44,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
       appBar: CustomAppBar(
         title: 'Book my Pandit',
         subtitle: 'Schedule a pandit for your ritual needs',
-
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),
@@ -54,7 +63,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
           ),
         ],
       ),
-
       body: SafeArea(
         child: Column(
           children: [
@@ -118,13 +126,11 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                           suffixIcon: GestureDetector(
                             onTap: () {
                               _searchController.clear();
-
-                              // reset search
                               ref
                                   .read(panditProvider.notifier)
                                   .searchPandit('');
                             },
-                            child: Icon(Icons.close, size: 18),
+                            child: const Icon(Icons.close, size: 18),
                           ),
                           filled: true,
                           fillColor: AppColors.warning.withAlpha(50),
@@ -141,49 +147,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                   ),
 
                   const SizedBox(width: 6),
-
-                  /// 📅 Date & Time
-                  // Expanded(
-                  //   flex: 3,
-                  //   child: SizedBox(
-                  //     height: 40,
-                  //     child: TextField(
-                  //       readOnly: true,
-                  //       onTap: () async {
-                  //         DateTime? date = await showDatePicker(
-                  //           context: context,
-                  //           initialDate: DateTime.now(),
-                  //           firstDate: DateTime.now(),
-                  //           lastDate: DateTime(2100),
-                  //         );
-
-                  //         if (date != null) {
-                  //           await showTimePicker(
-                  //             context: context,
-                  //             initialTime: TimeOfDay.now(),
-                  //           );
-                  //         }
-                  //       },
-                  //       decoration: InputDecoration(
-                  //         hintText: "Date & Time",
-                  //         hintStyle: text13(),
-                  //         prefixIcon: const Icon(
-                  //           Icons.calendar_today,
-                  //           size: 18,
-                  //         ),
-                  //         filled: true,
-                  //         fillColor: AppColors.warning.withAlpha(50),
-                  //         contentPadding: const EdgeInsets.symmetric(
-                  //           horizontal: 8,
-                  //         ),
-                  //         border: OutlineInputBorder(
-                  //           borderRadius: BorderRadius.circular(25),
-                  //           borderSide: BorderSide.none,
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
                 ],
               ),
             ),
@@ -231,14 +194,16 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
 
                   // Pandits Grid
                   panditAsync.when(
-                    loading: () => Center(child: CircularProgressIndicator()),
-                    error: (error, stackTrace) => Text("Something went wrong"),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (error, stackTrace) =>
+                        const Text("Something went wrong"),
                     data: (data) {
                       final pandits = data.searchResults.isNotEmpty
                           ? data.searchResults
                           : data.pandit;
                       if (pandits.isEmpty) {
-                        return Text("Pandit Not found");
+                        return const Text("Pandit Not found");
                       }
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -342,7 +307,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                   isRec
                       ? Container(
                           width: 130,
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: 10,
                             vertical: 5,
                           ),
@@ -357,7 +322,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                 size: 15,
                                 color: AppColors.warningLight,
                               ),
-                              SizedBox(width: 5),
+                              const SizedBox(width: 5),
                               Text(
                                 "Recommended",
                                 style: text10(color: AppColors.white),
@@ -365,7 +330,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                             ],
                           ),
                         )
-                      : SizedBox.shrink(),
+                      : const SizedBox.shrink(),
                   Text(
                     title,
                     style: text14(
@@ -440,7 +405,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                       pandit.fullName ?? 'N/A',
                       style: text14(
                         color: AppColors.white,
-
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -474,7 +438,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                         Navigator.pushNamed(
                           context,
                           AppRoutes.panditDetails,
-                          arguments: pandit, // 👈 your PanditData object
+                          arguments: pandit,
                         );
                       },
                     ),
@@ -489,16 +453,17 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   }
 
   Future<void> _showAssignPanditBottomSheet() async {
-    final poojaController = TextEditingController();
-    final nameController = TextEditingController();
-    final phoneController = TextEditingController();
-    final addressController = TextEditingController();
-    final notesController = TextEditingController();
+    // ✅ Clear previous values — no local controllers created here
+    _nameController.clear();
+    _phoneController.clear();
+    _addressController.clear();
+    _notesController.clear();
 
     int currentStep = 0;
     String? selectedService;
     DateTime? selectedDate;
-    TimeOfDay? selectedTime;
+    TimeOfDay? startTime;
+    TimeOfDay? endTime;
 
     await showModalBottomSheet(
       context: context,
@@ -513,9 +478,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
             final selectedDateText = selectedDate == null
                 ? 'Pick date'
                 : '${selectedDate!.day} ${_monthName(selectedDate!.month)} ${selectedDate!.year}';
-            final selectedTimeText = selectedTime == null
-                ? 'Pick time'
-                : _formatTime(selectedTime!);
 
             return Padding(
               padding: EdgeInsets.only(bottom: bottomInset),
@@ -566,12 +528,17 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                               )
                             : currentStep == 1
                             ? _buildDateTimeStep(
-                                context: context,
+                                context: sheetContext, // ✅ use sheetContext
                                 selectedDateText: selectedDateText,
-                                selectedTimeText: selectedTimeText,
+                                startTime: startTime == null
+                                    ? 'Start time'
+                                    : _formatTime(startTime!),
+                                endTime: endTime == null
+                                    ? 'End time'
+                                    : _formatTime(endTime!),
                                 onPickDate: () async {
                                   final date = await showDatePicker(
-                                    context: context,
+                                    context: sheetContext, // ✅
                                     initialDate: selectedDate ?? DateTime.now(),
                                     firstDate: DateTime.now(),
                                     lastDate: DateTime(2100),
@@ -582,96 +549,113 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                     });
                                   }
                                 },
-                                onPickTime: () async {
+                                onPickStartTime: () async {
                                   final time = await showTimePicker(
-                                    context: context,
-                                    initialTime:
-                                        selectedTime ?? TimeOfDay.now(),
+                                    context: sheetContext, // ✅
+                                    initialTime: startTime ?? TimeOfDay.now(),
                                   );
                                   if (time != null) {
                                     setModalState(() {
-                                      selectedTime = time;
+                                      startTime = time;
+                                    });
+                                  }
+                                },
+                                onPickEndTime: () async {
+                                  final time = await showTimePicker(
+                                    context: sheetContext, // ✅
+                                    initialTime:
+                                        endTime ?? startTime ?? TimeOfDay.now(),
+                                  );
+                                  if (time != null) {
+                                    setModalState(() {
+                                      endTime = time;
                                     });
                                   }
                                 },
                               )
                             : _buildOtherDetailsStep(
-                                poojaController: poojaController,
-                                nameController: nameController,
-                                phoneController: phoneController,
-                                addressController: addressController,
-                                notesController: notesController,
+                                nameController: _nameController,
+                                phoneController: _phoneController,
+                                addressController: _addressController,
+                                notesController: _notesController,
                               ),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        if (currentStep > 0) ...[
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                setModalState(() {
-                                  currentStep--;
-                                });
-                              },
-                              child: Text(
-                                'Back',
-                                style: text14(color: AppColors.button),
+                    SafeArea(
+                      child: Row(
+                        children: [
+                          if (currentStep > 0) ...[
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  setModalState(() {
+                                    currentStep--;
+                                  });
+                                },
+                                child: Text(
+                                  'Back',
+                                  style: text14(color: AppColors.button),
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                        ],
-                        Expanded(
-                          child: AppButton(
-                            title: currentStep == 2 ? 'Save' : 'Next',
-                            onTap: () {
-                              if (currentStep == 0 && selectedService == null) {
-                                _showMessage('Please select service');
-                                return;
-                              }
+                            const SizedBox(width: 12),
+                          ],
+                          Expanded(
+                            child: AppButton(
+                              title: currentStep == 2 ? 'Save' : 'Next',
+                              onTap: () {
+                                if (currentStep == 0 &&
+                                    selectedService == null) {
+                                  _showMessage('Please select service');
+                                  return;
+                                }
 
-                              if (currentStep == 1 &&
-                                  (selectedDate == null ||
-                                      selectedTime == null)) {
-                                _showMessage('Please select date and time');
-                                return;
-                              }
+                                if (currentStep == 1 &&
+                                    (selectedDate == null ||
+                                        startTime == null ||
+                                        endTime == null)) {
+                                  _showMessage('Please select date and time');
+                                  return;
+                                }
 
-                              if (currentStep < 2) {
-                                setModalState(() {
-                                  currentStep++;
+                                if (currentStep < 2) {
+                                  setModalState(() {
+                                    currentStep++;
+                                  });
+                                  return;
+                                }
+
+                                // ✅ Build details using state-level controllers
+                                final details = {
+                                  'booking_type':
+                                      'assign_best_available_pandit',
+                                  'service': selectedService,
+                                  'date': selectedDate == null
+                                      ? ''
+                                      : '${selectedDate!.year.toString().padLeft(4, '0')}-'
+                                            '${selectedDate!.month.toString().padLeft(2, '0')}-'
+                                            '${selectedDate!.day.toString().padLeft(2, '0')}',
+                                  'time': (startTime == null || endTime == null)
+                                      ? ''
+                                      : '${_formatTime(startTime!)} - ${_formatTime(endTime!)}',
+                                  'devotee_name': _nameController.text.trim(),
+                                  'phone': _phoneController.text.trim(),
+                                  'address': _addressController.text.trim(),
+                                  'notes': _notesController.text.trim(),
+                                };
+
+                                setState(() {
+                                  assignedPanditBookingDetails = details;
                                 });
-                                return;
-                              }
 
-                              final details = {
-                                'booking_type': 'assign_best_available_pandit',
-                                'service': selectedService,
-                                'date': selectedDate == null
-                                    ? ''
-                                    : '${selectedDate!.year.toString().padLeft(4, '0')}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}',
-                                'time': selectedTime == null
-                                    ? ''
-                                    : _formatTime(selectedTime!),
-                                'pooja_name': poojaController.text.trim(),
-                                'devotee_name': nameController.text.trim(),
-                                'phone': phoneController.text.trim(),
-                                'address': addressController.text.trim(),
-                                'notes': notesController.text.trim(),
-                              };
-
-                              setState(() {
-                                assignedPanditBookingDetails = details;
-                              });
-
-                              Navigator.pop(sheetContext);
-                              _showMessage('Pandit booking details saved');
-                            },
+                                Navigator.pop(sheetContext);
+                                _showMessage('Pandit booking details saved');
+                              },
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -681,12 +665,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
         );
       },
     );
-
-    poojaController.dispose();
-    nameController.dispose();
-    phoneController.dispose();
-    addressController.dispose();
-    notesController.dispose();
+    // ✅ No dispose() calls here — controllers live at state level
   }
 
   Widget _buildServiceStep({
@@ -774,9 +753,11 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   Widget _buildDateTimeStep({
     required BuildContext context,
     required String selectedDateText,
-    required String selectedTimeText,
+    required String startTime,
+    required String endTime,
     required VoidCallback onPickDate,
-    required VoidCallback onPickTime,
+    required VoidCallback onPickStartTime,
+    required VoidCallback onPickEndTime,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -790,18 +771,32 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
           onTap: onPickDate,
         ),
         const SizedBox(height: 12),
-        _buildPickerTile(
-          icon: Icons.access_time,
-          title: 'Time',
-          value: selectedTimeText,
-          onTap: onPickTime,
+        Row(
+          children: [
+            Expanded(
+              child: _buildPickerTile(
+                icon: Icons.access_time,
+                title: 'Start',
+                value: startTime,
+                onTap: onPickStartTime,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildPickerTile(
+                icon: Icons.access_time_filled,
+                title: 'End',
+                value: endTime,
+                onTap: onPickEndTime,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildOtherDetailsStep({
-    required TextEditingController poojaController,
     required TextEditingController nameController,
     required TextEditingController phoneController,
     required TextEditingController addressController,
@@ -812,11 +807,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
       children: [
         Text('Other Details', style: text16(fontWeight: FontWeight.w600)),
         const SizedBox(height: 12),
-        _buildDetailField(
-          controller: poojaController,
-          label: 'Pooja name',
-          icon: Icons.spa_outlined,
-        ),
         _buildDetailField(
           controller: nameController,
           label: 'Devotee name',
@@ -844,14 +834,14 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
     );
   }
 
+  // ✅ GestureDetector instead of InkWell — avoids focus/highlight lifecycle crash
   Widget _buildPickerTile({
     required IconData icon,
     required String title,
     required String value,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
+    return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -946,10 +936,9 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   }
 
   String _formatTime(TimeOfDay time) {
-    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
-    final minute = time.minute.toString().padLeft(2, '0');
-    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-    return '$hour:$minute $period';
+    final now = DateTime.now();
+    final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+    return TimeOfDay.fromDateTime(dt).format(context);
   }
 
   String _monthName(int month) {
@@ -977,23 +966,24 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   }
 }
 
+// ─────────────────────────────────────────────
+// Location Bottom Sheet (unchanged)
+// ─────────────────────────────────────────────
+
 void _showLocationBottomSheet(BuildContext context) {
   showModalBottomSheet(
     context: context,
-    isScrollControlled: true, // Allows full height if needed
+    isScrollControlled: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (context) {
       return Container(
         padding: const EdgeInsets.all(16),
-        height:
-            MediaQuery.of(context).size.height *
-            0.65, // Adjust height as needed
+        height: MediaQuery.of(context).size.height * 0.65,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -1009,10 +999,8 @@ void _showLocationBottomSheet(BuildContext context) {
             ),
             const SizedBox(height: 16),
 
-            // Search on Map Button
             ElevatedButton.icon(
               onPressed: () {
-                // TODO: Open Google Map or your map screen
                 Navigator.pop(context);
               },
               icon: const Icon(Icons.map, color: AppColors.button),
@@ -1027,10 +1015,8 @@ void _showLocationBottomSheet(BuildContext context) {
 
             const SizedBox(height: 12),
 
-            // Near Me Button
             ElevatedButton.icon(
               onPressed: () {
-                // TODO: Get current location
                 Navigator.pop(context);
               },
               icon: const Icon(Icons.my_location, color: AppColors.button),
@@ -1047,30 +1033,21 @@ void _showLocationBottomSheet(BuildContext context) {
             ),
             const SizedBox(height: 12),
 
-            // Location List
             Expanded(
               child: ListView(
                 children: [
                   _buildLocationTile(
                     "MG Road, Near City Mall, Sector 18, Noida",
-                    onTap: () {
-                      // Update selected location
-                      Navigator.pop(context);
-                    },
+                    onTap: () => Navigator.pop(context),
                   ),
                   _buildLocationTile(
                     "Linking Road, Bandra West, Mumbai, Maharashtra",
-                    isSelected:
-                        true, // Highlight current one like in your image
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
+                    isSelected: true,
+                    onTap: () => Navigator.pop(context),
                   ),
                   _buildLocationTile(
                     "Brigade Road, Ashok Nagar, Bengaluru, Karnataka",
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
+                    onTap: () => Navigator.pop(context),
                   ),
                 ],
               ),
@@ -1082,7 +1059,6 @@ void _showLocationBottomSheet(BuildContext context) {
   );
 }
 
-// Helper widget for location items
 Widget _buildLocationTile(
   String address, {
   bool isSelected = false,

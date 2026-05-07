@@ -118,7 +118,7 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(bottomNavProvider);
-    final userAsync = ref.read(userProvider);
+   ref.read(userProvider);
     return Scaffold(
       backgroundColor: AppColors.headerCard,
       body: IndexedStack(index: currentIndex, children: _screens),

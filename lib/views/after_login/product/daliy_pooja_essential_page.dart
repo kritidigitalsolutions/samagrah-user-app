@@ -70,6 +70,9 @@ class _TypeOfCategoryPageState extends ConsumerState<TypeOfCategoryPage> {
           List<Product> sourceProducts = [];
 
           switch (widget.categoryType) {
+            case "allItems":
+              sourceProducts = state.categoryProducts;
+              break;
             case "daily":
               sourceProducts = state.originalDailyEssentials;
               break;
@@ -90,11 +93,14 @@ class _TypeOfCategoryPageState extends ConsumerState<TypeOfCategoryPage> {
             return const Center(child: Text("No Products Found"));
           }
 
+          print('source ---------------------------${sourceProducts.length}');
+
           // Extract unique categories from source products
           final categorySet = <String>{};
           for (var product in sourceProducts) {
-            if (product.category != null && product.category!.isNotEmpty) {
-              categorySet.add(product.category!);
+            if (product.category != null &&
+                product.category!.name!.isNotEmpty) {
+              categorySet.add(product.category!.name!);
             }
           }
 
@@ -107,7 +113,7 @@ class _TypeOfCategoryPageState extends ConsumerState<TypeOfCategoryPage> {
               : sourceProducts
                     .where(
                       (p) =>
-                          (p.category ?? '').toLowerCase() ==
+                          (p.category?.name ?? '').toLowerCase() ==
                           selectedCategory.toLowerCase(),
                     )
                     .toList();

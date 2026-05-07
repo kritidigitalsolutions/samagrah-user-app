@@ -31,7 +31,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
     if (_lastKit?.id != kit.id) {
       _lastKit = kit;
       _originalItems = kit.items
-          .map((e) => Item(product: e.product, quantity: e.quantity))
+          .map((e) => Item(product: e.product, quantity: e.quantity, id: e.id))
           .toList();
     }
   }
@@ -40,6 +40,12 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
   Widget build(BuildContext context) {
     final kit = ModalRoute.of(context)!.settings.arguments as DefaultKitData;
     final isLoading = ref.watch(defaultKitLoaderPro);
+
+    // ✅ Use model field instead of hardcoded string
+    final bool isSpecialKit = (kit.kitType ?? '').toLowerCase() == 'special';
+    final bool isPanditApproved = kit.isPanditApproved == true;
+    final bool isMostUsed = kit.isMostUserUse == true;
+    final bool isPopular = kit.isMostPopularKit == true;
 
     final displayItems = _showAllItems
         ? _originalItems
@@ -53,17 +59,17 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
           SliverAppBar(
             expandedHeight: 260,
             pinned: true,
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.white,
             leading: IconButton(
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             ),
-            actions: [
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.shopping_cart_outlined),
-              ),
-            ],
+            // actions: [
+            //   IconButton(
+            //     onPressed: () {},
+            //     icon: const Icon(Icons.shopping_cart_outlined),
+            //   ),
+            // ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -85,6 +91,36 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                       ),
                     ),
                   ),
+
+                  // ✅ Image overlay badges from model flags
+                  Positioned(
+                    top: 50,
+                    left: 16,
+                    child: Wrap(
+                      spacing: 6,
+                      children: [
+                        if (isPopular)
+                          _overlayBadge(
+                            icon: Icons.local_fire_department_rounded,
+                            label: 'Most Popular',
+                            color: Colors.orange.shade600,
+                          ),
+                        if (isSpecialKit)
+                          _overlayBadge(
+                            icon: Icons.auto_awesome_rounded,
+                            label: 'Special Kit',
+                            color: Colors.purple.shade600,
+                          ),
+                        if (isPanditApproved)
+                          _overlayBadge(
+                            icon: Icons.verified_rounded,
+                            label: 'Pandit Approved',
+                            color: Colors.green.shade600,
+                          ),
+                      ],
+                    ),
+                  ),
+
                   Positioned(
                     left: 16,
                     right: 16,
@@ -130,9 +166,53 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ── Special Kit Notice Banner ──
+                if (isSpecialKit)
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.purple.shade200),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.lock_outline_rounded,
+                          color: Colors.purple.shade600,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'This is a Special Kit',
+                                style: text13(
+                                  color: Colors.purple.shade700,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                'This kit has been specially curated by our pandits and cannot be customized. You can purchase it as-is.',
+                                style: text12(color: Colors.purple.shade600),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                const SizedBox(height: 8),
+
                 // ── Price ──
                 Container(
-                  color: Colors.white,
+                  color: AppColors.white,
                   padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,30 +260,47 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                             ),
                         ],
                       ),
+
                       const SizedBox(height: 8),
-                      Row(
+
+                      // ✅ Trust row — driven by model booleans
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 6,
                         children: [
-                          Icon(
-                            Icons.verified,
-                            size: 16,
-                            color: Colors.green.shade600,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Pandit Approved',
-                            style: text13(color: Colors.green.shade700),
-                          ),
-                          const SizedBox(width: 12),
-                          Icon(
-                            Icons.people_outline,
-                            size: 16,
-                            color: AppColors.grey600,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '90% users chose this',
-                            style: text13(color: AppColors.grey600),
-                          ),
+                          if (isPanditApproved)
+                            _trustRow(
+                              icon: Icons.verified,
+                              label: 'Pandit Approved',
+                              color: Colors.green.shade600,
+                            ),
+                          if (isMostUsed)
+                            _trustRow(
+                              icon: Icons.people_outline,
+                              label: '98% users chose this',
+                              color: AppColors.grey600,
+                            ),
+                          if (isPopular)
+                            _trustRow(
+                              icon: Icons.local_fire_department_rounded,
+                              label: 'Most Popular',
+                              color: Colors.orange.shade600,
+                            ),
+                          // ✅ Category tag
+                          if (kit.category != null && kit.category!.isNotEmpty)
+                            _trustRow(
+                              icon: Icons.category_outlined,
+                              label: kit.category!,
+                              color: AppColors.button,
+                            ),
+                          // ✅ Festival type tag
+                          if (kit.festivalType != null &&
+                              kit.festivalType!.isNotEmpty)
+                            _trustRow(
+                              icon: Icons.celebration_outlined,
+                              label: kit.festivalType!,
+                              color: Colors.deepOrange.shade400,
+                            ),
                         ],
                       ),
                     ],
@@ -214,7 +311,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
 
                 // ── Items Included ──
                 Container(
-                  color: Colors.white,
+                  color: AppColors.white,
                   padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
                   child: Row(
                     children: [
@@ -227,6 +324,35 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                         '(${_originalItems.length})',
                         style: text14(color: AppColors.grey600),
                       ),
+                      const Spacer(),
+                      // ✅ Kit type chip
+                      if (kit.kitType != null && kit.kitType!.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSpecialKit
+                                ? Colors.purple.shade50
+                                : AppColors.button.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: isSpecialKit
+                                  ? Colors.purple.shade200
+                                  : AppColors.button.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Text(
+                            kit.kitType!,
+                            style: text10(
+                              color: isSpecialKit
+                                  ? Colors.purple.shade700
+                                  : AppColors.button,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -236,7 +362,8 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                   child: Column(
                     children: [
                       ...displayItems.map(
-                        (item) => _buildReadOnlyItemRow(context, item),
+                        (item) =>
+                            _buildReadOnlyItemRow(context, item, isSpecialKit),
                       ),
                       if (_originalItems.length > 5)
                         InkWell(
@@ -335,10 +462,42 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                       ),
               ),
               const SizedBox(height: 10),
-              AppOutlineButton(
-                title: 'Customize This Kit ✏️',
-                onTap: () => _openCustomizeSheet(context, ref, kit),
-              ),
+
+              // ✅ Show customize button only for non-special kits
+              if (!isSpecialKit)
+                AppOutlineButton(
+                  title: 'Customize This Kit ✏️',
+                  onTap: () => _openCustomizeSheet(context, ref, kit),
+                )
+              else
+                // ✅ Helpful message for special kit instead of button
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.shade50,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.purple.shade200),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.lock_outline_rounded,
+                        size: 15,
+                        color: Colors.purple.shade600,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Special kits cannot be customized',
+                        style: text12(color: Colors.purple.shade700),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),
@@ -346,13 +505,17 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
     );
   }
 
-  // ── Read-only item row WITH "View Products" button ──
-  Widget _buildReadOnlyItemRow(BuildContext context, Item item) {
+  // ── Read-only item row ──
+  Widget _buildReadOnlyItemRow(
+    BuildContext context,
+    Item item,
+    bool isSpecialKit,
+  ) {
     final product = item.product;
     final imageUrl = product?.media?.image.firstOrNull ?? '';
-    // Category slug — productProvider me filter ke liye
-    final categorySlug = "agarbatti";
-    final categoryLabel = "agarbatti";
+    // ✅ Use category from new model
+    final categoryName = product?.category?.name ?? '';
+    final categorySlug = categoryName.toLowerCase();
 
     return Column(
       children: [
@@ -373,7 +536,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
               ),
               const SizedBox(width: 12),
 
-              // Name + category
+              // Name + category + view products
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,38 +547,45 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    // if (categoryLabel.isNotEmpty)
-                    //   Text(
-                    //     categoryLabel,
-                    //     style: text11(color: AppColors.grey600),
-                    //   ),
-                    SizedBox(height: 5),
-                    GestureDetector(
-                      onTap: () => _showCategoryProductsSheet(
-                        context,
-                        categorySlug,
-                        categoryLabel.isNotEmpty
-                            ? categoryLabel
-                            : product?.title ?? '',
+                    // ✅ Show category name from new model
+                    if (categoryName.isNotEmpty)
+                      Text(
+                        categoryName,
+                        style: text11(color: AppColors.grey600),
                       ),
-                      child: Text(
-                        'View Products',
-                        style: text11(
-                          color: AppColors.button,
-                          fontWeight: FontWeight.w600,
+                    const SizedBox(height: 4),
+                    if (!isSpecialKit)
+                      GestureDetector(
+                        onTap: () => _showCategoryProductsSheet(
+                          context,
+                          categorySlug,
+                          categoryName.isNotEmpty
+                              ? categoryName
+                              : product?.title ?? '',
                         ),
+                        child: Text(
+                          'View Products',
+                          style: text11(
+                            color: AppColors.button,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      )
+                    else
+                      // ✅ Special kit — no view products, show locked hint
+                      Text(
+                        'Fixed item',
+                        style: text11(color: Colors.purple.shade400),
                       ),
-                    ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
 
-              // Right column: qty + view products button
+              // Qty + price
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // Qty badge
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -432,7 +602,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    "₹${product?.pricing?.price ?? ''}",
+                    '₹${product?.pricing?.price ?? ''}',
                     style: text14(
                       fontWeight: FontWeight.w600,
                       color: AppColors.button,
@@ -440,7 +610,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  // ✅ View Products button
                 ],
               ),
             ],
@@ -462,7 +631,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
     String categorySlug,
     String categoryLabel,
   ) {
-    // Filter products by category first
     ref
         .read(productProvider.notifier)
         .filterByCustKitCategory(categorySlug.toLowerCase());
@@ -489,7 +657,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
     );
   }
 
-  // ── rest of helpers ──
+  // ── Helpers ──
 
   Widget _statBadge(IconData icon, String label) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -505,6 +673,44 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
         Text(label, style: text11(color: Colors.white)),
       ],
     ),
+  );
+
+  /// ✅ Image overlay badge (top of hero image)
+  Widget _overlayBadge({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: Colors.white),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: text11(color: Colors.white, fontWeight: FontWeight.w700),
+        ),
+      ],
+    ),
+  );
+
+  /// ✅ Inline trust row item (price section)
+  Widget _trustRow({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 15, color: color),
+      const SizedBox(width: 4),
+      Text(label, style: text12(color: color)),
+    ],
   );
 
   Widget _trustBadge(IconData icon, String label) => Column(
@@ -544,7 +750,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
               kit: kit,
               originalItems: _originalItems,
               scrollController: scrollController,
-              onProceed: (List<Item> finalItems, int finalTotal) {
+              onProceed: (List<Item> finalItems, num finalTotal) {
                 Navigator.pop(sheetContext);
 
                 final customizedKit = DefaultKitData(
@@ -557,10 +763,16 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                   savings: kit.totalPrice != null
                       ? (kit.totalPrice! - finalTotal)
                       : kit.savings,
-                  //  price: kit.price,
                   status: kit.status,
                   items: finalItems,
-                  slug: "",
+
+                  festivalType: kit.festivalType ?? '',
+
+                  kitType: kit.kitType ?? '',
+                  category: kit.category ?? '',
+                  isMostPopularKit: kit.isMostPopularKit,
+                  isMostUserUse: kit.isMostUserUse,
+                  isPanditApproved: kit.isPanditApproved,
                 );
 
                 Navigator.pushNamed(
@@ -603,7 +815,6 @@ class _CategoryProductsSheet extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          // Drag handle
           const SizedBox(height: 10),
           Container(
             height: 4,
@@ -614,7 +825,6 @@ class _CategoryProductsSheet extends ConsumerWidget {
             ),
           ),
 
-          // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 8, 10),
             child: Row(
@@ -642,7 +852,6 @@ class _CategoryProductsSheet extends ConsumerWidget {
             ),
           ),
 
-          // Category chips — user dusri category bhi dekh sake
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -694,7 +903,6 @@ class _CategoryProductsSheet extends ConsumerWidget {
 
           const SizedBox(height: 12),
 
-          // Products grid
           Expanded(
             child: productState.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -762,7 +970,6 @@ class _CategoryProductsSheet extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
             Expanded(
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(
@@ -775,7 +982,6 @@ class _CategoryProductsSheet extends ConsumerWidget {
                 ),
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.all(7),
               child: Column(
@@ -808,7 +1014,6 @@ class _CategoryProductsSheet extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  // View Detail button
                   Container(
                     height: 26,
                     width: double.infinity,
@@ -885,13 +1090,13 @@ class _CategoryProductsSheet extends ConsumerWidget {
 }
 
 // ════════════════════════════════════════════════════════════
-//  CUSTOMIZE SHEET — 100% local state, global state never touched
+//  CUSTOMIZE SHEET
 // ════════════════════════════════════════════════════════════
 class _CustomizeSheet extends ConsumerStatefulWidget {
   final DefaultKitData kit;
   final List<Item> originalItems;
   final ScrollController scrollController;
-  final void Function(List<Item> finalItems, int finalTotal) onProceed;
+  final void Function(List<Item> finalItems, num finalTotal) onProceed;
 
   const _CustomizeSheet({
     required this.kit,
@@ -911,11 +1116,11 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
   void initState() {
     super.initState();
     _localItems = widget.originalItems
-        .map((e) => Item(product: e.product, quantity: e.quantity))
+        .map((e) => Item(product: e.product, quantity: e.quantity, id: e.id))
         .toList();
   }
 
-  int get _localTotal => _localItems.fold(0, (sum, item) {
+  num get _localTotal => _localItems.fold(0, (sum, item) {
     final price = item.product?.pricing?.price ?? 0;
     return sum + (price * (item.quantity ?? 1));
   });
@@ -926,6 +1131,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
       () => _localItems[index] = Item(
         product: _localItems[index].product,
         quantity: newQty,
+        id: _localItems[index].id,
       ),
     );
   }
@@ -940,9 +1146,10 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
         _localItems[idx] = Item(
           product: _localItems[idx].product,
           quantity: (_localItems[idx].quantity ?? 1) + 1,
+          id: _localItems[idx].id,
         );
       } else {
-        _localItems.add(Item(product: dp, quantity: 1));
+        _localItems.add(Item(product: dp, quantity: 1, id: ''));
       }
     });
   }
@@ -952,7 +1159,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
     final productState = ref.watch(productProvider);
     final cart = ref.watch(customizeKitCartProvider);
     final cartNotifier = ref.read(customizeKitCartProvider.notifier);
-    final selectedCategory = productState.value?.selectedKitCategory ?? "All";
+    final selectedCategory = productState.value?.selectedKitCategory ?? 'All';
 
     return Container(
       decoration: const BoxDecoration(
@@ -999,6 +1206,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
             ),
           ),
 
+          // ✅ Customize info banner
           Container(
             margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1224,6 +1432,9 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
   Widget _buildEditableRow(Item item, int index) {
     final product = item.product;
     final qty = item.quantity ?? 1;
+    // ✅ Category from new model
+    final categoryName = product?.category?.name ?? '';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -1248,9 +1459,12 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: 5),
+                // ✅ Show category name from new model
+                if (categoryName.isNotEmpty)
+                  Text(categoryName, style: text11(color: AppColors.grey500)),
+                const SizedBox(height: 4),
                 Text(
-                  "₹${product?.pricing?.price ?? ''}",
+                  '₹${product?.pricing?.price ?? ''}',
                   style: text14(
                     fontWeight: FontWeight.w600,
                     color: AppColors.button,
@@ -1349,7 +1563,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
                       color: AppColors.white,
                       fontWeight: FontWeight.w600,
                     ),
-                    title: "Add",
+                    title: 'Add',
                     onTap: () {
                       cartNotifier.addItem(product);
                       _addProduct(product);
@@ -1425,7 +1639,11 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
     pricing: Pricing(
       price: product.price,
       mrp: product.oldPrice,
-      currency: "INR",
+      currency: 'INR',
+      basePrice: null,
+      gstAmount: null,
+      gstPercent: null,
+      priceIncludesGst: null,
     ),
     media: Media(
       image: product.thumbnail != null
@@ -1433,5 +1651,6 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
           : product.images.map((e) => e.toString()).toList(),
     ),
     slug: '',
+    category: null,
   );
 }

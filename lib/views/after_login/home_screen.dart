@@ -176,8 +176,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           "assets/icon/notification.png",
                           AppColors.warningLighter,
                           "Notification",
-                              () {
-                            Navigator.pushNamed(context, AppRoutes.notification);
+                          () {
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.notification,
+                            );
                           },
                         ),
                         // Unread badge
@@ -186,7 +189,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             final unreadCount = ref.watch(
                               notificationProvider.select((s) => s.unreadCount),
                             );
-                            if (unreadCount == 0) return const SizedBox.shrink();
+                            if (unreadCount == 0)
+                              return const SizedBox.shrink();
                             return Positioned(
                               top: 4,
                               right: 4,
@@ -196,7 +200,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   color: Colors.red,
                                   shape: BoxShape.circle,
                                 ),
-                                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
                                 child: Text(
                                   unreadCount > 99 ? '99+' : '$unreadCount',
                                   style: const TextStyle(
@@ -270,9 +277,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const Center(child: Text("Something went wrong")),
 
                   data: (state) {
-                    final products = state.categoryProducts;
-                    final dailyEss = state.dailyEssentials;
-                    final mostUsed = state.mostUsed;
+                    final products = state.categoryProducts.take(6).toList();
+                    final dailyEss = state.dailyEssentials.take(20).toList();
+                    final mostUsed = state.mostUsed.take(20).toList();
+
+                    print(
+                      "------------------------------------${state.categoryProducts.length}",
+                    );
+
+                    final hasMoreProducts = state.categoryProducts.length > 6;
 
                     // ✅ Check if ALL lists are empty
                     final bool allEmpty =
@@ -355,139 +368,87 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               },
                             ),
                           ),
-
-                          // Daily Pooja Essentials
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 12),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Daily Pooja Essentials',
-                                  style: text15(fontWeight: FontWeight.bold),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const TypeOfCategoryPage(
-                                              title: 'Daily Pooja Essentials',
-                                              categoryType: 'daily',
-                                            ),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    'View all >',
-                                    style: text13(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.warningDark,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          SizedBox(
-                            height: 160,
-                            child: AnimationLimiter(
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                itemCount: dailyEss.length,
-                                itemBuilder: (context, index) {
-                                  final product = dailyEss[index];
-
-                                  return AnimationConfiguration.staggeredList(
-                                    position: index,
-                                    duration: const Duration(milliseconds: 400),
-                                    child: SlideAnimation(
-                                      horizontalOffset:
-                                          50, // 👉 right se aayega
-                                      child: FadeInAnimation(
-                                        child: buildDiyaCard(
-                                          product,
-                                          ref,
-                                          context,
+                          if (hasMoreProducts)
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const TypeOfCategoryPage(
+                                          title: 'Buy Item for Pooja',
+                                          categoryType: 'allItems',
                                         ),
-                                      ),
-                                    ),
-                                  );
-                                },
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                "View More",
+                                style: text13(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.warningDark,
+                                ),
                               ),
                             ),
-                          ),
 
-                          const SizedBox(height: 20),
-
-                          // Most Used Items
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Most Used Items in Pooja',
-                                  style: text15(fontWeight: FontWeight.bold),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const TypeOfCategoryPage(
-                                              title: 'Most Used Items in Pooja',
-                                              categoryType: 'mostUsed',
-                                            ),
+                          // Daily Pooja Essentials
+                          if (dailyEss.isNotEmpty) ...[
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Daily Pooja Essentials',
+                                    style: text15(fontWeight: FontWeight.bold),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const TypeOfCategoryPage(
+                                                title: 'Daily Pooja Essentials',
+                                                categoryType: 'daily',
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      'View all >',
+                                      style: text13(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.warningDark,
                                       ),
-                                    );
-                                  },
-                                  child: Text(
-                                    'View all >',
-                                    style: text13(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.warningDark,
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 10),
-                          SizedBox(
-                            height: 160,
-                            child: AnimationLimiter(
-                              key: ValueKey(
-                                "mostUsed_${mostUsed.length}",
-                              ), // 🔥 re-animation support
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                itemCount: mostUsed.length,
-                                itemBuilder: (context, index) {
-                                  final product = mostUsed[index];
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              height: 175,
+                              child: AnimationLimiter(
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  itemCount: dailyEss.length,
+                                  itemBuilder: (context, index) {
+                                    final product = dailyEss[index];
 
-                                  return AnimationConfiguration.staggeredList(
-                                    position: index,
-                                    duration: const Duration(milliseconds: 400),
-                                    child: SlideAnimation(
-                                      horizontalOffset: 50, // 👉 right se slide
-                                      child: FadeInAnimation(
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            Navigator.pushNamed(
-                                              context,
-                                              AppRoutes.productDetails,
-                                            );
-                                          },
+                                    return AnimationConfiguration.staggeredList(
+                                      position: index,
+                                      duration: const Duration(
+                                        milliseconds: 400,
+                                      ),
+                                      child: SlideAnimation(
+                                        horizontalOffset:
+                                            50, // 👉 right se aayega
+                                        child: FadeInAnimation(
                                           child: buildDiyaCard(
                                             product,
                                             ref,
@@ -495,13 +456,98 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 20),
+                          ],
 
+                          if (mostUsed.isNotEmpty) ...[
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Most Used Items in Pooja',
+                                    style: text15(fontWeight: FontWeight.bold),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const TypeOfCategoryPage(
+                                                title:
+                                                    'Most Used Items in Pooja',
+                                                categoryType: 'mostUsed',
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      'View all >',
+                                      style: text13(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.warningDark,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              height: 175,
+                              child: AnimationLimiter(
+                                key: ValueKey(
+                                  "mostUsed_${mostUsed.length}",
+                                ), // 🔥 re-animation support
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  itemCount: mostUsed.length,
+                                  itemBuilder: (context, index) {
+                                    final product = mostUsed[index];
+
+                                    return AnimationConfiguration.staggeredList(
+                                      position: index,
+                                      duration: const Duration(
+                                        milliseconds: 400,
+                                      ),
+                                      child: SlideAnimation(
+                                        horizontalOffset:
+                                            50, // 👉 right se slide
+                                        child: FadeInAnimation(
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              Navigator.pushNamed(
+                                                context,
+                                                AppRoutes.productDetails,
+                                              );
+                                            },
+                                            child: buildDiyaCard(
+                                              product,
+                                              ref,
+                                              context,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+
+                          // Most Used Items
                           const SizedBox(height: 100),
                         ],
                       ),
@@ -695,7 +741,7 @@ Widget buildDiyaCard(Product product, WidgetRef ref, BuildContext context) {
   final currentIndex = ref.watch(imageSliderIndexProvider(product.id ?? ''));
 
   return Container(
-    width: 120,
+    width: 130,
 
     margin: const EdgeInsets.only(right: 12),
     decoration: BoxDecoration(
@@ -754,6 +800,25 @@ Widget buildDiyaCard(Product product, WidgetRef ref, BuildContext context) {
                   ),
                 ),
               ),
+
+              if (product.isRecommended == true)
+                Positioned(
+                  top: 6,
+                  left: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    margin: const EdgeInsets.only(bottom: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.star, color: AppColors.warning, size: 12),
+                  ),
+                ),
+
               Positioned(
                 top: 6,
                 right: 6,

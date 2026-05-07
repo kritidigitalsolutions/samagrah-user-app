@@ -144,6 +144,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
                       AppButton(
                         title: "View Booking",
                         onTap: () {
+                          ref.invalidate(panditBookingProvider);
                           Navigator.pushNamed(context, AppRoutes.myBooking);
                         },
                       ),

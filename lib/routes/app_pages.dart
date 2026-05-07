@@ -11,7 +11,6 @@ import 'package:samagrah/views/after_login/order/track_order_screen.dart';
 import 'package:samagrah/views/after_login/pandit/bookings/cancel_booking.dart';
 import 'package:samagrah/views/after_login/pandit/checkout_pandit/address_selection.dart';
 import 'package:samagrah/views/after_login/pandit/book_pandit_page.dart';
-import 'package:samagrah/views/after_login/pandit/checkout_pandit/booking_confirmed_page.dart';
 import 'package:samagrah/views/after_login/pandit/checkout_pandit/booking_summary_page.dart';
 import 'package:samagrah/views/after_login/pandit/checkout_pandit/online_booking_details.dart';
 import 'package:samagrah/views/after_login/pandit/bookings/my_booking_details.dart';
@@ -79,7 +78,6 @@ class AppPages {
     AppRoutes.addressSelection: (context) => const AddressSelectionScreen(),
     AppRoutes.bookingSummary: (context) => const BookingSummaryScreen(),
     AppRoutes.panditPayment: (context) => const PaymentSuccessScreen(),
-    AppRoutes.bookingConfirmed: (context) => const BookingConfirmedScreen(),
     AppRoutes.onlineDetails: (context) => const OnlineBookingDetails(),
     AppRoutes.templeSelection: (context) => const TempleSelectionScreen(),
     AppRoutes.panditRecKit: (context) => const PanditRecKitPage(),

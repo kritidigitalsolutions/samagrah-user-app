@@ -32,9 +32,17 @@ class DefaultKitData {
     required this.totalPrice,
     required this.kitPrice,
     required this.savings,
+    required this.festivalType,
+    // required this.createdAt,
+    // required this.updatedAt,
+    // required this.slug,
+    // required this.v,
+    required this.kitType,
     required this.status,
-
-    required this.slug,
+    required this.category,
+    required this.isMostPopularKit,
+    required this.isMostUserUse,
+    required this.isPanditApproved,
   });
 
   final String? id;
@@ -42,12 +50,20 @@ class DefaultKitData {
   final String? description;
   final String? image;
   final List<Item> items;
-  final int? totalPrice;
-  final int? kitPrice;
-  final int? savings;
+  final num? totalPrice;
+  final num? kitPrice;
+  final num? savings;
+  final String? festivalType;
+  // final DateTime? createdAt;
+  // final DateTime? updatedAt;
+  // final String? slug;
+  // final int? v;
+  final String? kitType;
   final String? status;
-
-  final String? slug;
+  final String? category;
+  final bool? isMostPopularKit;
+  final bool? isMostUserUse;
+  final bool? isPanditApproved;
 
   factory DefaultKitData.fromJson(Map<String, dynamic> json) {
     return DefaultKitData(
@@ -61,18 +77,27 @@ class DefaultKitData {
       totalPrice: json["totalPrice"],
       kitPrice: json["kitPrice"],
       savings: json["savings"],
+      festivalType: json["festivalType"],
+      // createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
+      // updatedAt: DateTime.tryParse(json["updatedAt"] ?? ""),
+      // slug: json["slug"],
+      // v: json["__v"],
+      kitType: json["kitType"],
       status: json["status"],
-
-      slug: json["slug"],
+      category: json["category"],
+      isMostPopularKit: json["isMostPopularKit"],
+      isMostUserUse: json["isMostUserUse"],
+      isPanditApproved: json["isPanditApproved"],
     );
   }
 }
 
 class Item {
-  Item({required this.product, required this.quantity});
+  Item({required this.product, required this.quantity, this.id});
 
   final UserDraftProduct? product;
   final int? quantity;
+  final String? id;
 
   factory Item.fromJson(Map<String, dynamic> json) {
     return Item(
@@ -80,12 +105,14 @@ class Item {
           ? null
           : UserDraftProduct.fromJson(json["product"]),
       quantity: json["quantity"],
+      id: json["_id"],
     );
   }
 }
 
 class UserDraftProduct {
   UserDraftProduct({
+    required this.category,
     required this.pricing,
     required this.media,
     required this.id,
@@ -93,6 +120,7 @@ class UserDraftProduct {
     required this.slug,
   });
 
+  final Category? category;
   final Pricing? pricing;
   final Media? media;
   final String? id;
@@ -101,6 +129,9 @@ class UserDraftProduct {
 
   factory UserDraftProduct.fromJson(Map<String, dynamic> json) {
     return UserDraftProduct(
+      category: json["category"] == null
+          ? null
+          : Category.fromJson(json["category"]),
       pricing: json["pricing"] == null
           ? null
           : Pricing.fromJson(json["pricing"]),
@@ -109,6 +140,16 @@ class UserDraftProduct {
       title: json["title"],
       slug: json["slug"],
     );
+  }
+}
+
+class Category {
+  Category({required this.name});
+
+  final String? name;
+
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(name: json["name"]);
   }
 }
 
@@ -127,17 +168,33 @@ class Media {
 }
 
 class Pricing {
-  Pricing({required this.price, required this.mrp, required this.currency});
+  Pricing({
+    required this.price,
+    required this.mrp,
+    required this.currency,
+    required this.basePrice,
+    required this.gstAmount,
+    required this.gstPercent,
+    required this.priceIncludesGst,
+  });
 
-  final int? price;
-  final int? mrp;
+  final num? price;
+  final num? mrp;
   final String? currency;
+  final num? basePrice;
+  final num? gstAmount;
+  final num? gstPercent;
+  final bool? priceIncludesGst;
 
   factory Pricing.fromJson(Map<String, dynamic> json) {
     return Pricing(
       price: json["price"],
       mrp: json["mrp"],
       currency: json["currency"],
+      basePrice: json["basePrice"],
+      gstAmount: json["gstAmount"],
+      gstPercent: json["gstPercent"],
+      priceIncludesGst: json["priceIncludesGst"],
     );
   }
 }

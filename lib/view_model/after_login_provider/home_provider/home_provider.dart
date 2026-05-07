@@ -74,16 +74,22 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
     } else {
       // ✅ Specific category selected - Filter everything
       baseList = current.allProducts
-          .where((p) => (p.category ?? '').toLowerCase() == normalizedCategory)
+          .where(
+            (p) => (p.category?.name ?? '').toLowerCase() == normalizedCategory,
+          )
           .toList();
 
       // Filter from original lists (not from already filtered lists)
       dailyEss = current.originalDailyEssentials
-          .where((p) => (p.category ?? '').toLowerCase() == normalizedCategory)
+          .where(
+            (p) => (p.category?.name ?? '').toLowerCase() == normalizedCategory,
+          )
           .toList();
 
       mostU = current.originalMostUsed
-          .where((p) => (p.category ?? '').toLowerCase() == normalizedCategory)
+          .where(
+            (p) => (p.category?.name ?? '').toLowerCase() == normalizedCategory,
+          )
           .toList();
     }
 
@@ -115,7 +121,9 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
     } else {
       // ✅ Specific category selected - Filter everything
       baseList = current.customizeKitItems
-          .where((p) => (p.category ?? '').toLowerCase() == normalizedCategory)
+          .where(
+            (p) => (p.category?.name ?? '').toLowerCase() == normalizedCategory,
+          )
           .toList();
     }
 
@@ -166,7 +174,7 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
 
     final filteredResults = uniqueProducts.where((p) {
       final title = (p.title ?? '').toLowerCase();
-      final category = (p.category ?? '').toLowerCase();
+      final category = (p.category?.name ?? '').toLowerCase();
       return title.contains(searchTerm) || category.contains(searchTerm);
     }).toList();
 

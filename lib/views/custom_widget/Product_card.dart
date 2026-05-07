@@ -83,6 +83,27 @@ class ProductCard extends ConsumerWidget {
                     ),
                   ),
                 ),
+                if (product.isRecommended == true)
+                  Positioned(
+                    top: 6,
+                    left: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      margin: const EdgeInsets.only(bottom: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.star,
+                        color: AppColors.warning,
+                        size: 12,
+                      ),
+                    ),
+                  ),
                 Positioned(
                   top: 6,
                   right: 6,

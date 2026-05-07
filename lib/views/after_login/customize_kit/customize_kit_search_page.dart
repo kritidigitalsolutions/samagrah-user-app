@@ -1215,7 +1215,7 @@ class _CustomizePoojaKitScreenState
                         width: 65,
                         height: 65,
                         decoration: BoxDecoration(color: AppColors.grey500),
-                        child: Center(child: Icon(Icons.image)),
+                        child: const Center(child: Icon(Icons.image)),
                       );
                     },
                   ),
@@ -1230,8 +1230,7 @@ class _CustomizePoojaKitScreenState
             Expanded(
               child: defaultKitsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) =>
-                    const Center(child: Text("Failed to load kits")),
+                error: (e, _) => Center(child: Text("Failed to load kits $e")),
                 data: (kitState) {
                   final allKits = kitState.defaultKit?.data ?? [];
 
@@ -1249,13 +1248,19 @@ class _CustomizePoojaKitScreenState
                     return _buildEmptyState();
                   }
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final kit = filtered[index];
-                      return _buildKitCard(kit, index);
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      ref.invalidate(userDraftKits);
+                      await Future.delayed(const Duration(milliseconds: 300));
                     },
+                    child: ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) {
+                        final kit = filtered[index];
+                        return _buildKitCard(kit);
+                      },
+                    ),
                   );
                 },
               ),
@@ -1313,9 +1318,11 @@ class _CustomizePoojaKitScreenState
     );
   }
 
-  Widget _buildKitCard(DefaultKitData kit, int index) {
-    // "Most Popular" badge pehle item pe
-    final bool isPopular = index == 0;
+  Widget _buildKitCard(DefaultKitData kit) {
+    // ✅ Use actual model flags instead of index-based guessing
+    final bool isPopular = kit.isMostPopularKit == true;
+    final bool isMostUsed = kit.isMostUserUse == true;
+    final bool isPanditApproved = kit.isPanditApproved == true;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -1333,7 +1340,7 @@ class _CustomizePoojaKitScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// ── Image + Badge Row ──
+          /// ── Image + Badges ──
           Stack(
             children: [
               ClipRRect(
@@ -1349,24 +1356,50 @@ class _CustomizePoojaKitScreenState
                   ),
                 ),
               ),
+
+              // ✅ Most Popular badge from isMostPopularKit
               if (isPopular)
                 Positioned(
                   top: 12,
                   left: 12,
+                  child: _buildBadge(
+                    label: 'Most Popular',
+                    color: Colors.orange.shade600,
+                    icon: Icons.local_fire_department_rounded,
+                  ),
+                ),
+
+              // ✅ Pandit Approved badge from isPanditApproved
+              if (isPanditApproved)
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: _buildBadge(
+                    label: 'Pandit Approved',
+                    color: Colors.green.shade600,
+                    icon: Icons.verified_rounded,
+                  ),
+                ),
+
+              // ✅ Kit type badge (e.g. "Premium", "Basic") from kitType
+              if (kit.kitType != null && kit.kitType!.isNotEmpty)
+                Positioned(
+                  bottom: 10,
+                  right: 12,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
+                      horizontal: 8,
+                      vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.orange.shade600,
-                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      'Most Popular',
+                      kit.kitType!,
                       style: text11(
                         color: Colors.white,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -1380,10 +1413,36 @@ class _CustomizePoojaKitScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// Name
-                Text(
-                  kit.name ?? '',
-                  style: text16(fontWeight: FontWeight.bold),
+                /// Name + Category row
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        kit.name ?? '',
+                        style: text16(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    // ✅ Category from new model
+                    if (kit.category != null && kit.category!.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.button.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          kit.category!,
+                          style: text10(
+                            color: AppColors.button,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
 
                 const SizedBox(height: 4),
@@ -1399,47 +1458,81 @@ class _CustomizePoojaKitScreenState
 
                 const SizedBox(height: 10),
 
-                /// Price Row
+                /// ── Price Row ──
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
+                    // Kit price (selling price)
                     Text(
-                      '₹${kit.totalPrice ?? 0}',
+                      '₹${kit.kitPrice ?? kit.totalPrice ?? 0}',
                       style: text20(
                         fontWeight: FontWeight.bold,
                         color: AppColors.grey800,
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    // Users badge (if applicable)
-                    if (isPopular)
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.check_circle,
-                            color: Colors.green.shade600,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '98% users choose this',
-                            style: text11(color: Colors.green.shade700),
-                          ),
-                        ],
+
+                    // ✅ MRP strikethrough + savings from new model
+                    if (kit.savings != null && kit.savings! > 0) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        '₹${kit.totalPrice ?? 0}',
+                        style: text13(
+                          color: AppColors.grey500,
+                        ).copyWith(decoration: TextDecoration.lineThrough),
                       ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'Save ₹${kit.savings}',
+                          style: text10(
+                            color: Colors.green.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
+
+                const SizedBox(height: 8),
+
+                /// ✅ Trust indicators row using new boolean fields
+                if (isMostUsed || isPanditApproved)
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 4,
+                    children: [
+                      if (isMostUsed)
+                        _buildTrustChip(
+                          icon: Icons.people_alt_rounded,
+                          label: '98% users choose this',
+                          color: Colors.green.shade700,
+                        ),
+                      if (isPanditApproved)
+                        _buildTrustChip(
+                          icon: Icons.how_to_reg_rounded,
+                          label: 'Pandit recommended',
+                          color: Colors.blue.shade700,
+                        ),
+                    ],
+                  ),
 
                 const SizedBox(height: 12),
 
                 /// View Kit Button
-                ///
                 AppButton(
                   title: "View Kit",
                   radius: 10,
                   onTap: () {
                     final notifier = ref.read(customizeKitProvider.notifier);
-
-                    // ✅ initialize kit before navigation
                     notifier.initializeFromDefault(kit);
                     Navigator.pushNamed(
                       context,
@@ -1453,6 +1546,48 @@ class _CustomizePoojaKitScreenState
           ),
         ],
       ),
+    );
+  }
+
+  /// Reusable badge widget for image overlays
+  Widget _buildBadge({
+    required String label,
+    required Color color,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: Colors.white),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: text11(color: Colors.white, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Reusable trust indicator chip
+  Widget _buildTrustChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 13),
+        const SizedBox(width: 4),
+        Text(label, style: text11(color: color)),
+      ],
     );
   }
 

@@ -119,10 +119,14 @@ class CategoryPage extends ConsumerWidget {
                     error: (e, _) =>
                         const Center(child: Text("Something went wrong")),
                     data: (state) {
-                      final ritualItems = state.originalRitualItems;
-                      final dailyEss = state.originalDailyEssentials;
-                      final mostUsed = state.originalMostUsed;
-                      final otherProduct = state.allProducts;
+                      final ritualItems = state.originalRitualItems
+                          .take(20)
+                          .toList();
+                      final dailyEss = state.originalDailyEssentials
+                          .take(20)
+                          .toList();
+                      final mostUsed = state.originalMostUsed.take(20).toList();
+                      final otherProduct = state.allProducts.take(15).toList();
 
                       final bool allEmpty =
                           ritualItems.isEmpty &&

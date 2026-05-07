@@ -48,7 +48,6 @@ class _ProductImageSliderState extends State<ProductImageSlider> {
               final cleanImage = image.replaceAll("\\", "/");
 
               return ClipRRect(
-                borderRadius: BorderRadius.circular(12),
                 child: CustomCachedImage(
                   imageUrl: cleanImage,
                   fit: BoxFit.cover,

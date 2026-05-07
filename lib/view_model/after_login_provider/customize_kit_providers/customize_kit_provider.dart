@@ -87,17 +87,17 @@ class CustomizeKitNotifier extends Notifier<List<Item>> {
   }
 
   // Helper getters
-  int get totalPrice => state.fold(0, (sum, item) {
+  num get totalPrice => state.fold(0, (sum, item) {
     final price = item.product?.pricing?.price ?? 0;
     return sum + (price * (item.quantity ?? 1));
   });
 
-  int get originalTotalPrice => originalItems.fold(0, (sum, item) {
+  num get originalTotalPrice => originalItems.fold(0, (sum, item) {
     final price = item.product?.pricing?.price ?? 0;
     return sum + (price * (item.quantity ?? 1));
   });
 
-  int get savings => originalTotalPrice - totalPrice;
+  num get savings => originalTotalPrice - totalPrice;
 
   // check in customize or not
 

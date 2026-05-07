@@ -1,3 +1,5 @@
+import 'package:samagrah/model/response/kit_response/default_kit_res_model.dart';
+
 class ProductResModel {
   ProductResModel({required this.success, required this.data});
 
@@ -60,6 +62,7 @@ class Product {
     required this.details,
     required this.price,
     required this.oldPrice,
+    this.pricing,
     required this.discountPercent,
     required this.thumbnail,
     required this.images,
@@ -79,10 +82,11 @@ class Product {
   final Details? details;
   final int? price;
   final int? oldPrice;
+  final Pricing? pricing;
   final int? discountPercent;
   final String? thumbnail;
   final List<String> images;
-  final String? category;
+  final Category? category;
   final bool? inStock;
   final Ratings? ratings;
   final bool? isRecommended;
@@ -101,12 +105,17 @@ class Product {
           : Details.fromJson(json["details"]),
       price: json["price"],
       oldPrice: json["oldPrice"],
+      pricing: json["pricing"] == null
+          ? null
+          : Pricing.fromJson(json["pricing"]),
       discountPercent: json["discountPercent"],
       thumbnail: json["thumbnail"],
       images: json["products"] == null
           ? []
           : List<String>.from(json["products"]!.map((x) => x)),
-      category: json["category"],
+      category: json["category"] == null
+          ? null
+          : Category.fromJson(json["category"]),
       inStock: json["inStock"],
       ratings: json["ratings"] == null
           ? null
@@ -117,6 +126,16 @@ class Product {
       isEveryDayRitual: json["isEveryDayRitual"],
       isRitualItems: json["isRitualItems"],
     );
+  }
+}
+
+class Category {
+  Category({required this.name});
+
+  final String? name;
+
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(name: json["name"]);
   }
 }
 

@@ -111,6 +111,8 @@ class KitOrderSummaryPage extends ConsumerWidget {
                             children: [
                               Text(
                                 item.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 style: text16(fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(height: 4),
@@ -265,7 +267,7 @@ class OrderSummaryModel {
   final String id;
   final String name;
   final List<OrderItemModel> items;
-  final int totalPrice;
+  final num totalPrice;
 
   OrderSummaryModel({
     required this.id,
@@ -280,7 +282,7 @@ class OrderItemModel {
   final String title;
   final String image;
   final int quantity;
-  final int price;
+  final num price;
 
   OrderItemModel({
     required this.id,

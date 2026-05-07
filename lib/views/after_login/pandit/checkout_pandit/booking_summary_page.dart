@@ -243,6 +243,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                   'You will receive confirmation shortly.',
                   true,
                 ),
+                const SizedBox(height: 8),
+                _buildRefundNote(),
                 const SizedBox(height: 24),
 
                 // ── WALLET SECTION ───────────────────────────────────────
@@ -546,6 +548,37 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
           ),
           const SizedBox(width: 12),
           Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRefundNote() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.success.withAlpha(20),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.success.withAlpha(64)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.account_balance_wallet_outlined,
+            color: AppColors.success,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'If your booking is rejected, the paid amount will be returned to your wallet. You can use it again for product purchases or Pandit booking.',
+              style: text12(
+                color: AppColors.textSecondary,
+              ).copyWith(height: 1.35, fontWeight: FontWeight.w500),
+            ),
+          ),
         ],
       ),
     );
