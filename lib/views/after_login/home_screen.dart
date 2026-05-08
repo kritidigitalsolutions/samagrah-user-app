@@ -189,8 +189,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             final unreadCount = ref.watch(
                               notificationProvider.select((s) => s.unreadCount),
                             );
-                            if (unreadCount == 0)
+                            if (unreadCount == 0) {
                               return const SizedBox.shrink();
+                            }
                             return Positioned(
                               top: 4,
                               right: 4,
