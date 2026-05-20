@@ -91,6 +91,9 @@ class ProfilePage extends ConsumerWidget {
                 _MenuItem("assets/profile/booking.png", 'My Bookings', () {
                   Navigator.pushNamed(context, AppRoutes.myBooking);
                 }),
+                _MenuItem("assets/profile/voucher.png", 'My Coupons', () {
+                  Navigator.pushNamed(context, AppRoutes.coupon);
+                }),
               ]),
               const SizedBox(height: 30),
 

@@ -1,5 +1,5 @@
 class AppUrls {
-  static const String baseUrl = "http://192.168.1.30:8000/api";
+  static const String baseUrl = "http://192.168.1.8:8000/api";
 
   //static const String baseUrl = "https://samagran-backend.vercel.app/api";
 
@@ -72,7 +72,7 @@ class AppUrls {
 
   //========================== wallet and offers =================================
 
-  static const String offers = "$baseUrl/user/offers/active";
+  static const String coupons = "$baseUrl/user/offers/active";
   static const String wallet = "$baseUrl/user/wallet/transactions";
   static const String walletCreateOrder =
       "$baseUrl/user/wallet/topup/razorpay/order";

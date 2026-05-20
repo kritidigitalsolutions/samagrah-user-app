@@ -159,7 +159,7 @@ class _SuccessPageState extends ConsumerState<SuccessPage>
     ref.invalidate(bookingItemProvider);
     ref.invalidate(cartProvider);
     ref.invalidate(walletProvider);
-    ref.invalidate(offerProvider);
+    //ref.invalidate(offerProvider);
 
     if (!mounted) return;
 

@@ -606,6 +606,9 @@ class MyBookingDetails extends ConsumerWidget {
                         .bookingReschedule(booking.id ?? '', model);
 
                     if (success && context.mounted) {
+                      ref.invalidate(panditBookingProvider);
+
+                      Navigator.pop(context);
                       AppSnackbar.show(
                         context,
                         message: "Booking rescheduled successfully",

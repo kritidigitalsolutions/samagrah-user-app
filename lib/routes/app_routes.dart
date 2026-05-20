@@ -23,6 +23,7 @@ class AppRoutes {
   //===================================================
 
   static const myWallet = "/myWallet";
+  static const coupon = "/coupon";
 
   //==============================================
   // product

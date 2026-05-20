@@ -8,10 +8,10 @@ import 'package:samagrah/repo/wallet_repo.dart';
 
 final walletRepoProvider = Provider((ref) => WalletRepo());
 
-final offerProvider = FutureProvider<OffersResModel>((ref) async {
-  final repo = ref.read(walletRepoProvider);
-  return repo.getOffers();
-});
+// final offerProvider = FutureProvider<OffersResModel>((ref) async {
+//   final repo = ref.read(walletRepoProvider);
+//   return repo.getOffers();
+// });
 
 final walletProvider = FutureProvider<WalletResModel>((ref) async {
   final repo = ref.read(walletRepoProvider);

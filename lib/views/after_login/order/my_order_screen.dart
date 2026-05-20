@@ -138,6 +138,14 @@ class OrderCard extends ConsumerWidget {
 
   const OrderCard({super.key, required this.order, required this.onTap});
 
+  // Helper to safely get first image
+  String _getFirstImage(List<String>? images) {
+    if (images == null || images.isEmpty) {
+      return ''; // or use a placeholder asset URL
+    }
+    return images.first;
+  }
+
   List<ProductDisplayItem> _getDisplayItems() {
     List<ProductDisplayItem> displayItems = [];
 
@@ -162,7 +170,7 @@ class OrderCard extends ConsumerWidget {
                 orderItem.product?.title ??
                 orderItem.product?.name ??
                 'Unknown',
-            emoji: orderItem.product?.media?.image.first ?? '',
+            emoji: _getFirstImage(orderItem.product?.media?.image),
             pack: 'Qty: ${orderItem.quantity ?? 1}',
           ),
         );

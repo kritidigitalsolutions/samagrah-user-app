@@ -14,7 +14,7 @@ class MyWalletScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final offerAsync = ref.watch(offerProvider);
+    // final offerAsync = ref.watch(offerProvider);
     final walletAsync = ref.watch(walletProvider);
 
     return Scaffold(
@@ -45,7 +45,7 @@ class MyWalletScreen extends ConsumerWidget {
         color: AppColors.button,
         onRefresh: () async {
           ref.invalidate(walletProvider);
-          ref.invalidate(offerProvider);
+          //  ref.invalidate(offerProvider);
           await ref.read(walletProvider.future);
         },
         child: SingleChildScrollView(
@@ -74,26 +74,26 @@ class MyWalletScreen extends ConsumerWidget {
                 onAction: () {},
               ),
 
-              offerAsync.when(
-                loading: () => const _ShimmerBox(height: 140),
-                error: (_, _) =>
-                    _ErrorText(message: "Offers load nahi ho paye"),
-                data: (data) {
-                  final offers = data.data?.offers ?? [];
-                  if (offers.isEmpty) {
-                    return _EmptyText(message: "Koi offer nahi mila");
-                  }
-                  return SizedBox(
-                    height: 148,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: offers.length,
-                      itemBuilder: (_, i) => _OfferCard(offer: offers[i]),
-                    ),
-                  );
-                },
-              ),
+              // offerAsync.when(
+              //   loading: () => const _ShimmerBox(height: 140),
+              //   error: (_, _) =>
+              //       _ErrorText(message: "Offers load nahi ho paye"),
+              //   data: (data) {
+              //     final offers = data.data?.offers ?? [];
+              //     if (offers.isEmpty) {
+              //       return _EmptyText(message: "Koi offer nahi mila");
+              //     }
+              //     return SizedBox(
+              //       height: 148,
+              //       child: ListView.builder(
+              //         scrollDirection: Axis.horizontal,
+              //         padding: const EdgeInsets.symmetric(horizontal: 16),
+              //         itemCount: offers.length,
+              //         itemBuilder: (_, i) => _OfferCard(offer: offers[i]),
+              //       ),
+              //     );
+              //   },
+              //  ),
 
               // ── Activity ───────────────────────────────────────────────
               _SectionHeader(

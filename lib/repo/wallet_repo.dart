@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:samagrah/data/network/network_api_service.dart';
-import 'package:samagrah/model/response/wallet_res/offers_res_model.dart';
+import 'package:samagrah/model/response/coupon_res_model.dart';
 import 'package:samagrah/model/response/wallet_res/wallet_res_model.dart';
 import 'package:samagrah/res/app_urls.dart';
 import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
@@ -14,16 +14,16 @@ class WalletRepo {
 
   // ================================ get offers ======================
 
-  Future<OffersResModel> getOffers() async {
-    try {
-      final token = await _getToken();
-      _api.setToken(token);
-      final res = await _api.getApi(AppUrls.offers);
-      return OffersResModel.fromJson(res);
-    } catch (e) {
-      rethrow;
-    }
-  }
+  // Future<OffersResModel> getOffers() async {
+  //   try {
+  //     final token = await _getToken();
+  //     _api.setToken(token);
+  //     final res = await _api.getApi(AppUrls.offers);
+  //     return OffersResModel.fromJson(res);
+  //   } catch (e) {
+  //     rethrow;
+  //   }
+  // }
 
   // ================================ get wallet ======================
 
@@ -82,6 +82,21 @@ class WalletRepo {
       });
 
       return res["success"] == true;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // ==================coupon ===========================
+  //
+  //==========================================
+
+  Future<CouponResModel> getCoupon() async {
+    try {
+      final token = await _getToken();
+      _api.setToken(token);
+      final res = await _api.getApi(AppUrls.coupons);
+      return CouponResModel.fromJson(res);
     } catch (e) {
       rethrow;
     }

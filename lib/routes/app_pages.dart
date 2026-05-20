@@ -30,6 +30,7 @@ import 'package:samagrah/views/after_login/product/my_cart_page.dart';
 import 'package:samagrah/views/after_login/product/product_details.dart';
 import 'package:samagrah/views/after_login/profile/about_us_page.dart';
 import 'package:samagrah/views/after_login/profile/delete_account_page.dart';
+import 'package:samagrah/views/after_login/profile/my_coupon_page.dart';
 import 'package:samagrah/views/after_login/profile/my_fav_products.dart';
 import 'package:samagrah/views/after_login/profile/my_profile_Page.dart';
 import 'package:samagrah/views/after_login/profile/profile%20_edit_Page.dart';
@@ -95,5 +96,7 @@ class AppPages {
     AppRoutes.myOrder: (context) => const MyOrdersPage(),
     AppRoutes.trackOrder: (context) => TrackOrderPage(),
     AppRoutes.orderDetails: (context) => const OrderDetailsPage(),
+
+    AppRoutes.coupon: (context) => const CouponPage(),
   };
 }
