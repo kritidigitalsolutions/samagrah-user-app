@@ -150,27 +150,30 @@ class OrderCard extends ConsumerWidget {
     List<ProductDisplayItem> displayItems = [];
 
     for (var orderItem in order.items) {
-      if (orderItem.product?.items != null &&
-          orderItem.product!.items.isNotEmpty) {
-        // Booked kit with multiple products
-        for (var kitItem in orderItem.product!.items) {
+      final product = orderItem.product;
+
+      // Festival Kit
+      if (product != null && product.items.isNotEmpty) {
+        for (var kitItem in product.items) {
           displayItems.add(
             ProductDisplayItem(
               name: kitItem.product?.title ?? 'Unknown',
-              emoji: kitItem.product?.media?.image.first ?? '',
+
+              // SAFE IMAGE ACCESS
+              emoji: _getFirstImage(kitItem.product?.media?.image),
+
               pack: 'Qty: ${kitItem.quantity ?? 1}',
             ),
           );
         }
       } else {
-        // Single product
+        // Single Product
         displayItems.add(
           ProductDisplayItem(
-            name:
-                orderItem.product?.title ??
-                orderItem.product?.name ??
-                'Unknown',
-            emoji: _getFirstImage(orderItem.product?.media?.image),
+            name: product?.title ?? product?.name ?? 'Unknown',
+
+            emoji: _getFirstImage(product?.media?.image),
+
             pack: 'Qty: ${orderItem.quantity ?? 1}',
           ),
         );
@@ -280,6 +283,13 @@ class OrderCard extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
+                                order.razorpayOrderId ?? '',
+                                style: text11(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.button,
+                                ),
+                              ),
+                              Text(
                                 displayItems[0].name,
                                 style: text16(fontWeight: FontWeight.w600),
                                 maxLines: 2,
@@ -296,13 +306,6 @@ class OrderCard extends ConsumerWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text(
-                              OrderUtils.getOrderNumber(order.id),
-                              style: text20(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.button,
-                              ),
-                            ),
                             const SizedBox(height: 4),
                             Text(
                               OrderUtils.formatCurrency(order.totalAmount),

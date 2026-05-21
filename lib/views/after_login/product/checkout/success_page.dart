@@ -6,7 +6,9 @@ import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
+import 'package:samagrah/view_model/after_login_provider/checkout_providers/payment_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/wallet_provider/coupon_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/wallet_provider/wallet_provider.dart';
 
 class SuccessPage extends ConsumerStatefulWidget {
@@ -138,6 +140,7 @@ class _SuccessPageState extends ConsumerState<SuccessPage>
     final bookingItems = ref.read(bookingItemProvider);
     final cartState = ref.read(cartProvider);
 
+    // Delete ordered items from cart
     for (final bookingItem in bookingItems) {
       final matchedCartItem = cartState.items.firstWhere(
         (cartItem) => cartItem.productId == bookingItem.productId,
@@ -146,20 +149,20 @@ class _SuccessPageState extends ConsumerState<SuccessPage>
       );
 
       if (matchedCartItem.productId.isNotEmpty) {
-        debugPrint(
-          '🗑 Deleting ordered cart item: ${matchedCartItem.productId}',
-        );
-
         await ref
             .read(cartProvider.notifier)
             .deleteCart(matchedCartItem.productId);
       }
     }
 
+    // === IMPORTANT: Reset all checkout related providers ===
     ref.invalidate(bookingItemProvider);
     ref.invalidate(cartProvider);
     ref.invalidate(walletProvider);
-    //ref.invalidate(offerProvider);
+    ref.invalidate(couponProvider);
+    ref.invalidate(paymentProvider); // ←←← Ye line add karo
+    ref.invalidate(loadingProvider); // Ye bhi add karo
+    ref.invalidate(offerProvider);
 
     if (!mounted) return;
 

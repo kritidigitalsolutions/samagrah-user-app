@@ -78,7 +78,7 @@ class OrderDetailsContent extends ConsumerWidget {
               name: kitItem.product?.title ?? 'Unknown',
               emoji: kitItem.product?.media?.image.firstOrNull ?? '',
               quantity: kitItem.quantity ?? 1,
-              price: kitItem.priceAtTime ?? 0,
+              price: kitItem.product?.pricing?.price ?? 0,
               productId: kitItem.product?.id ?? '',
             ),
           );
@@ -410,7 +410,7 @@ class OrderDetailsContent extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildInfoRow('Order ID:', OrderUtils.getOrderNumber(order.id)),
+                _buildInfoRow('Order ID:', (order.razorpayOrderId)),
                 _buildInfoRow(
                   'Order Date:',
                   OrderUtils.formatDateShort(order.createdAt),

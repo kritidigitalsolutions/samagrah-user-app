@@ -54,20 +54,23 @@ class CartNotifier extends StateNotifier<CartState> {
           return CartItem(
             productId: product.product?.id ?? '',
             title: product.product?.title ?? '',
-            thumbnail: product.product?.media?.image.first ?? '',
+
+            // ✅ FIXED
+            thumbnail: (product.product?.media?.image.isNotEmpty ?? false)
+                ? product.product!.media!.image.first
+                : '',
+
             price: (product.product?.pricing?.price ?? 0).toDouble(),
             quantity: product.quantity ?? 1,
           );
         }).toList();
 
-        // ✅ FIXED
         state = state.copyWith(items: serverCart);
         await _saveCartLocally();
 
         print('✅ Synced ${serverCart.length} items from server');
       } else if (response.success == true && response.data.isEmpty) {
         if (state.items.isNotEmpty) {
-          // ✅ FIXED
           state = state.copyWith(items: []);
           await _saveCartLocally();
 

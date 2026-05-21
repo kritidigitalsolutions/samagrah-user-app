@@ -89,12 +89,12 @@ class OrderUtils {
     return '₹$amount';
   }
 
-  // Get order number from order ID
-  static String getOrderNumber(String? orderId) {
-    if (orderId == null || orderId.isEmpty) return '#0';
-    // Use last 4 characters or a hash code
-    return '#${orderId.substring(orderId.length > 4 ? orderId.length - 4 : 0)}';
-  }
+  // // Get order number from order ID
+  // static String getOrderNumber(String? orderId) {
+  //   if (orderId == null || orderId.isEmpty) return '#0';
+  //   // Use last 4 characters or a hash code
+  //   return '#${orderId.substring(orderId.length > 4 ? orderId.length - 4 : 0)}';
+  // }
 
   // Check if order has multiple items
   static bool hasMultipleItems(Order order) {

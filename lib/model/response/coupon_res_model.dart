@@ -1,113 +1,79 @@
-// model/response/product_res/coupon_res_model.dart
-
-import 'dart:convert';
-
-CouponResModel couponResModelFromJson(String str) =>
-    CouponResModel.fromJson(json.decode(str));
-
 class CouponResModel {
-  final bool success;
-  final CouponData data;
-
   CouponResModel({required this.success, required this.data});
 
-  factory CouponResModel.fromJson(Map<String, dynamic> json) => CouponResModel(
-    success: json["success"] ?? false,
-    data: CouponData.fromJson(json["data"] ?? {}),
-  );
+  final bool? success;
+  final List<CouponData> data;
+
+  factory CouponResModel.fromJson(Map<String, dynamic> json) {
+    return CouponResModel(
+      success: json["success"],
+      data: json["data"] == null
+          ? []
+          : List<CouponData>.from(
+              json["data"]!.map((x) => CouponData.fromJson(x)),
+            ),
+    );
+  }
 }
 
 class CouponData {
-  final List<Offer> offers;
+  CouponData({
+    required this.id,
+    required this.vendorId,
+    required this.code,
+    required this.title,
+    required this.description,
+    required this.discountType,
+    required this.discountValue,
+    required this.minOrderAmount,
+    required this.maxDiscount,
+    required this.usageLimit,
+    required this.perUserLimit,
+    required this.usedCount,
+    required this.isActive,
+    required this.startsAt,
+    required this.expiresAt,
+    required this.createdAt,
+    required this.updatedAt,
+  });
 
-  CouponData({required this.offers});
-
-  factory CouponData.fromJson(Map<String, dynamic> json) => CouponData(
-    offers: List<Offer>.from(
-      (json["offers"] ?? []).map((x) => Offer.fromJson(x)),
-    ),
-  );
-}
-
-class Offer {
-  final String id;
-  final String vendorId;
-  final String title;
-  final String description;
-  final String offerType;
-  final String discountType;
-  final num value;
-  final num minOrderAmount;
-  final num maxBenefit;
-  final bool isActive;
+  final String? id;
+  final String? vendorId;
+  final String? code;
+  final String? title;
+  final String? description;
+  final String? discountType;
+  final num? discountValue;
+  final num? minOrderAmount;
+  final num? maxDiscount;
+  final num? usageLimit;
+  final num? perUserLimit;
+  final num? usedCount;
+  final bool? isActive;
   final DateTime? startsAt;
   final DateTime? expiresAt;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  Offer({
-    required this.id,
-    required this.vendorId,
-    required this.title,
-    required this.description,
-    required this.offerType,
-    required this.discountType,
-    required this.value,
-    required this.minOrderAmount,
-    required this.maxBenefit,
-    required this.isActive,
-    this.startsAt,
-    this.expiresAt,
-    this.createdAt,
-    this.updatedAt,
-  });
-
-  factory Offer.fromJson(Map<String, dynamic> json) => Offer(
-    id: json["_id"] ?? '',
-    vendorId: json["vendorId"] ?? '',
-    title: json["title"] ?? '',
-    description: json["description"] ?? '',
-    offerType: json["offerType"] ?? '',
-    discountType: json["discountType"] ?? '',
-    value: json["value"] ?? 0,
-    minOrderAmount: json["minOrderAmount"] ?? 0,
-    maxBenefit: json["maxBenefit"] ?? 0,
-    isActive: json["isActive"] ?? false,
-    startsAt: json["startsAt"] != null
-        ? DateTime.tryParse(json["startsAt"])
-        : null,
-    expiresAt: json["expiresAt"] != null
-        ? DateTime.tryParse(json["expiresAt"])
-        : null,
-    createdAt: json["createdAt"] != null
-        ? DateTime.tryParse(json["createdAt"])
-        : null,
-    updatedAt: json["updatedAt"] != null
-        ? DateTime.tryParse(json["updatedAt"])
-        : null,
-  );
-
-  /// Returns true if the offer is currently valid
-  bool get isValid {
-    final now = DateTime.now();
-    final started = startsAt == null || now.isAfter(startsAt!);
-    final notExpired = expiresAt == null || now.isBefore(expiresAt!);
-    return isActive && started && notExpired;
-  }
-
-  /// Returns days remaining until expiry (null if no expiry)
-  int? get daysRemaining {
-    if (expiresAt == null) return null;
-    final diff = expiresAt!.difference(DateTime.now()).inDays;
-    return diff < 0 ? 0 : diff;
-  }
-
-  /// Formatted discount label e.g. "20% OFF" or "₹200 OFF"
-  String get discountLabel {
-    if (discountType == 'percent') {
-      return '${value.toInt()}% OFF';
-    } else {
-      return '₹${value.toInt()} OFF';
-    }
+  factory CouponData.fromJson(Map<String, dynamic> json) {
+    return CouponData(
+      id: json["_id"],
+      vendorId: json["vendorId"],
+      code: json["code"],
+      title: json["title"],
+      description: json["description"],
+      discountType: json["discountType"],
+      discountValue: json["discountValue"],
+      minOrderAmount: json["minOrderAmount"],
+      maxDiscount: json["maxDiscount"],
+      usageLimit: json["usageLimit"],
+      perUserLimit: json["perUserLimit"],
+      usedCount: json["usedCount"],
+      isActive: json["isActive"],
+      startsAt: DateTime.tryParse(json["startsAt"] ?? ""),
+      expiresAt: DateTime.tryParse(json["expiresAt"] ?? ""),
+      createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
+      updatedAt: DateTime.tryParse(json["updatedAt"] ?? ""),
+    );
   }
 }

@@ -1,13 +1,22 @@
 class CreateOrderReqModel {
   final int deliveryFee;
   final List<VerifyItem> items;
+  final String? couponCode;
+  final String? offerId;
 
-  CreateOrderReqModel({required this.deliveryFee, required this.items});
+  CreateOrderReqModel({
+    required this.deliveryFee,
+    required this.items,
+    this.couponCode,
+    this.offerId,
+  });
 
   Map<String, dynamic> toJson() {
     return {
       "deliveryFee": deliveryFee,
       "items": items.map((e) => e.toJson()).toList(),
+      "couponCode": couponCode,
+      "offerId": offerId,
     };
   }
 }
@@ -18,6 +27,8 @@ class VerifyPaymentReqModel {
   final String paymentMethod;
   final num deliveryFee;
   final num? walletAmount;
+  final String? couponCode;
+  final String? offerId;
   final Address address;
   final List<VerifyItem> items;
 
@@ -31,6 +42,8 @@ class VerifyPaymentReqModel {
     required this.address,
     required this.items,
     this.walletAmount,
+    this.couponCode,
+    this.offerId,
     this.razorpayOrderId,
     this.razorpayPaymentId,
     this.razorpaySignature,
@@ -42,6 +55,8 @@ class VerifyPaymentReqModel {
       "deliveryFee": deliveryFee,
       "address": address.toJson(),
       "items": items.map((e) => e.toJson()).toList(),
+      "couponCode": couponCode,
+      "offerId": offerId,
     };
 
     if (razorpayOrderId != null && razorpayOrderId!.isNotEmpty) {

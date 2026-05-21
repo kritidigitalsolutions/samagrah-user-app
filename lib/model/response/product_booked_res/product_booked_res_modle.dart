@@ -38,17 +38,31 @@ class Order {
   Order({
     required this.id,
     required this.user,
+    required this.vendorId,
     required this.items,
     required this.totalAmount,
     required this.amountBreakup,
+    required this.couponCode,
+    required this.offer,
+    required this.discountTotal,
+    required this.cashbackAmount,
+    required this.walletUsed,
+    required this.payableAmount,
+    required this.addressType,
     required this.address,
     required this.paymentMethod,
     required this.paymentStatus,
     required this.paymentGateway,
+    required this.deliveryBoy,
+    required this.deliveryAssignedAt,
+    required this.deliveryAssignedBy,
     required this.razorpayOrderId,
     required this.razorpayPaymentId,
     required this.razorpaySignature,
     required this.orderStatus,
+    required this.inventoryAdjusted,
+    required this.cancellationRequests,
+    required this.rescheduleRequests,
     required this.createdAt,
     required this.updatedAt,
     required this.v,
@@ -58,17 +72,31 @@ class Order {
 
   final String? id;
   final String? user;
+  final String? vendorId;
   final List<OrderItem> items;
   final int? totalAmount;
   final AmountBreakup? amountBreakup;
+  final dynamic couponCode;
+  final Offer? offer;
+  final int? discountTotal;
+  final int? cashbackAmount;
+  final int? walletUsed;
+  final int? payableAmount;
+  final String? addressType;
   final Address? address;
   final String? paymentMethod;
   final String? paymentStatus;
   final String? paymentGateway;
+  final dynamic deliveryBoy;
+  final dynamic deliveryAssignedAt;
+  final dynamic deliveryAssignedBy;
   final String? razorpayOrderId;
   final String? razorpayPaymentId;
   final String? razorpaySignature;
   final String? orderStatus;
+  final bool? inventoryAdjusted;
+  final List<dynamic> cancellationRequests;
+  final List<dynamic> rescheduleRequests;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final int? v;
@@ -79,6 +107,7 @@ class Order {
     return Order(
       id: json["_id"],
       user: json["user"],
+      vendorId: json["vendorId"],
       items: json["items"] == null
           ? []
           : List<OrderItem>.from(
@@ -88,16 +117,33 @@ class Order {
       amountBreakup: json["amountBreakup"] == null
           ? null
           : AmountBreakup.fromJson(json["amountBreakup"]),
+      couponCode: json["couponCode"],
+      offer: json["offer"] == null ? null : Offer.fromJson(json["offer"]),
+      discountTotal: json["discountTotal"],
+      cashbackAmount: json["cashbackAmount"],
+      walletUsed: json["walletUsed"],
+      payableAmount: json["payableAmount"],
+      addressType: json["addressType"],
       address: json["address"] == null
           ? null
           : Address.fromJson(json["address"]),
       paymentMethod: json["paymentMethod"],
       paymentStatus: json["paymentStatus"],
       paymentGateway: json["paymentGateway"],
+      deliveryBoy: json["deliveryBoy"],
+      deliveryAssignedAt: json["deliveryAssignedAt"],
+      deliveryAssignedBy: json["deliveryAssignedBy"],
       razorpayOrderId: json["razorpayOrderId"],
       razorpayPaymentId: json["razorpayPaymentId"],
       razorpaySignature: json["razorpaySignature"],
       orderStatus: json["orderStatus"],
+      inventoryAdjusted: json["inventoryAdjusted"],
+      cancellationRequests: json["cancellationRequests"] == null
+          ? []
+          : List<dynamic>.from(json["cancellationRequests"]!.map((x) => x)),
+      rescheduleRequests: json["rescheduleRequests"] == null
+          ? []
+          : List<dynamic>.from(json["rescheduleRequests"]!.map((x) => x)),
       createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
       updatedAt: DateTime.tryParse(json["updatedAt"] ?? ""),
       v: json["__v"],
@@ -114,6 +160,7 @@ class Address {
     required this.name,
     required this.phone,
     required this.fullAddress,
+    required this.addressType,
     required this.city,
     required this.state,
     required this.pincode,
@@ -122,6 +169,7 @@ class Address {
   final String? name;
   final String? phone;
   final String? fullAddress;
+  final String? addressType;
   final String? city;
   final String? state;
   final String? pincode;
@@ -131,6 +179,7 @@ class Address {
       name: json["name"],
       phone: json["phone"],
       fullAddress: json["fullAddress"],
+      addressType: json["addressType"],
       city: json["city"],
       state: json["state"],
       pincode: json["pincode"],
@@ -139,15 +188,30 @@ class Address {
 }
 
 class AmountBreakup {
-  AmountBreakup({required this.itemTotal, required this.deliveryFee});
+  AmountBreakup({
+    required this.itemTotal,
+    required this.deliveryFee,
+    required this.couponDiscount,
+    required this.offerDiscount,
+    required this.walletUsed,
+    required this.payableAmount,
+  });
 
   final int? itemTotal;
   final int? deliveryFee;
+  final int? couponDiscount;
+  final int? offerDiscount;
+  final int? walletUsed;
+  final int? payableAmount;
 
   factory AmountBreakup.fromJson(Map<String, dynamic> json) {
     return AmountBreakup(
       itemTotal: json["itemTotal"],
       deliveryFee: json["deliveryFee"],
+      couponDiscount: json["couponDiscount"],
+      offerDiscount: json["offerDiscount"],
+      walletUsed: json["walletUsed"],
+      payableAmount: json["payableAmount"],
     );
   }
 }
@@ -182,109 +246,216 @@ class OrderItem {
 
 class PurpleProduct {
   PurpleProduct({
-    required this.id,
-    required this.user,
-    required this.name,
-    required this.baseKit,
-    required this.items,
-    required this.totalPrice,
-    required this.status,
-    required this.paymentStatus,
-    required this.order,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.v,
     required this.category,
+    required this.details,
     required this.pricing,
+    required this.discount,
+    required this.compliance,
     required this.media,
     required this.ratings,
     required this.stock,
     required this.flags,
+    required this.id,
+    required this.vendorId,
     required this.title,
     required this.slug,
-    required this.tags,
     required this.description,
+    required this.tags,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.itemCode,
+    required this.v,
+    required this.kitType,
+    required this.name,
     required this.image,
+    required this.isMostPopularKit,
+    required this.isMostUserUse,
+    required this.isPanditApproved,
+    required this.items,
+    required this.totalPrice,
     required this.kitPrice,
     required this.savings,
   });
 
-  final String? id;
-  final String? user;
-  final String? name;
-  final dynamic baseKit;
-  final List<ProductItem> items;
-  final int? totalPrice;
-  final String? status;
-  final String? paymentStatus;
-  final String? order;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
-  final int? v;
-  final Category? category;
+  final dynamic category;
+  final Details? details;
   final Pricing? pricing;
+  final Discount? discount;
+  final Compliance? compliance;
   final Media? media;
   final Ratings? ratings;
   final Stock? stock;
   final Flags? flags;
+  final String? id;
+  final String? vendorId;
   final String? title;
   final String? slug;
-  final List<String> tags;
   final String? description;
+  final List<dynamic> tags;
+  final String? status;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final String? itemCode;
+  final int? v;
+  final String? kitType;
+  final String? name;
   final String? image;
+  final bool? isMostPopularKit;
+  final bool? isMostUserUse;
+  final bool? isPanditApproved;
+  final List<ProductItem> items;
+  final int? totalPrice;
   final int? kitPrice;
   final int? savings;
 
   factory PurpleProduct.fromJson(Map<String, dynamic> json) {
     return PurpleProduct(
-      id: json["_id"],
-      user: json["user"],
-      name: json["name"],
-      baseKit: json["baseKit"],
-      items: json["items"] == null
-          ? []
-          : List<ProductItem>.from(
-              json["items"]!.map((x) => ProductItem.fromJson(x)),
-            ),
-      totalPrice: json["totalPrice"],
-      status: json["status"],
-      paymentStatus: json["paymentStatus"],
-      order: json["order"],
-      createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
-      updatedAt: DateTime.tryParse(json["updatedAt"] ?? ""),
-      v: json["__v"],
-      category: json["category"] == null
+      category: json["category"],
+      details: json["details"] == null
           ? null
-          : Category.fromJson(json["category"]),
+          : Details.fromJson(json["details"]),
       pricing: json["pricing"] == null
           ? null
           : Pricing.fromJson(json["pricing"]),
+      discount: json["discount"] == null
+          ? null
+          : Discount.fromJson(json["discount"]),
+      compliance: json["compliance"] == null
+          ? null
+          : Compliance.fromJson(json["compliance"]),
       media: json["media"] == null ? null : Media.fromJson(json["media"]),
       ratings: json["ratings"] == null
           ? null
           : Ratings.fromJson(json["ratings"]),
       stock: json["stock"] == null ? null : Stock.fromJson(json["stock"]),
       flags: json["flags"] == null ? null : Flags.fromJson(json["flags"]),
+      id: json["_id"],
+      vendorId: json["vendorId"],
       title: json["title"],
       slug: json["slug"],
+      description: json["description"],
       tags: json["tags"] == null
           ? []
-          : List<String>.from(json["tags"]!.map((x) => x)),
-      description: json["description"],
+          : List<dynamic>.from(json["tags"]!.map((x) => x)),
+      status: json["status"],
+      createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
+      updatedAt: DateTime.tryParse(json["updatedAt"] ?? ""),
+      itemCode: json["itemCode"],
+      v: json["__v"],
+      kitType: json["kitType"],
+      name: json["name"],
       image: json["image"],
+      isMostPopularKit: json["isMostPopularKit"],
+      isMostUserUse: json["isMostUserUse"],
+      isPanditApproved: json["isPanditApproved"],
+      items: json["items"] == null
+          ? []
+          : List<ProductItem>.from(
+              json["items"]!.map((x) => ProductItem.fromJson(x)),
+            ),
+      totalPrice: json["totalPrice"],
       kitPrice: json["kitPrice"],
       savings: json["savings"],
     );
   }
 }
 
-class Category {
-  Category({required this.name});
+class CategoryClass {
+  CategoryClass({required this.name, required this.subCategory});
 
   final String? name;
+  final String? subCategory;
 
-  factory Category.fromJson(Map<String, dynamic> json) {
-    return Category(name: json["name"]);
+  factory CategoryClass.fromJson(Map<String, dynamic> json) {
+    return CategoryClass(name: json["name"], subCategory: json["subCategory"]);
+  }
+}
+
+class Compliance {
+  Compliance({required this.hsnCode, required this.city});
+
+  final String? hsnCode;
+  final String? city;
+
+  factory Compliance.fromJson(Map<String, dynamic> json) {
+    return Compliance(hsnCode: json["hsnCode"], city: json["city"]);
+  }
+}
+
+class Details {
+  Details({
+    required this.brand,
+    required this.subBrand,
+    required this.unit,
+    required this.weight,
+    required this.dimensions,
+    required this.material,
+    required this.color,
+    required this.manufacturer,
+    required this.countryOfOrigin,
+    required this.packageContents,
+    required this.usageInstructions,
+    required this.careInstructions,
+    required this.expiryInfo,
+  });
+
+  final String? brand;
+  final String? subBrand;
+  final String? unit;
+  final String? weight;
+  final String? dimensions;
+  final String? material;
+  final String? color;
+  final String? manufacturer;
+  final String? countryOfOrigin;
+  final String? packageContents;
+  final String? usageInstructions;
+  final String? careInstructions;
+  final String? expiryInfo;
+
+  factory Details.fromJson(Map<String, dynamic> json) {
+    return Details(
+      brand: json["brand"],
+      subBrand: json["subBrand"],
+      unit: json["unit"],
+      weight: json["weight"],
+      dimensions: json["dimensions"],
+      material: json["material"],
+      color: json["color"],
+      manufacturer: json["manufacturer"],
+      countryOfOrigin: json["countryOfOrigin"],
+      packageContents: json["packageContents"],
+      usageInstructions: json["usageInstructions"],
+      careInstructions: json["careInstructions"],
+      expiryInfo: json["expiryInfo"],
+    );
+  }
+}
+
+class Discount {
+  Discount({
+    required this.type,
+    required this.value,
+    required this.isActive,
+    required this.startsAt,
+    required this.expiresAt,
+  });
+
+  final String? type;
+  final int? value;
+  final bool? isActive;
+  final dynamic startsAt;
+  final dynamic expiresAt;
+
+  factory Discount.fromJson(Map<String, dynamic> json) {
+    return Discount(
+      type: json["type"],
+      value: json["value"],
+      isActive: json["isActive"],
+      startsAt: json["startsAt"],
+      expiresAt: json["expiresAt"],
+    );
   }
 }
 
@@ -318,13 +489,11 @@ class ProductItem {
   ProductItem({
     required this.product,
     required this.quantity,
-    required this.priceAtTime,
     required this.id,
   });
 
   final FluffyProduct? product;
   final int? quantity;
-  final int? priceAtTime;
   final String? id;
 
   factory ProductItem.fromJson(Map<String, dynamic> json) {
@@ -333,7 +502,6 @@ class ProductItem {
           ? null
           : FluffyProduct.fromJson(json["product"]),
       quantity: json["quantity"],
-      priceAtTime: json["priceAtTime"],
       id: json["_id"],
     );
   }
@@ -342,44 +510,65 @@ class ProductItem {
 class FluffyProduct {
   FluffyProduct({
     required this.category,
+    required this.details,
     required this.pricing,
+    required this.discount,
+    required this.compliance,
     required this.media,
     required this.ratings,
     required this.stock,
     required this.flags,
     required this.id,
+    required this.vendorId,
     required this.title,
     required this.slug,
+    required this.description,
     required this.tags,
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    required this.itemCode,
     required this.v,
   });
 
-  final Category? category;
+  final CategoryClass? category;
+  final Details? details;
   final Pricing? pricing;
+  final Discount? discount;
+  final Compliance? compliance;
   final Media? media;
   final Ratings? ratings;
   final Stock? stock;
   final Flags? flags;
   final String? id;
+  final String? vendorId;
   final String? title;
   final String? slug;
+  final String? description;
   final List<String> tags;
   final String? status;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String? itemCode;
   final int? v;
 
   factory FluffyProduct.fromJson(Map<String, dynamic> json) {
     return FluffyProduct(
       category: json["category"] == null
           ? null
-          : Category.fromJson(json["category"]),
+          : CategoryClass.fromJson(json["category"]),
+      details: json["details"] == null
+          ? null
+          : Details.fromJson(json["details"]),
       pricing: json["pricing"] == null
           ? null
           : Pricing.fromJson(json["pricing"]),
+      discount: json["discount"] == null
+          ? null
+          : Discount.fromJson(json["discount"]),
+      compliance: json["compliance"] == null
+          ? null
+          : Compliance.fromJson(json["compliance"]),
       media: json["media"] == null ? null : Media.fromJson(json["media"]),
       ratings: json["ratings"] == null
           ? null
@@ -387,14 +576,17 @@ class FluffyProduct {
       stock: json["stock"] == null ? null : Stock.fromJson(json["stock"]),
       flags: json["flags"] == null ? null : Flags.fromJson(json["flags"]),
       id: json["_id"],
+      vendorId: json["vendorId"],
       title: json["title"],
       slug: json["slug"],
+      description: json["description"],
       tags: json["tags"] == null
           ? []
           : List<String>.from(json["tags"]!.map((x) => x)),
       status: json["status"],
       createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
       updatedAt: DateTime.tryParse(json["updatedAt"] ?? ""),
+      itemCode: json["itemCode"],
       v: json["__v"],
     );
   }
@@ -412,20 +604,38 @@ class Media {
           : List<String>.from(json["image"]!.map((x) => x)),
     );
   }
+
+  Map<String, dynamic> toJson() => {"image": image.map((x) => x).toList()};
 }
 
 class Pricing {
-  Pricing({required this.price, required this.mrp, required this.currency});
+  Pricing({
+    required this.price,
+    required this.basePrice,
+    required this.gstPercent,
+    required this.gstAmount,
+    required this.priceIncludesGst,
+    required this.currency,
+    required this.mrp,
+  });
 
   final int? price;
-  final int? mrp;
+  final int? basePrice;
+  final int? gstPercent;
+  final int? gstAmount;
+  final bool? priceIncludesGst;
   final String? currency;
+  final int? mrp;
 
   factory Pricing.fromJson(Map<String, dynamic> json) {
     return Pricing(
       price: json["price"],
-      mrp: json["mrp"],
+      basePrice: json["basePrice"],
+      gstPercent: json["gstPercent"],
+      gstAmount: json["gstAmount"],
+      priceIncludesGst: json["priceIncludesGst"],
       currency: json["currency"],
+      mrp: json["mrp"],
     );
   }
 }
@@ -437,6 +647,17 @@ class Stock {
 
   factory Stock.fromJson(Map<String, dynamic> json) {
     return Stock(quantity: json["quantity"]);
+  }
+}
+
+class Offer {
+  Offer({required this.id, required this.type});
+
+  final dynamic id;
+  final dynamic type;
+
+  factory Offer.fromJson(Map<String, dynamic> json) {
+    return Offer(id: json["id"], type: json["type"]);
   }
 }
 

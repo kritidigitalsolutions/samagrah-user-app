@@ -1,6 +1,9 @@
+// view/after_login/checkout/payment/payment_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
+import 'package:samagrah/model/response/coupon_res_model.dart';
 import 'package:samagrah/repo/payment_repo.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
@@ -10,8 +13,8 @@ import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/payment_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/state/payment_state.dart';
-
-import '../../../../view_model/after_login_provider/wallet_provider/wallet_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/wallet_provider/coupon_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/wallet_provider/wallet_provider.dart';
 
 class PaymentPage extends ConsumerStatefulWidget {
   const PaymentPage({super.key});
@@ -21,14 +24,13 @@ class PaymentPage extends ConsumerStatefulWidget {
 }
 
 class _PaymentPageState extends ConsumerState<PaymentPage> {
-  String selectedPaymentMethod = 'online'; // 'online', 'wallet', 'cod'
+  String selectedPaymentMethod = 'online';
+  int walletBalance = 0;
 
-  // Wallet balance (you can fetch this from provider)
-  var walletBalance = 0;
-
-  // COD charges
   final double codCharges = 25.00;
   final double shippingCharges = 40.00;
+
+  final TextEditingController _couponController = TextEditingController();
 
   @override
   void initState() {
@@ -36,107 +38,527 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     ref.read(paymentProvider.notifier).init();
   }
 
+  // Safe Snackbar Helper
+  void _showSafeSnackbar(String message, SnackBarType type) {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        AppSnackbar.show(context, message: message, type: type);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final walletAsync = ref.watch(walletProvider);
-    ref.listen<PaymentState>(paymentProvider, (prev, next) {
+    final couponState = ref.watch(couponProvider);
+
+    // ── Payment success / error listener ─────────────────────────────────────
+    ref.listen<PaymentState>(paymentProvider, (previous, next) {
       if (!mounted) return;
 
-      // ❌ Error Snackbar
-      if (next.error != null && next.error!.isNotEmpty) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-
-          AppSnackbar.show(
-            context,
-            message: next.error!,
-            type: SnackBarType.error,
-          );
-        });
+      if (next.error?.isNotEmpty == true) {
+        _showSafeSnackbar(next.error!, SnackBarType.error);
       }
 
-      // ✅ Success
       if (next.isSuccess) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
+        _showSafeSnackbar("Payment Successful 🎉", SnackBarType.success);
 
-          AppSnackbar.show(
-            context,
-            message: "Payment Successful 🎉",
-            type: SnackBarType.success,
-          );
-
-          Navigator.pushNamed(context, AppRoutes.successPage);
+        // Increased delay to make sure navigation works
+        Future.delayed(const Duration(milliseconds: 600), () {
+          if (mounted) {
+            Navigator.pushNamed(context, AppRoutes.successPage);
+          }
         });
       }
     });
 
-    final address = ref.read(storeAddressProvider);
+    ref.listen<CouponState>(couponProvider, (previous, next) {
+      if (!mounted) return;
+
+      if (next.isApplySuccess && !(previous?.isApplySuccess ?? false)) {
+        _showSafeSnackbar(
+          "Coupon applied! You saved ₹${next.discountAmount.toStringAsFixed(0)} 🎉",
+          SnackBarType.success,
+        );
+        FocusScope.of(context).unfocus();
+      }
+
+      if (next.applyError?.isNotEmpty == true &&
+          next.applyError != previous?.applyError) {
+        _showSafeSnackbar(next.applyError!, SnackBarType.error);
+      }
+    });
+    final address = ref.watch(storeAddressProvider);
     final items = ref.watch(bookingItemProvider);
-    final totalAmount = ref.read(totalPriceProvider);
+    final totalAmount = ref.watch(totalPriceProvider);
+
+    final effectiveTotal = couponState.isCouponApplied
+        ? couponState.finalAmount
+        : totalAmount;
+
+    // final validCoupons = couponState.coupon.where((coupon) {
+    //   final usageLeft = (coupon.usageLimit ?? 0) > (coupon.usedCount ?? 0);
+
+    //   final perUserAvailable = (coupon.perUserLimit ?? 0) > 0;
+
+    //   final isNotExpired = coupon.expiresAt == null
+    //       ? true
+    //       : coupon.expiresAt!.isAfter(DateTime.now());
+
+    //   return usageLeft && perUserAvailable && isNotExpired;
+    // }).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
-
       body: SafeArea(
         child: Column(
           children: [
             _buildStepper(),
-
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildPriceBreakdown(totalAmount),
+                    _buildPriceBreakdown(totalAmount, couponState),
                     const SizedBox(height: 20),
 
-                    // Payment Methods Header
+                    _buildCouponSection(totalAmount, couponState),
+                    const SizedBox(height: 20),
                     Text(
                       "Payment Methods",
                       style: text16(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 12),
-
-                    // Wallet Option
                     walletAsync.when(
                       data: (data) {
                         final amount = data.data?.wallet?.balance;
                         walletBalance = amount ?? 0;
-                        return _buildWalletOption(totalAmount);
+                        return _buildWalletOption(effectiveTotal);
                       },
                       loading: () => const _ShimmerBox(height: 140),
-                      error: (_, _) =>
+                      error: (_, __) =>
                           _ErrorText(message: "Offers load nahi ho paye"),
                     ),
                     const SizedBox(height: 12),
-
-                    // Online Payment Option
                     _buildOnlineMethods(),
                     const SizedBox(height: 12),
-
-                    // COD Option
                     _buildCODOption(),
-
-                    // COD Charges Info
                     if (selectedPaymentMethod == 'cod') ...[
                       const SizedBox(height: 12),
                       _buildCODChargesInfo(),
                     ],
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
             ),
-
-            _buildBottomCTA(totalAmount, address, items),
+            _buildBottomCTA(effectiveTotal, address, items, couponState),
           ],
         ),
       ),
     );
   }
 
-  // 🔝 MODERN STEPPER
+  // ──────────────────────────────────────────────────────────────────────────
+  // COUPON SECTION
+  // ──────────────────────────────────────────────────────────────────────────
+
+  Widget _buildCouponSection(num totalAmount, CouponState couponState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Coupons & Offers", style: text16(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 12),
+        couponState.isCouponApplied
+            ? _buildAppliedCouponBanner(couponState)
+            : _buildCouponInputCard(totalAmount, couponState),
+        if (!couponState.isCouponApplied) ...[
+          const SizedBox(height: 12),
+          _buildAvailableOffers(totalAmount, couponState),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildCouponInputCard(num totalAmount, CouponState couponState) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+            color: AppColors.black.withOpacity(0.05),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.local_offer_outlined,
+                color: AppColors.button,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                "Have a coupon?",
+                style: text14(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _couponController,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: InputDecoration(
+                    hintText: "Enter coupon code",
+                    hintStyle: text13(color: AppColors.grey600),
+                    filled: true,
+                    fillColor: AppColors.grey100,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: AppColors.button,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                  style: text14(fontWeight: FontWeight.w600),
+                ),
+              ),
+              const SizedBox(width: 10),
+              SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: couponState.isApplying
+                      ? null
+                      : () => _applyManualCoupon(totalAmount),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.button,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    elevation: 0,
+                  ),
+                  child: couponState.isApplying
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            color: AppColors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          "APPLY",
+                          style: text13(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppliedCouponBanner(CouponState couponState) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.green.withAlpha(20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.green.withAlpha(80), width: 1.5),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.green.withAlpha(30),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.check, color: AppColors.green, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "${couponState.appliedCode} Applied!",
+                  style: text14(
+                    color: AppColors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "You saved ₹${couponState.discountAmount.toStringAsFixed(0)} on this order",
+                  style: text12(color: AppColors.green),
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              ref.read(couponProvider.notifier).removeCoupon();
+              _couponController.clear();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.error.withAlpha(20),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.error.withAlpha(60)),
+              ),
+              child: Text(
+                "REMOVE",
+                style: text11(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Horizontally scrollable offer chips — uses new CouponData fields
+  Widget _buildAvailableOffers(num totalAmount, CouponState couponState) {
+    if (couponState.isLoading) return const _ShimmerBox(height: 90);
+    if (couponState.coupon.isEmpty) return const SizedBox.shrink();
+
+    // Filter: active + not expired
+    final now = DateTime.now();
+    final validOffers = couponState.coupon.where((c) {
+      final active = c.isActive ?? false;
+      final started = c.startsAt == null || now.isAfter(c.startsAt!);
+      final notExpired = c.expiresAt == null || now.isBefore(c.expiresAt!);
+      return active && started && notExpired;
+    }).toList();
+
+    if (validOffers.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Available Offers",
+          style: text13(color: AppColors.grey700, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 150,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: validOffers.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (context, i) =>
+                _buildOfferChip(validOffers[i], totalAmount),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Chip card for each offer — tapping fills the code field and auto-applies
+  Widget _buildOfferChip(CouponData coupon, num totalAmount) {
+    final eligible = totalAmount >= (coupon.minOrderAmount ?? 0);
+
+    // Discount label
+    final discountLabel = (coupon.discountType ?? '').toLowerCase() == 'percent'
+        ? '${(coupon.discountValue ?? 0).toInt()}% OFF'
+        : '₹${(coupon.discountValue ?? 0).toInt()} OFF';
+
+    // Expiry
+    int? daysLeft;
+    if (coupon.expiresAt != null) {
+      final diff = coupon.expiresAt!.difference(DateTime.now()).inDays;
+      daysLeft = diff < 0 ? 0 : diff;
+    }
+
+    return GestureDetector(
+      onTap: eligible
+          ? () {
+              _couponController.text = coupon.code ?? '';
+            }
+          : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 220,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: eligible ? AppColors.white : AppColors.grey100,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: eligible
+                ? AppColors.button.withAlpha(80)
+                : AppColors.grey300,
+          ),
+          boxShadow: eligible
+              ? [
+                  BoxShadow(
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                    color: AppColors.button.withOpacity(0.08),
+                  ),
+                ]
+              : [],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: eligible ? AppColors.button : AppColors.grey400,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    discountLabel,
+                    style: text11(
+                      color: AppColors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+                if (daysLeft != null)
+                  Text(
+                    daysLeft == 0 ? "Expired" : "$daysLeft days left",
+                    style: text10(
+                      color: daysLeft <= 3
+                          ? AppColors.warning
+                          : AppColors.grey600,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+
+            // Coupon Code
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.grey100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.grey300),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.local_offer_outlined, size: 16),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      coupon.code ?? '',
+                      style: text13(fontWeight: FontWeight.w800),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 5),
+            if ((coupon.title ?? '').isNotEmpty)
+              Text(
+                coupon.title ?? '',
+                style: text11(
+                  color: AppColors.button,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+
+            // Description
+            if ((coupon.description ?? '').isNotEmpty)
+              Text(
+                coupon.description ?? '',
+                style: text11(color: AppColors.grey700),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+
+            const SizedBox(height: 2),
+            if ((coupon.usageLimit ?? 0) > 0)
+              _buildCouponInfoRow(
+                title: "Usage Limit",
+                value: "${coupon.usageLimit}",
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper Widget
+  Widget _buildCouponInfoRow({required String title, required String value}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(title, style: text10(color: AppColors.grey600)),
+          Text(value, style: text10(fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+
+  void _applyManualCoupon(num totalAmount) {
+    final code = _couponController.text.trim();
+    if (code.isEmpty) {
+      AppSnackbar.show(
+        context,
+        message: "Please enter a coupon code",
+        type: SnackBarType.error,
+      );
+      return;
+    }
+    ref
+        .read(couponProvider.notifier)
+        .applyCoupon(code: code, amount: totalAmount);
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // STEPPER
+  // ──────────────────────────────────────────────────────────────────────────
+
   Widget _buildStepper() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -194,11 +616,18 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     );
   }
 
-  // 💰 PRICE BREAKDOWN (Blinkit-style)
-  Widget _buildPriceBreakdown(num totalAmount) {
-    final codTotal = selectedPaymentMethod == 'cod'
-        ? totalAmount + codCharges + shippingCharges
+  // ──────────────────────────────────────────────────────────────────────────
+  // PRICE BREAKDOWN
+  // ──────────────────────────────────────────────────────────────────────────
+
+  Widget _buildPriceBreakdown(num totalAmount, CouponState couponState) {
+    final isCOD = selectedPaymentMethod == 'cod';
+    final baseAmount = couponState.isCouponApplied
+        ? couponState.finalAmount
         : totalAmount;
+    final grandTotal = isCOD
+        ? baseAmount + codCharges + shippingCharges
+        : baseAmount;
 
     return Container(
       width: double.infinity,
@@ -217,7 +646,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Bill Details Header
           Row(
             children: [
               const Icon(Icons.receipt_long_outlined, size: 20),
@@ -225,14 +653,42 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
               Text("Bill Details", style: text14(fontWeight: FontWeight.w600)),
             ],
           ),
-
           const SizedBox(height: 14),
 
-          // Item Total
           _buildPriceRow("Item Total", "₹$totalAmount", false),
 
-          // COD Charges (if COD selected)
-          if (selectedPaymentMethod == 'cod') ...[
+          // Coupon discount row
+          if (couponState.isCouponApplied) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      "Coupon (${couponState.appliedCode})",
+                      style: text13(color: AppColors.green),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.local_offer,
+                      color: AppColors.green,
+                      size: 14,
+                    ),
+                  ],
+                ),
+                Text(
+                  "- ₹${couponState.discountAmount.toStringAsFixed(2)}",
+                  style: text14(
+                    color: AppColors.green,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          if (isCOD) ...[
             const SizedBox(height: 8),
             _buildPriceRow("Delivery Charges", "₹$shippingCharges", false),
             const SizedBox(height: 8),
@@ -240,43 +696,51 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
           ],
 
           const Divider(height: 24),
-
-          // Total Amount
           _buildPriceRow(
             "Total Amount",
-            "₹${codTotal.toStringAsFixed(2)}",
+            "₹${grandTotal.toStringAsFixed(2)}",
             true,
           ),
 
-          // Savings Badge (if online payment)
           if (selectedPaymentMethod != 'cod') ...[
             const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.green.withAlpha(30),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.check_circle,
-                    color: AppColors.green,
-                    size: 16,
+            Builder(
+              builder: (_) {
+                final savedAmount = couponState.isCouponApplied
+                    ? (codCharges + shippingCharges) +
+                          couponState.discountAmount.toDouble()
+                    : (codCharges + shippingCharges).toDouble();
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      "You're saving ₹${(codCharges + shippingCharges).toStringAsFixed(0)} on this order",
-                      style: text12(
+                  decoration: BoxDecoration(
+                    color: AppColors.green.withAlpha(30),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.check_circle,
                         color: AppColors.green,
-                        fontWeight: FontWeight.w600,
+                        size: 16,
                       ),
-                    ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          "You're saving ₹${savedAmount.toStringAsFixed(2)} on this order",
+                          style: text12(
+                            color: AppColors.green,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ],
         ],
@@ -303,7 +767,10 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     );
   }
 
-  // 💳 WALLET OPTION (New)
+  // ──────────────────────────────────────────────────────────────────────────
+  // WALLET
+  // ──────────────────────────────────────────────────────────────────────────
+
   Widget _buildWalletOption(num totalAmount) {
     final isSelected = selectedPaymentMethod == 'wallet';
     final canPayWithWallet = walletBalance >= totalAmount;
@@ -311,9 +778,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     return GestureDetector(
       onTap: () {
         if (canPayWithWallet) {
-          setState(() {
-            selectedPaymentMethod = 'wallet';
-          });
+          setState(() => selectedPaymentMethod = 'wallet');
         } else {
           Navigator.pushNamed(context, AppRoutes.myWallet);
           AppSnackbar.show(
@@ -376,8 +841,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                   const Icon(Icons.check_circle, color: AppColors.button),
               ],
             ),
-
-            // Insufficient Balance Warning
             if (!canPayWithWallet) ...[
               const SizedBox(height: 10),
               Container(
@@ -410,16 +873,15 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     );
   }
 
-  // 💳 ONLINE METHODS CARD
+  // ──────────────────────────────────────────────────────────────────────────
+  // ONLINE METHODS
+  // ──────────────────────────────────────────────────────────────────────────
+
   Widget _buildOnlineMethods() {
     final isSelected = selectedPaymentMethod == 'online';
 
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedPaymentMethod = 'online';
-        });
-      },
+      onTap: () => setState(() => selectedPaymentMethod = 'online'),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.all(16),
@@ -493,8 +955,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                   const Icon(Icons.check_circle, color: AppColors.green),
               ],
             ),
-
-            // Payment Icons
             if (isSelected) ...[
               const SizedBox(height: 12),
               const Divider(height: 1),
@@ -533,24 +993,20 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       child: Image.asset(
         path,
         height: 20,
-        errorBuilder: (context, error, stackTrace) {
-          // Fallback icon if image fails to load
-          return const Icon(Icons.payment, size: 20, color: AppColors.grey600);
-        },
+        errorBuilder: (_, __, ___) =>
+            const Icon(Icons.payment, size: 20, color: AppColors.grey600),
       ),
     );
   }
 
-  // 💵 COD OPTION
+  // ──────────────────────────────────────────────────────────────────────────
+  // COD
+  // ──────────────────────────────────────────────────────────────────────────
+
   Widget _buildCODOption() {
     final isSelected = selectedPaymentMethod == 'cod';
-
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedPaymentMethod = 'cod';
-        });
-      },
+      onTap: () => setState(() => selectedPaymentMethod = 'cod'),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.all(16),
@@ -601,7 +1057,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     );
   }
 
-  // 📊 COD CHARGES INFO
   Widget _buildCODChargesInfo() {
     return Container(
       padding: const EdgeInsets.all(14),
@@ -639,19 +1094,22 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     );
   }
 
-  // 🚀 BOTTOM CTA
+  // ──────────────────────────────────────────────────────────────────────────
+  // BOTTOM CTA
+  // ──────────────────────────────────────────────────────────────────────────
+
   Widget _buildBottomCTA(
-    num totalAmount,
+    num effectiveTotal,
     Address? address,
     List<VerifyItem> items,
+    CouponState couponState,
   ) {
     final paymentState = ref.watch(paymentProvider);
     final loading = ref.watch(loadingProvider);
 
-    // Calculate final amount
     final finalAmount = selectedPaymentMethod == 'cod'
-        ? totalAmount + codCharges + shippingCharges
-        : totalAmount;
+        ? effectiveTotal + codCharges + shippingCharges
+        : effectiveTotal;
 
     String buttonText = "Pay ₹${finalAmount.toStringAsFixed(0)}";
     Color buttonColor = AppColors.green;
@@ -695,7 +1153,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     );
                     return;
                   }
-
                   if (items.isEmpty) {
                     AppSnackbar.show(
                       context,
@@ -707,59 +1164,37 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
 
                   if (selectedPaymentMethod == 'cod') {
                     ref.read(loadingProvider.notifier).state = true;
-                    final PaymentRepo repo = PaymentRepo();
+                    final repo = PaymentRepo();
                     final verifyReq = VerifyPaymentReqModel(
                       paymentMethod: "COD",
                       deliveryFee: codCharges,
                       address: address,
                       items: items,
+                      couponCode: couponState.appliedCode,
                     );
-
-                    debugPrint("📤 Verify Request JSON:");
-                    debugPrint("${verifyReq.toJson()}");
-
-                    debugPrint("🌐 Calling verifyPayment API...");
-
                     final success = await repo.productVerifyPayment(verifyReq);
-
+                    ref.read(loadingProvider.notifier).state = false;
                     if (success) {
-                      ref.read(loadingProvider.notifier).state = false;
                       Navigator.pushNamed(context, AppRoutes.successPage);
-                      debugPrint("✅ PAYMENT VERIFIED SUCCESSFULLY");
-                    } else {
-                      ref.read(loadingProvider.notifier).state = false;
-                      debugPrint("❌ PAYMENT VERIFICATION FAILED");
                     }
-                    // COD Order
                   } else if (selectedPaymentMethod == 'wallet') {
-                    // Wallet Payment
-                    if (walletBalance >= totalAmount) {
+                    if (walletBalance >= effectiveTotal) {
                       ref.read(loadingProvider.notifier).state = true;
-                      final PaymentRepo repo = PaymentRepo();
+                      final repo = PaymentRepo();
                       final verifyReq = VerifyPaymentReqModel(
                         paymentMethod: "WALLET",
                         deliveryFee: codCharges,
                         walletAmount: walletBalance,
                         address: address,
                         items: items,
+                        couponCode: couponState.appliedCode,
                       );
-
-                      debugPrint("📤 Verify Request JSON:");
-                      debugPrint("${verifyReq.toJson()}");
-
-                      debugPrint("🌐 Calling verifyPayment API...");
-
                       final success = await repo.productVerifyPayment(
                         verifyReq,
                       );
-
+                      ref.read(loadingProvider.notifier).state = false;
                       if (success) {
-                        ref.read(loadingProvider.notifier).state = false;
                         Navigator.pushNamed(context, AppRoutes.successPage);
-                        debugPrint("✅ PAYMENT VERIFIED SUCCESSFULLY");
-                      } else {
-                        ref.read(loadingProvider.notifier).state = false;
-                        debugPrint("❌ PAYMENT VERIFICATION FAILED");
                       }
                     } else {
                       AppSnackbar.show(
@@ -769,10 +1204,13 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                       );
                     }
                   } else {
-                    // Online Payment
                     await ref
                         .read(paymentProvider.notifier)
-                        .startPayment(address, items);
+                        .startPayment(
+                          address,
+                          items,
+                          couponState.appliedCode ?? '',
+                        );
                   }
                 },
         ),
@@ -780,6 +1218,10 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     );
   }
 }
+
+// ──────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ──────────────────────────────────────────────────────────────────────────
 
 class _ShimmerBox extends StatelessWidget {
   final double height;

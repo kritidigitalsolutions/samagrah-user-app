@@ -72,11 +72,17 @@ class AppUrls {
 
   //========================== wallet and offers =================================
 
-  static const String coupons = "$baseUrl/user/offers/active";
+  static const String offers = "$baseUrl/user/offers/active";
   static const String wallet = "$baseUrl/user/wallet/transactions";
   static const String walletCreateOrder =
       "$baseUrl/user/wallet/topup/razorpay/order";
   static const String walletVerify = "$baseUrl/user/wallet/topup/confirm";
+
+  // ================== Coupons ===============================
+
+  static const String coupon = "$baseUrl/user/coupons";
+
+  static const String couponApply = "$baseUrl/user/coupons/apply";
 
   // video call
 

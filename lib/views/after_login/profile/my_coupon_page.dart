@@ -6,11 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:samagrah/model/response/coupon_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
+import 'package:samagrah/res/app_image.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/wallet_provider/coupon_provider.dart';
 import 'package:samagrah/views/custom_widget/empty_data_widget.dart';
-import 'package:samagrah/res/app_image.dart';
 
 class CouponPage extends ConsumerWidget {
   const CouponPage({super.key});
@@ -26,7 +26,7 @@ class CouponPage extends ConsumerWidget {
       );
     }
 
-    final offers = state.offers;
+    final offers = state.coupon;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -63,15 +63,12 @@ class CouponPage extends ConsumerWidget {
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(15, 12, 15, 24),
                   children: [
-                    // ── Header Banner ─────────────────────────────
                     _OffersBanner(count: offers.length),
                     const SizedBox(height: 16),
-
-                    // ── Coupon Cards ──────────────────────────────
                     ...offers.map(
-                      (offer) => Padding(
+                      (coupon) => Padding(
                         padding: const EdgeInsets.only(bottom: 14),
-                        child: _CouponCard(offer: offer),
+                        child: _CouponCard(coupon: coupon),
                       ),
                     ),
                   ],
@@ -132,21 +129,35 @@ class _OffersBanner extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Coupon Card
+// Coupon Card  —  uses new CouponData fields
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _CouponCard extends StatelessWidget {
-  final Offer offer;
-  const _CouponCard({required this.offer});
+  final CouponData coupon;
+  const _CouponCard({required this.coupon});
+
+  /// Days remaining until expiry (null = no expiry set)
+  int? get _daysRemaining {
+    if (coupon.expiresAt == null) return null;
+    final diff = coupon.expiresAt!.difference(DateTime.now()).inDays;
+    return diff < 0 ? 0 : diff;
+  }
+
+  /// Formatted label e.g. "20% OFF" or "₹200 OFF"
+  String get _discountLabel {
+    final v = (coupon.discountValue ?? 0).toInt();
+    return coupon.discountType == 'percent' ? '$v% OFF' : '₹$v OFF';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final daysLeft = offer.daysRemaining;
+    final daysLeft = _daysRemaining;
     final isExpiringSoon = daysLeft != null && daysLeft <= 3;
     final expired = daysLeft != null && daysLeft == 0;
+    final isActive = coupon.isActive ?? false;
 
     return Opacity(
-      opacity: expired ? 0.55 : 1.0,
+      opacity: (expired || !isActive) ? 0.55 : 1.0,
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.white,
@@ -163,13 +174,17 @@ class _CouponCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Left accent strip + discount badge ───────────────
-              _DiscountBadge(offer: offer),
+              // ── Left accent strip + discount badge ──────────────────────
+              _DiscountBadge(
+                label: _discountLabel,
+                discountType: coupon.discountType ?? '',
+                discountValue: coupon.discountValue ?? 0,
+              ),
 
-              // ── Dashed divider ────────────────────────────────────
+              // ── Dashed divider ──────────────────────────────────────────
               _DashedDivider(),
 
-              // ── Right content ─────────────────────────────────────
+              // ── Right content ───────────────────────────────────────────
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
@@ -182,13 +197,13 @@ class _CouponCard extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              offer.title,
+                              coupon.title ?? '',
                               style: text15(fontWeight: FontWeight.bold),
                             ),
                           ),
                           const SizedBox(width: 6),
                           _StatusChip(
-                            expired: expired,
+                            expired: expired || !isActive,
                             isExpiringSoon: isExpiringSoon,
                           ),
                         ],
@@ -197,42 +212,49 @@ class _CouponCard extends StatelessWidget {
                       const SizedBox(height: 5),
 
                       Text(
-                        offer.description,
+                        coupon.description ?? '',
                         style: text12(color: AppColors.grey500),
                       ),
 
                       const SizedBox(height: 10),
 
-                      // Details row
+                      // Details chips
                       Wrap(
                         spacing: 10,
                         runSpacing: 6,
                         children: [
-                          if (offer.minOrderAmount > 0)
+                          if ((coupon.minOrderAmount ?? 0) > 0)
                             _InfoChip(
                               icon: Icons.shopping_bag_outlined,
-                              label: 'Min ₹${offer.minOrderAmount.toInt()}',
+                              label:
+                                  'Min ₹${coupon.minOrderAmount?.toInt() ?? 0}',
                             ),
-                          _InfoChip(
-                            icon: Icons.savings_outlined,
-                            label: 'Max benefit ₹${offer.maxBenefit.toInt()}',
-                          ),
-                          if (offer.expiresAt != null)
+                          if ((coupon.maxDiscount ?? 0) > 0)
+                            _InfoChip(
+                              icon: Icons.savings_outlined,
+                              label:
+                                  'Max benefit ₹${coupon.maxDiscount?.toInt() ?? 0}',
+                            ),
+                          if (coupon.expiresAt != null)
                             _InfoChip(
                               icon: Icons.calendar_today_outlined,
                               label:
-                                  'Expires ${DateFormat('dd MMM yy').format(offer.expiresAt!)}',
+                                  'Expires ${DateFormat('dd MMM yy').format(coupon.expiresAt!)}',
                               urgent: isExpiringSoon && !expired,
+                            ),
+                          if ((coupon.usageLimit ?? 0) > 0)
+                            _InfoChip(
+                              icon: Icons.people_outline,
+                              label:
+                                  '${coupon.usedCount ?? 0}/${coupon.usageLimit} used',
                             ),
                         ],
                       ),
 
                       const SizedBox(height: 12),
 
-                      // Copy code button (uses offer id as code stub)
-                      _CopyCodeButton(
-                        code: offer.id.substring(0, 8).toUpperCase(),
-                      ),
+                      // Copy code button — uses coupon.code field directly
+                      _CopyCodeButton(code: coupon.code ?? ''),
                     ],
                   ),
                 ),
@@ -250,16 +272,23 @@ class _CouponCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _DiscountBadge extends StatelessWidget {
-  final Offer offer;
-  const _DiscountBadge({required this.offer});
+  final String label;
+  final String discountType;
+  final num discountValue;
+
+  const _DiscountBadge({
+    required this.label,
+    required this.discountType,
+    required this.discountValue,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 72,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.button,
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           topLeft: Radius.circular(14),
           bottomLeft: Radius.circular(14),
         ),
@@ -268,9 +297,9 @@ class _DiscountBadge extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            offer.discountType == 'percent'
-                ? '${offer.value.toInt()}%'
-                : '₹${offer.value.toInt()}',
+            discountType == 'percent'
+                ? '${discountValue.toInt()}%'
+                : '₹${discountValue.toInt()}',
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w900,
@@ -396,7 +425,7 @@ class _InfoChip extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Copy code button
+// Copy code button  —  uses coupon.code directly
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _CopyCodeButton extends StatefulWidget {
@@ -420,22 +449,19 @@ class _CopyCodeButtonState extends State<_CopyCodeButton> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _copy,
+      onTap: widget.code.isEmpty ? null : _copy,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
           color: AppColors.button.withOpacity(0.08),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: AppColors.button.withOpacity(0.3),
-            style: BorderStyle.solid,
-          ),
+          border: Border.all(color: AppColors.button.withOpacity(0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              widget.code,
+              widget.code.isEmpty ? '—' : widget.code,
               style: text13(
                 color: AppColors.button,
                 fontWeight: FontWeight.w800,
@@ -445,9 +471,9 @@ class _CopyCodeButtonState extends State<_CopyCodeButton> {
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: _copied
-                  ? Icon(
+                  ? const Icon(
                       Icons.check_circle_outline,
-                      key: const ValueKey('check'),
+                      key: ValueKey('check'),
                       size: 16,
                       color: Colors.green,
                     )
