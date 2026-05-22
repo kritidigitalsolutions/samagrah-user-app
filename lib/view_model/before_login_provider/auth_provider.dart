@@ -26,6 +26,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   Future<void> register({required UserRequestModel model}) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
+      print(model.toJson());
       final res = await _repo.register(model);
       return state.value!.copyWith(
         registerModel: res,

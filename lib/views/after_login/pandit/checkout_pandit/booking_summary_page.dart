@@ -1,10 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/request/payment_req/pandit_create_order_req_model.dart';
 import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
+import 'package:samagrah/repo/payment_repo.dart';
 import 'package:samagrah/res/app_colors.dart';
+import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
+import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/pandit_payment_provider.dart';
@@ -45,8 +50,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
     final walletAsync = ref.watch(walletProvider);
 
     // ✅ Read balance safely from async state — no side effects in build
-    final int walletBalance =
-        walletAsync.asData?.value.data?.wallet?.balance ?? 0;
+    final walletBalance =
+        walletAsync.asData?.value.data?.wallet?.balance ?? 0.0;
 
     String fullAddress = '';
     if (address != null) {
@@ -473,7 +478,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                       title: toPay > 0
                           ? 'Pay ₹${toPay.toStringAsFixed(0)} & Request Booking'
                           : 'Confirm Booking (Wallet)',
-                      onTap: () {
+                      onTap: () async {
                         final List<DateTimeSlot> slots = dateTimeList.map((d) {
                           return DateTimeSlot(
                             date: d["date"] ?? "",
@@ -497,13 +502,45 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           ),
                           onlineDetails: onlineDetails,
                           price: toPay,
+                          walletAmount: deduction,
                         );
+                        if (toPay > 0) {
+                          ref
+                              .read(panditPaymentBookingProvider.notifier)
+                              .createOrderAndPay(
+                                context: context,
+                                model: model,
+                              );
+                        } else {
+                          final _repo = PaymentRepo();
 
-                        ref
-                            .read(panditPaymentBookingProvider.notifier)
-                            .createOrderAndPay(context: context, model: model);
+                          final response = await _repo.panditCreateOrder(model);
+
+                          debugPrint(
+                            "📥 Full Response: ${jsonEncode(response)}",
+                          );
+
+                          /// ✅ VALIDATION
+                          if (response["success"] != true ||
+                              response["data"] == null) {
+                            AppSnackbar.show(
+                              context,
+                              message: 'Payment Failed: Something went wrong',
+                              type: SnackBarType.error,
+                            );
+                            return;
+                          }
+                          AppSnackbar.show(
+                            context,
+                            message: 'Payment Successful!',
+                            type: SnackBarType.success,
+                          );
+
+                          // Show success dialog
+                          Navigator.pushNamed(context, AppRoutes.panditPayment);
+                        }
                       },
-                      color: AppColors.success,
+                      color: AppColors.button,
                       textStyle: text15(
                         color: AppColors.white,
                         fontWeight: FontWeight.bold,

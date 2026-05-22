@@ -10,6 +10,7 @@ import 'package:samagrah/utils/service/helper_methods.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
+import 'package:samagrah/views/after_login/customize_kit/kit_order_summary_page.dart';
 import 'package:samagrah/views/global_widgets/product_details_bottom_sheet.dart';
 
 class FestivalKitDetails extends ConsumerStatefulWidget {
@@ -452,13 +453,15 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
             children: [
               AppButton(
                 title: isLoading ? "Creating Kit..." : "Buy Now",
-                isLoading: isLoading,
                 onTap: isLoading
                     ? null
                     : () => Navigator.pushNamed(
                         context,
                         AppRoutes.kitOrderSummary,
-                        arguments: kit,
+                        arguments: KitOrderArgs(
+                          kit: kit,
+                          isCustomized: false,
+                        ), // ✅
                       ),
               ),
               const SizedBox(height: 10),
@@ -778,7 +781,10 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                 Navigator.pushNamed(
                   context,
                   AppRoutes.kitOrderSummary,
-                  arguments: customizedKit,
+                  arguments: KitOrderArgs(
+                    kit: customizedKit,
+                    isCustomized: true,
+                  ), // ✅
                 );
               },
             );
@@ -810,7 +816,7 @@ class _CategoryProductsSheet extends ConsumerWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -820,7 +826,7 @@ class _CategoryProductsSheet extends ConsumerWidget {
             height: 4,
             width: 40,
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
+              color: AppColors.grey300,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -963,7 +969,7 @@ class _CategoryProductsSheet extends ConsumerWidget {
       onTap: () => _openProductDetail(context, product.id ?? ''),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 5)],
         ),
@@ -998,10 +1004,9 @@ class _CategoryProductsSheet extends ConsumerWidget {
                     children: [
                       Text(
                         '₹${product.price}',
-                        style: const TextStyle(
-                          fontSize: 12,
+                        style: text12(
                           fontWeight: FontWeight.bold,
-                          color: Colors.red,
+                          color: AppColors.error,
                         ),
                       ),
                       if ((product.discountPercent ?? 0) > 0) ...[
@@ -1514,7 +1519,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
     final isAdded = isInLocalKit || cartQty > 0;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 5)],
       ),

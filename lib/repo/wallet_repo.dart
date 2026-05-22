@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:samagrah/data/network/network_api_service.dart';
-import 'package:samagrah/model/response/coupon_res_model.dart';
 import 'package:samagrah/model/response/wallet_res/offers_res_model.dart';
 import 'package:samagrah/model/response/wallet_res/wallet_res_model.dart';
 import 'package:samagrah/res/app_urls.dart';

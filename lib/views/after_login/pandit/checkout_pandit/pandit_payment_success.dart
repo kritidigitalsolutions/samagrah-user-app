@@ -9,6 +9,8 @@ import 'package:samagrah/view_model/after_login_provider/pandit_provider/booking
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/pandit_payment_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/wallet_provider/coupon_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/wallet_provider/wallet_provider.dart';
 import 'package:samagrah/views/after_login/pandit/checkout_pandit/booking_confirmed_page.dart';
 
 class PaymentSuccessScreen extends ConsumerStatefulWidget {
@@ -62,6 +64,8 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
         ref.invalidate(selectedServiceProvider);
         ref.invalidate(serviceSelected);
         ref.invalidate(panditBookingProvider);
+        ref.invalidate(walletProvider);
+        ref.invalidate(couponProvider);
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => MyHomeScreen(index: 0)),
@@ -160,6 +164,8 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
                           ref.invalidate(selectedServiceProvider);
                           ref.invalidate(serviceSelected);
                           ref.invalidate(panditBookingProvider);
+                          ref.invalidate(walletProvider);
+                          ref.invalidate(couponProvider);
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(

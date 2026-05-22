@@ -8,6 +8,69 @@ import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
 
+// ─────────────────────────────────────────────
+// Filter State Model
+// ─────────────────────────────────────────────
+
+class PanditFilterState {
+  final String? serviceType; // 'home' | 'online' | 'temple' | null
+  final String? language;
+  final int? minExperience;
+  final double? minRating;
+
+  const PanditFilterState({
+    this.serviceType,
+    this.language,
+    this.minExperience,
+    this.minRating,
+  });
+
+  bool get hasAnyFilter =>
+      serviceType != null ||
+      language != null ||
+      minExperience != null ||
+      minRating != null;
+
+  PanditFilterState copyWith({
+    Object? serviceType = _sentinel,
+    Object? language = _sentinel,
+    Object? minExperience = _sentinel,
+    Object? minRating = _sentinel,
+  }) {
+    return PanditFilterState(
+      serviceType: serviceType == _sentinel
+          ? this.serviceType
+          : serviceType as String?,
+      language: language == _sentinel ? this.language : language as String?,
+      minExperience: minExperience == _sentinel
+          ? this.minExperience
+          : minExperience as int?,
+      minRating: minRating == _sentinel ? this.minRating : minRating as double?,
+    );
+  }
+}
+
+const _sentinel = Object();
+
+// Quick filter config — shown as horizontal chips below search bar
+class _QuickFilter {
+  final String label;
+  final IconData icon;
+  final String type; // matches serviceType values
+
+  const _QuickFilter(this.label, this.icon, this.type);
+}
+
+const _quickFilters = [
+  _QuickFilter('Home Visit', Icons.home_outlined, 'home'),
+  _QuickFilter('Online', Icons.video_call_outlined, 'online'),
+  _QuickFilter('Temple', Icons.temple_hindu_outlined, 'temple'),
+];
+
+// ─────────────────────────────────────────────
+// BookPanditPage
+// ─────────────────────────────────────────────
+
 class BookPanditPage extends ConsumerStatefulWidget {
   const BookPanditPage({super.key});
 
@@ -16,29 +79,339 @@ class BookPanditPage extends ConsumerStatefulWidget {
 }
 
 class _BookPanditPageState extends ConsumerState<BookPanditPage> {
-  int selectedOption = 2;
-  Map<String, dynamic> assignedPanditBookingDetails = {};
-
-  // All controllers at state level — disposed safely in dispose()
+  PanditFilterState _filters = const PanditFilterState();
   final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _notesController = TextEditingController();
+
+  // COMMENTED: assign best pandit option
+  // int selectedOption = 2;
+
+  // COMMENTED: controllers for assign pandit sheet — kept for future use
+  // final TextEditingController _nameController = TextEditingController();
+  // final TextEditingController _phoneController = TextEditingController();
+  // final TextEditingController _addressController = TextEditingController();
+  // final TextEditingController _notesController = TextEditingController();
+
+  // COMMENTED: assign pandit booking details map
+  // Map<String, dynamic> assignedPanditBookingDetails = {};
 
   @override
   void dispose() {
     _searchController.dispose();
-    _nameController.dispose();
-    _phoneController.dispose();
-    _addressController.dispose();
-    _notesController.dispose();
+    // COMMENTED: dispose assign pandit controllers
+    // _nameController.dispose();
+    // _phoneController.dispose();
+    // _addressController.dispose();
+    // _notesController.dispose();
     super.dispose();
+  }
+
+  List<PanditData> _applyFilters(List<PanditData> source) {
+    return source.where((p) {
+      if (_filters.serviceType != null) {
+        final st = p.serviceTypes;
+        bool matches = false;
+        if (_filters.serviceType == 'home') matches = st?.homeVisit == true;
+        if (_filters.serviceType == 'online') matches = st?.onlinePooja == true;
+        if (_filters.serviceType == 'temple') matches = st?.atTemple == true;
+        if (!matches) return false;
+      }
+      if (_filters.language != null) {
+        final hasLang = p.languagesSpoken.any(
+          (l) => l.toLowerCase().contains(_filters.language!.toLowerCase()),
+        );
+        if (!hasLang) return false;
+      }
+      if (_filters.minExperience != null &&
+          (p.yearsOfExperience ?? 0) < _filters.minExperience!)
+        return false;
+      if (_filters.minRating != null &&
+          (p.ratingAverage ?? 0) < _filters.minRating!)
+        return false;
+      return true;
+    }).toList();
+  }
+
+  // ── Advanced Filter Bottom Sheet ──
+  void _openFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        PanditFilterState draft = _filters;
+        return StatefulBuilder(
+          builder: (ctx, setSheet) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.80,
+              ),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+                left: 20,
+                right: 20,
+                top: 8,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Drag handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        color: AppColors.grey300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+
+                  // Header row
+                  Row(
+                    children: [
+                      Text(
+                        'Advanced Filters',
+                        style: text18(fontWeight: FontWeight.bold),
+                      ),
+                      const Spacer(),
+                      if (draft.hasAnyFilter)
+                        TextButton(
+                          onPressed: () =>
+                              setSheet(() => draft = const PanditFilterState()),
+                          child: Text(
+                            'Clear All',
+                            style: text13(color: AppColors.error),
+                          ),
+                        ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        onPressed: () => Navigator.pop(sheetCtx),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ── Service Type ──
+                          _sheetSectionLabel('Service Type'),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              for (final qf in _quickFilters) ...[
+                                Expanded(
+                                  child: _serviceTypeCard(
+                                    label: qf.label,
+                                    icon: qf.icon,
+                                    selected: draft.serviceType == qf.type,
+                                    onTap: () => setSheet(() {
+                                      draft = draft.copyWith(
+                                        serviceType:
+                                            draft.serviceType == qf.type
+                                            ? null
+                                            : qf.type,
+                                      );
+                                    }),
+                                  ),
+                                ),
+                                if (qf != _quickFilters.last)
+                                  const SizedBox(width: 8),
+                              ],
+                            ],
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // ── Language ──
+                          _sheetSectionLabel('Language'),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              for (final lang in [
+                                'Hindi',
+                                'English',
+                                'Sanskrit',
+                                'Bengali',
+                                'Tamil',
+                              ])
+                                _sheetChip(
+                                  label: lang,
+                                  selected: draft.language == lang,
+                                  onTap: () => setSheet(() {
+                                    draft = draft.copyWith(
+                                      language: draft.language == lang
+                                          ? null
+                                          : lang,
+                                    );
+                                  }),
+                                ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // ── Minimum Rating ──
+                          _sheetSectionLabel('Minimum Rating'),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              for (final r in [3.0, 3.5, 4.0, 4.5]) ...[
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () => setSheet(() {
+                                      draft = draft.copyWith(
+                                        minRating: draft.minRating == r
+                                            ? null
+                                            : r,
+                                      );
+                                    }),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 160,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: draft.minRating == r
+                                            ? AppColors.button
+                                            : AppColors.white,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: draft.minRating == r
+                                              ? AppColors.button
+                                              : AppColors.grey300,
+                                        ),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Icon(
+                                            Icons.star_rounded,
+                                            size: 16,
+                                            color: draft.minRating == r
+                                                ? AppColors.white
+                                                : AppColors.warning,
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            '$r+',
+                                            style: text12(
+                                              color: draft.minRating == r
+                                                  ? AppColors.white
+                                                  : AppColors.grey700,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (r != 4.5) const SizedBox(width: 8),
+                              ],
+                            ],
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // ── Experience ──
+                          Row(
+                            children: [
+                              _sheetSectionLabel('Min. Experience'),
+                              const Spacer(),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.button.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  draft.minExperience == null ||
+                                          draft.minExperience == 0
+                                      ? 'Any'
+                                      : '${draft.minExperience}+ yrs',
+                                  style: text12(
+                                    color: AppColors.button,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SliderTheme(
+                            data: SliderTheme.of(ctx).copyWith(
+                              trackHeight: 4,
+                              thumbShape: const RoundSliderThumbShape(
+                                enabledThumbRadius: 8,
+                              ),
+                              overlayShape: const RoundSliderOverlayShape(
+                                overlayRadius: 18,
+                              ),
+                              activeTrackColor: AppColors.button,
+                              inactiveTrackColor: AppColors.button.withOpacity(
+                                0.15,
+                              ),
+                              thumbColor: AppColors.button,
+                              overlayColor: AppColors.button.withOpacity(0.12),
+                            ),
+                            child: Slider(
+                              value: (draft.minExperience ?? 0).toDouble(),
+                              min: 0,
+                              max: 30,
+                              divisions: 6,
+                              onChanged: (val) => setSheet(() {
+                                draft = draft.copyWith(
+                                  minExperience: val == 0 ? null : val.toInt(),
+                                );
+                              }),
+                            ),
+                          ),
+
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  SafeArea(
+                    child: AppButton(
+                      title: 'Apply Filters',
+                      onTap: () {
+                        setState(() => _filters = draft);
+                        Navigator.pop(sheetCtx);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final panditAsync = ref.watch(panditProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
@@ -66,286 +439,391 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header Section
+            // ══════════════════════════════════
+            // Search + Filter icon bar
+            // ══════════════════════════════════
             Container(
-              decoration: BoxDecoration(color: AppColors.headerCard),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              color: AppColors.headerCard,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Row(
                 children: [
-                  /// 📍 Location
-                  GestureDetector(
-                    onTap: () {
-                      _showLocationBottomSheet(context);
-                    },
-                    child: Row(
-                      children: [
-                        const Icon(Icons.location_on, size: 16),
-                        const SizedBox(width: 4),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  'Location',
-                                  style: text11(
-                                    color: AppColors.grey800,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const Icon(Icons.keyboard_arrow_down, size: 14),
-                              ],
-                            ),
-                            Text(
-                              'Agra, UP',
-                              style: text10(color: AppColors.grey700),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(width: 6),
-
-                  /// 🔍 Search
+                  // COMMENTED: Location button — kept for future use
+                  // GestureDetector(
+                  //   onTap: () => _showLocationBottomSheet(context),
+                  //   child: Row(children: [ ... ]),
+                  // ),
+                  // const SizedBox(width: 6),
                   Expanded(
-                    child: SizedBox(
-                      height: 40,
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: (value) {
-                          ref.read(panditProvider.notifier).searchPandit(value);
-                        },
-                        decoration: InputDecoration(
-                          hintText: "Search",
-                          hintStyle: text13(),
-                          prefixIcon: const Icon(Icons.search, size: 18),
-                          suffixIcon: GestureDetector(
-                            onTap: () {
-                              _searchController.clear();
-                              ref
-                                  .read(panditProvider.notifier)
-                                  .searchPandit('');
-                            },
-                            child: const Icon(Icons.close, size: 18),
-                          ),
-                          filled: true,
-                          fillColor: AppColors.warning.withAlpha(50),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(width: 6),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Selection Options
-            Expanded(
-              child: ListView(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        _buildOptionCard(
-                          1,
-                          'Assign Best Available Pandit',
-                          'We assign the best pandit available',
-                          AppColors.button,
-                          true,
-                        ),
-                        if (selectedOption == 1) ...[
-                          const SizedBox(height: 15),
-                          AppButton(
-                            title: "Next",
-                            onTap: () {
-                              _showAssignPanditBottomSheet();
-                            },
+                    child: Container(
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
                           ),
                         ],
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        textAlignVertical: TextAlignVertical.center,
+                        onChanged: (value) => ref
+                            .read(panditProvider.notifier)
+                            .searchPandit(value),
+                        style: text14(),
+                        decoration: InputDecoration(
+                          hintText: 'Search by name, city, language...',
+                          hintStyle: text13(color: AppColors.grey500),
 
-                        const SizedBox(height: 15),
-                        _buildOptionCard(
-                          2,
-                          'Choose Pandit',
-                          'Choose from our best pandits and experience',
-                          AppColors.button,
-                          false,
+                          prefixIcon: Icon(
+                            Icons.search_rounded,
+                            size: 20,
+                            color: AppColors.grey600,
+                          ),
+
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? GestureDetector(
+                                  onTap: () {
+                                    _searchController.clear();
+                                    ref
+                                        .read(panditProvider.notifier)
+                                        .searchPandit('');
+                                    setState(() {});
+                                  },
+                                  child: Icon(
+                                    Icons.close_rounded,
+                                    size: 18,
+                                    color: AppColors.grey500,
+                                  ),
+                                )
+                              : null,
+
+                          border: InputBorder.none,
+
+                          isDense: true,
+
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 12,
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // Pandits Grid
-                  panditAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (error, stackTrace) =>
-                        const Text("Something went wrong"),
-                    data: (data) {
-                      final pandits = data.searchResults.isNotEmpty
-                          ? data.searchResults
-                          : data.pandit;
-                      if (pandits.isEmpty) {
-                        return const Text("Pandit Not found");
-                      }
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 15,
-                                mainAxisSpacing: 15,
-                                childAspectRatio: 0.75,
-                              ),
-                          itemCount: pandits.length,
-                          itemBuilder: (context, index) {
-                            final pandit = pandits[index];
-                            return _buildPanditCard(pandit);
-                          },
-                        ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      'View More',
-                      style: text14(
-                        color: AppColors.button,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
+                  const SizedBox(width: 10),
 
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOptionCard(
-    int index,
-    String title,
-    String description,
-    Color color,
-    bool isRec,
-  ) {
-    final isSelected = selectedOption == index;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedOption = index;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? color : Colors.transparent,
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected ? color : AppColors.grey400,
-                  width: 2,
-                ),
-                color: isSelected ? color : Colors.transparent,
-              ),
-              child: isSelected
-                  ? const Icon(Icons.circle, size: 10, color: AppColors.white)
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  isRec
-                      ? Container(
-                          width: 130,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
+                  // Advanced filter button
+                  GestureDetector(
+                    onTap: _openFilterSheet,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: _filters.hasAnyFilter
+                            ? AppColors.button
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
                           ),
-                          decoration: BoxDecoration(
-                            color: AppColors.success,
-                            borderRadius: BorderRadius.circular(20),
+                        ],
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(
+                            Icons.tune_rounded,
+                            size: 20,
+                            color: _filters.hasAnyFilter
+                                ? Colors.white
+                                : AppColors.grey700,
                           ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.star,
-                                size: 15,
-                                color: AppColors.warningLight,
+                          // Red dot when filters active
+                          if (_filters.hasAnyFilter)
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Container(
+                                width: 7,
+                                height: 7,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
-                              const SizedBox(width: 5),
-                              Text(
-                                "Recommended",
-                                style: text10(color: AppColors.white),
-                              ),
-                            ],
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                  Text(
-                    title,
-                    style: text14(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.black87,
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    description,
-                    style: text11(
-                      color: AppColors.grey600,
-                    ).copyWith(height: 1.3),
-                  ),
                 ],
+              ),
+            ),
+
+            // ══════════════════════════════════
+            // Quick filter chips row (under search)
+            // ══════════════════════════════════
+            Container(
+              color: AppColors.headerCard,
+              padding: const EdgeInsets.only(left: 12, right: 12, bottom: 10),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    // "All" chip
+                    _quickChip(
+                      label: 'All',
+                      icon: Icons.apps_rounded,
+                      selected:
+                          _filters.serviceType == null &&
+                          _filters.minRating == null &&
+                          _filters.language == null &&
+                          _filters.minExperience == null,
+                      onTap: () =>
+                          setState(() => _filters = const PanditFilterState()),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // Service type quick chips
+                    for (final qf in _quickFilters) ...[
+                      _quickChip(
+                        label: qf.label,
+                        icon: qf.icon,
+                        selected: _filters.serviceType == qf.type,
+                        onTap: () => setState(() {
+                          _filters = _filters.copyWith(
+                            serviceType: _filters.serviceType == qf.type
+                                ? null
+                                : qf.type,
+                          );
+                        }),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+
+                    // Rating quick chip
+                    _quickChip(
+                      label: '4★ & above',
+                      icon: Icons.star_rounded,
+                      selected: _filters.minRating == 4.0,
+                      onTap: () => setState(() {
+                        _filters = _filters.copyWith(
+                          minRating: _filters.minRating == 4.0 ? null : 4.0,
+                        );
+                      }),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // Experience quick chip
+                    _quickChip(
+                      label: '5+ yrs exp',
+                      icon: Icons.workspace_premium_outlined,
+                      selected: _filters.minExperience == 5,
+                      onTap: () => setState(() {
+                        _filters = _filters.copyWith(
+                          minExperience: _filters.minExperience == 5 ? null : 5,
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ══════════════════════════════════
+            // Active filter tags (when advanced filters set)
+            // ══════════════════════════════════
+            if (_filters.hasAnyFilter)
+              Container(
+                color: AppColors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            if (_filters.language != null)
+                              _activeTag(
+                                _filters.language!,
+                                onRemove: () => setState(() {
+                                  _filters = _filters.copyWith(language: null);
+                                }),
+                              ),
+                            if (_filters.minExperience != null &&
+                                _filters.minExperience != 5)
+                              _activeTag(
+                                '${_filters.minExperience}+ yrs',
+                                onRemove: () => setState(() {
+                                  _filters = _filters.copyWith(
+                                    minExperience: null,
+                                  );
+                                }),
+                              ),
+                            if (_filters.minRating != null &&
+                                _filters.minRating != 4.0)
+                              _activeTag(
+                                '${_filters.minRating}★+',
+                                onRemove: () => setState(() {
+                                  _filters = _filters.copyWith(minRating: null);
+                                }),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () =>
+                          setState(() => _filters = const PanditFilterState()),
+                      child: Text(
+                        'Clear all',
+                        style: text12(color: AppColors.error),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // ══════════════════════════════════
+            // Pandit Grid
+            // ══════════════════════════════════
+            Expanded(
+              child: panditAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) =>
+                    const Center(child: Text('Something went wrong')),
+                data: (data) {
+                  final base = data.searchResults.isNotEmpty
+                      ? data.searchResults
+                      : data.pandit;
+                  final pandits = _applyFilters(base);
+
+                  if (pandits.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: AppColors.grey100,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.search_off_rounded,
+                              size: 40,
+                              color: AppColors.grey400,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No pandits found',
+                            style: text16(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Try adjusting your filters',
+                            style: text13(color: AppColors.grey500),
+                          ),
+                          const SizedBox(height: 16),
+                          TextButton(
+                            onPressed: () => setState(
+                              () => _filters = const PanditFilterState(),
+                            ),
+                            child: Text(
+                              'Clear filters',
+                              style: text13(color: AppColors.button),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+                    children: [
+                      // Results count row
+                      Row(
+                        children: [
+                          Text(
+                            '${pandits.length} Pandit${pandits.length == 1 ? '' : 's'} found',
+                            style: text13(
+                              color: AppColors.grey600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const Spacer(),
+                          if (_filters.hasAnyFilter)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.button.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                'Filtered',
+                                style: text11(
+                                  color: AppColors.button,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // COMMENTED: option cards — kept for future use
+                      // _buildOptionCard(1, 'Assign Best Available Pandit', ...)
+                      // _buildOptionCard(2, 'Choose Pandit', ...)
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 14,
+                              mainAxisSpacing: 14,
+                              childAspectRatio: 0.72,
+                            ),
+                        itemCount: pandits.length,
+                        itemBuilder: (context, index) =>
+                            _buildPanditCard(pandits[index]),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      TextButton(
+                        onPressed: () {},
+                        child: Text(
+                          'View More',
+                          style: text14(
+                            color: AppColors.button,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -354,28 +832,189 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
     );
   }
 
+  // ── Quick chip (horizontal row under search) ──
+  Widget _quickChip({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.button : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? AppColors.button : AppColors.grey300,
+            width: 1,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppColors.button.withOpacity(0.25),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 13,
+              color: selected ? Colors.white : AppColors.grey600,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: text12(
+                color: selected ? Colors.white : AppColors.grey700,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Active tag (advanced filter applied) ──
+  Widget _activeTag(String label, {required VoidCallback onRemove}) {
+    return Container(
+      margin: const EdgeInsets.only(right: 6),
+      padding: const EdgeInsets.only(left: 10, right: 6, top: 4, bottom: 4),
+      decoration: BoxDecoration(
+        color: AppColors.button.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.button.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: text12(color: AppColors.button, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: onRemove,
+            child: Icon(Icons.close_rounded, size: 14, color: AppColors.button),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Sheet helpers ──
+
+  Widget _sheetSectionLabel(String label) =>
+      Text(label, style: text14(fontWeight: FontWeight.w600));
+
+  Widget _serviceTypeCard({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.button : AppColors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? AppColors.button : AppColors.grey300,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppColors.button.withOpacity(0.2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : [],
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 22,
+              color: selected ? Colors.white : AppColors.button,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: text11(
+                color: selected ? Colors.white : AppColors.grey700,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sheetChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.button : AppColors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? AppColors.button : AppColors.grey300,
+          ),
+        ),
+        child: Text(
+          label,
+          style: text13(
+            color: selected ? Colors.white : AppColors.grey700,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Pandit Card ──
   Widget _buildPanditCard(PanditData pandit) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         child: Stack(
           children: [
-            // Background Image
+            // Background image
             Positioned.fill(
               child: CustomCachedImage(imageUrl: pandit.profileImage ?? ''),
             ),
 
-            // Gradient Overlay
+            // Gradient overlay
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
@@ -384,697 +1023,247 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      AppColors.black.withOpacity(0.7),
+                      Colors.black.withOpacity(0.35),
+                      Colors.black.withOpacity(0.78),
                     ],
+                    stops: const [0.35, 0.6, 1.0],
                   ),
                 ),
               ),
             ),
 
-            // Content
+            // Verified badge (top-right)
+            if (pandit.isVerified == true)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade600,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.verified_rounded,
+                        size: 10,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 3),
+                      Text('Verified', style: text10(color: Colors.white)),
+                    ],
+                  ),
+                ),
+              ),
+
+            // Content (bottom)
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       pandit.fullName ?? 'N/A',
                       style: text14(
-                        color: AppColors.white,
+                        color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
                         const Icon(
-                          Icons.star,
-                          color: AppColors.warning,
-                          size: 14,
+                          Icons.star_rounded,
+                          color: Colors.amber,
+                          size: 13,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 3),
                         Text(
-                          pandit.ratingAverage.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
+                          pandit.ratingAverage?.toStringAsFixed(1) ?? '—',
+                          style: text11(color: Colors.white),
+                        ),
+                        const SizedBox(width: 6),
+                        if ((pandit.yearsOfExperience ?? 0) > 0) ...[
+                          const Icon(
+                            Icons.circle,
+                            size: 3,
+                            color: Colors.white38,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    AppButton(
-                      height: 30,
-                      textStyle: text12(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.white,
-                      ),
-                      title: "View Details",
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.panditDetails,
-                          arguments: pandit,
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showAssignPanditBottomSheet() async {
-    // ✅ Clear previous values — no local controllers created here
-    _nameController.clear();
-    _phoneController.clear();
-    _addressController.clear();
-    _notesController.clear();
-
-    int currentStep = 0;
-    String? selectedService;
-    DateTime? selectedDate;
-    TimeOfDay? startTime;
-    TimeOfDay? endTime;
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-            final selectedDateText = selectedDate == null
-                ? 'Pick date'
-                : '${selectedDate!.day} ${_monthName(selectedDate!.month)} ${selectedDate!.year}';
-
-            return Padding(
-              padding: EdgeInsets.only(bottom: bottomInset),
-              child: Container(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.86,
-                ),
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Assign Pandit',
-                            style: text18(fontWeight: FontWeight.bold),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${pandit.yearsOfExperience}y',
+                            style: text11(color: Colors.white70),
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(sheetContext),
-                        ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        _buildSheetStep(1, currentStep >= 0),
-                        _buildSheetLine(currentStep >= 1),
-                        _buildSheetStep(2, currentStep >= 1),
-                        _buildSheetLine(currentStep >= 2),
-                        _buildSheetStep(3, currentStep >= 2),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-                    Flexible(
-                      child: SingleChildScrollView(
-                        child: currentStep == 0
-                            ? _buildServiceStep(
-                                selectedService: selectedService,
-                                onSelect: (value) {
-                                  setModalState(() {
-                                    selectedService = value;
-                                  });
-                                },
-                              )
-                            : currentStep == 1
-                            ? _buildDateTimeStep(
-                                context: sheetContext, // ✅ use sheetContext
-                                selectedDateText: selectedDateText,
-                                startTime: startTime == null
-                                    ? 'Start time'
-                                    : _formatTime(startTime!),
-                                endTime: endTime == null
-                                    ? 'End time'
-                                    : _formatTime(endTime!),
-                                onPickDate: () async {
-                                  final date = await showDatePicker(
-                                    context: sheetContext, // ✅
-                                    initialDate: selectedDate ?? DateTime.now(),
-                                    firstDate: DateTime.now(),
-                                    lastDate: DateTime(2100),
-                                  );
-                                  if (date != null) {
-                                    setModalState(() {
-                                      selectedDate = date;
-                                    });
-                                  }
-                                },
-                                onPickStartTime: () async {
-                                  final time = await showTimePicker(
-                                    context: sheetContext, // ✅
-                                    initialTime: startTime ?? TimeOfDay.now(),
-                                  );
-                                  if (time != null) {
-                                    setModalState(() {
-                                      startTime = time;
-                                    });
-                                  }
-                                },
-                                onPickEndTime: () async {
-                                  final time = await showTimePicker(
-                                    context: sheetContext, // ✅
-                                    initialTime:
-                                        endTime ?? startTime ?? TimeOfDay.now(),
-                                  );
-                                  if (time != null) {
-                                    setModalState(() {
-                                      endTime = time;
-                                    });
-                                  }
-                                },
-                              )
-                            : _buildOtherDetailsStep(
-                                nameController: _nameController,
-                                phoneController: _phoneController,
-                                addressController: _addressController,
-                                notesController: _notesController,
-                              ),
+                    AppButton(
+                      height: 28,
+                      textStyle: text11(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.white,
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    SafeArea(
-                      child: Row(
-                        children: [
-                          if (currentStep > 0) ...[
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () {
-                                  setModalState(() {
-                                    currentStep--;
-                                  });
-                                },
-                                child: Text(
-                                  'Back',
-                                  style: text14(color: AppColors.button),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                          ],
-                          Expanded(
-                            child: AppButton(
-                              title: currentStep == 2 ? 'Save' : 'Next',
-                              onTap: () {
-                                if (currentStep == 0 &&
-                                    selectedService == null) {
-                                  _showMessage('Please select service');
-                                  return;
-                                }
-
-                                if (currentStep == 1 &&
-                                    (selectedDate == null ||
-                                        startTime == null ||
-                                        endTime == null)) {
-                                  _showMessage('Please select date and time');
-                                  return;
-                                }
-
-                                if (currentStep < 2) {
-                                  setModalState(() {
-                                    currentStep++;
-                                  });
-                                  return;
-                                }
-
-                                // ✅ Build details using state-level controllers
-                                final details = {
-                                  'booking_type':
-                                      'assign_best_available_pandit',
-                                  'service': selectedService,
-                                  'date': selectedDate == null
-                                      ? ''
-                                      : '${selectedDate!.year.toString().padLeft(4, '0')}-'
-                                            '${selectedDate!.month.toString().padLeft(2, '0')}-'
-                                            '${selectedDate!.day.toString().padLeft(2, '0')}',
-                                  'time': (startTime == null || endTime == null)
-                                      ? ''
-                                      : '${_formatTime(startTime!)} - ${_formatTime(endTime!)}',
-                                  'devotee_name': _nameController.text.trim(),
-                                  'phone': _phoneController.text.trim(),
-                                  'address': _addressController.text.trim(),
-                                  'notes': _notesController.text.trim(),
-                                };
-
-                                setState(() {
-                                  assignedPanditBookingDetails = details;
-                                });
-
-                                Navigator.pop(sheetContext);
-                                _showMessage('Pandit booking details saved');
-                              },
-                            ),
-                          ),
-                        ],
+                      title: 'View Details',
+                      onTap: () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.panditDetails,
+                        arguments: pandit,
                       ),
                     ),
                   ],
                 ),
               ),
-            );
-          },
-        );
-      },
-    );
-    // ✅ No dispose() calls here — controllers live at state level
-  }
-
-  Widget _buildServiceStep({
-    required String? selectedService,
-    required ValueChanged<String> onSelect,
-  }) {
-    final services = [
-      {
-        'title': 'Home Pooja',
-        'type': 'home',
-        'description': 'Pandit ji will visit your home.',
-        'icon': Icons.home_outlined,
-      },
-      {
-        'title': 'Online Pooja',
-        'type': 'online',
-        'description': 'Pooja will happen on a video call.',
-        'icon': Icons.video_call_outlined,
-      },
-      {
-        'title': 'Temple Pooja',
-        'type': 'temple',
-        'description': 'Pooja will be performed at temple.',
-        'icon': Icons.temple_hindu_outlined,
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Select Service', style: text16(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 12),
-        ...services.map((service) {
-          final type = service['type'] as String;
-          final isSelected = selectedService == type;
-
-          return GestureDetector(
-            onTap: () => onSelect(type),
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isSelected ? AppColors.button : AppColors.grey200,
-                  width: 1.5,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(service['icon'] as IconData, color: AppColors.button),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          service['title'] as String,
-                          style: text15(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          service['description'] as String,
-                          style: text12(color: AppColors.grey600),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    isSelected
-                        ? Icons.radio_button_checked
-                        : Icons.radio_button_off,
-                    color: AppColors.button,
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildDateTimeStep({
-    required BuildContext context,
-    required String selectedDateText,
-    required String startTime,
-    required String endTime,
-    required VoidCallback onPickDate,
-    required VoidCallback onPickStartTime,
-    required VoidCallback onPickEndTime,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Pick Date & Time', style: text16(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 12),
-        _buildPickerTile(
-          icon: Icons.calendar_today_outlined,
-          title: 'Date',
-          value: selectedDateText,
-          onTap: onPickDate,
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildPickerTile(
-                icon: Icons.access_time,
-                title: 'Start',
-                value: startTime,
-                onTap: onPickStartTime,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildPickerTile(
-                icon: Icons.access_time_filled,
-                title: 'End',
-                value: endTime,
-                onTap: onPickEndTime,
-              ),
             ),
           ],
         ),
-      ],
-    );
-  }
-
-  Widget _buildOtherDetailsStep({
-    required TextEditingController nameController,
-    required TextEditingController phoneController,
-    required TextEditingController addressController,
-    required TextEditingController notesController,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Other Details', style: text16(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 12),
-        _buildDetailField(
-          controller: nameController,
-          label: 'Devotee name',
-          icon: Icons.person_outline,
-        ),
-        _buildDetailField(
-          controller: phoneController,
-          label: 'Phone number',
-          icon: Icons.phone_outlined,
-          keyboardType: TextInputType.phone,
-        ),
-        _buildDetailField(
-          controller: addressController,
-          label: 'Address',
-          icon: Icons.location_on_outlined,
-          maxLines: 2,
-        ),
-        _buildDetailField(
-          controller: notesController,
-          label: 'Notes',
-          icon: Icons.notes_outlined,
-          maxLines: 2,
-        ),
-      ],
-    );
-  }
-
-  // ✅ GestureDetector instead of InkWell — avoids focus/highlight lifecycle crash
-  Widget _buildPickerTile({
-    required IconData icon,
-    required String title,
-    required String value,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.grey200),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.button),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: text12(color: AppColors.grey600)),
-                  const SizedBox(height: 4),
-                  Text(value, style: text15(fontWeight: FontWeight.w600)),
-                ],
-              ),
-            ),
-            const Icon(Icons.keyboard_arrow_right),
-          ],
-        ),
       ),
     );
   }
 
-  Widget _buildDetailField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    TextInputType? keyboardType,
-    int maxLines = 1,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        maxLines: maxLines,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: AppColors.button),
-          filled: true,
-          fillColor: AppColors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppColors.grey200),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppColors.grey200),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.button),
-          ),
-        ),
-      ),
-    );
-  }
+  // COMMENTED: _buildOptionCard — kept for future use
+  // Widget _buildOptionCard(int index, String title, String description,
+  //     Color color, bool isRec) { ... }
 
-  Widget _buildSheetStep(int step, bool isActive) {
-    return Container(
-      width: 28,
-      height: 28,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isActive ? AppColors.button : AppColors.grey300,
-      ),
-      child: Text(
-        step.toString(),
-        style: text12(
-          color: isActive ? AppColors.white : AppColors.grey700,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
+  // COMMENTED: _showAssignPanditBottomSheet — kept for future use
+  // Future<void> _showAssignPanditBottomSheet() async { ... }
 
-  Widget _buildSheetLine(bool isActive) {
-    return Expanded(
-      child: Container(
-        height: 2,
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        color: isActive ? AppColors.button : AppColors.grey300,
-      ),
-    );
-  }
+  // COMMENTED: _buildServiceStep — kept for future use
+  // Widget _buildServiceStep({...}) { ... }
 
-  String _formatTime(TimeOfDay time) {
-    final now = DateTime.now();
-    final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
-    return TimeOfDay.fromDateTime(dt).format(context);
-  }
+  // COMMENTED: _buildDateTimeStep — kept for future use
+  // Widget _buildDateTimeStep({...}) { ... }
 
-  String _monthName(int month) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return months[month - 1];
-  }
+  // COMMENTED: _buildOtherDetailsStep — kept for future use
+  // Widget _buildOtherDetailsStep({...}) { ... }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
-    );
-  }
+  // COMMENTED: _buildPickerTile — kept for future use
+  // Widget _buildPickerTile({...}) { ... }
+
+  // COMMENTED: _buildDetailField — kept for future use
+  // Widget _buildDetailField({...}) { ... }
+
+  // Widget _buildSheetStep(int step, bool isActive) {
+  //   return Container(
+  //     width: 28,
+  //     height: 28,
+  //     alignment: Alignment.center,
+  //     decoration: BoxDecoration(
+  //       shape: BoxShape.circle,
+  //       color: isActive ? AppColors.button : AppColors.grey300,
+  //     ),
+  //     child: Text(step.toString(),
+  //         style: text12(
+  //             color: isActive ? AppColors.white : AppColors.grey700,
+  //             fontWeight: FontWeight.bold)),
+  //   );
+  // }
+
+  // Widget _buildSheetLine(bool isActive) {
+  //   return Expanded(
+  //     child: Container(
+  //       height: 2,
+  //       margin: const EdgeInsets.symmetric(horizontal: 8),
+  //       color: isActive ? AppColors.button : AppColors.grey300,
+  //     ),
+  //   );
+  // }
+
+  // String _formatTime(TimeOfDay time) {
+  //   final now = DateTime.now();
+  //   final dt =
+  //       DateTime(now.year, now.month, now.day, time.hour, time.minute);
+  //   return TimeOfDay.fromDateTime(dt).format(context);
+  // }
+
+  // String _monthName(int month) {
+  //   const months = [
+  //     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  //     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  //   ];
+  //   return months[month - 1];
+  // }
+
+  // void _showMessage(String message) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //         content: Text(message), behavior: SnackBarBehavior.floating),
+  //   );
+  // }
 }
 
 // ─────────────────────────────────────────────
-// Location Bottom Sheet (unchanged)
+// Location Bottom Sheet — COMMENTED OUT
+// Kept for future use
 // ─────────────────────────────────────────────
 
-void _showLocationBottomSheet(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        height: MediaQuery.of(context).size.height * 0.65,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Select Location",
-                  style: text18(fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
+// void _showLocationBottomSheet(BuildContext context) {
+//   showModalBottomSheet(
+//     context: context,
+//     isScrollControlled: true,
+//     shape: const RoundedRectangleBorder(
+//       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+//     ),
+//     builder: (context) {
+//       return Container(
+//         padding: const EdgeInsets.all(16),
+//         height: MediaQuery.of(context).size.height * 0.65,
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+//               Text("Select Location", style: text18(fontWeight: FontWeight.bold)),
+//               IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+//             ]),
+//             const SizedBox(height: 16),
+//             ElevatedButton.icon(
+//               onPressed: () { Navigator.pop(context); },
+//               icon: const Icon(Icons.map, color: AppColors.button),
+//               label: Text("Search on Map", style: text14(color: AppColors.button)),
+//               style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 48)),
+//             ),
+//             const SizedBox(height: 12),
+//             ElevatedButton.icon(
+//               onPressed: () { Navigator.pop(context); },
+//               icon: const Icon(Icons.my_location, color: AppColors.button),
+//               label: Text("Near Me", style: text14(color: AppColors.button)),
+//               style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 48)),
+//             ),
+//             const SizedBox(height: 20),
+//             const Text("Recent / Saved Locations", style: TextStyle(fontWeight: FontWeight.w600)),
+//             const SizedBox(height: 12),
+//             Expanded(
+//               child: ListView(children: [
+//                 _buildLocationTile("MG Road, Near City Mall, Sector 18, Noida", onTap: () => Navigator.pop(context)),
+//                 _buildLocationTile("Linking Road, Bandra West, Mumbai, Maharashtra", isSelected: true, onTap: () => Navigator.pop(context)),
+//                 _buildLocationTile("Brigade Road, Ashok Nagar, Bengaluru, Karnataka", onTap: () => Navigator.pop(context)),
+//               ]),
+//             ),
+//           ],
+//         ),
+//       );
+//     },
+//   );
+// }
 
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              icon: const Icon(Icons.map, color: AppColors.button),
-              label: Text(
-                "Search on Map",
-                style: text14(color: AppColors.button),
-              ),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 48),
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              icon: const Icon(Icons.my_location, color: AppColors.button),
-              label: Text("Near Me", style: text14(color: AppColors.button)),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 48),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-            const Text(
-              "Recent / Saved Locations",
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 12),
-
-            Expanded(
-              child: ListView(
-                children: [
-                  _buildLocationTile(
-                    "MG Road, Near City Mall, Sector 18, Noida",
-                    onTap: () => Navigator.pop(context),
-                  ),
-                  _buildLocationTile(
-                    "Linking Road, Bandra West, Mumbai, Maharashtra",
-                    isSelected: true,
-                    onTap: () => Navigator.pop(context),
-                  ),
-                  _buildLocationTile(
-                    "Brigade Road, Ashok Nagar, Bengaluru, Karnataka",
-                    onTap: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
-
-Widget _buildLocationTile(
-  String address, {
-  bool isSelected = false,
-  VoidCallback? onTap,
-}) {
-  return ListTile(
-    contentPadding: const EdgeInsets.symmetric(vertical: 4),
-    leading: const Icon(Icons.location_on, color: AppColors.warning),
-    title: Text(
-      address,
-      style: text14(
-        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-      ),
-    ),
-    onTap: onTap,
-    selected: isSelected,
-    selectedTileColor: Colors.orange.withOpacity(0.1),
-  );
-}
+// Widget _buildLocationTile(String address, {bool isSelected = false, VoidCallback? onTap}) {
+//   return ListTile(
+//     contentPadding: const EdgeInsets.symmetric(vertical: 4),
+//     leading: const Icon(Icons.location_on, color: AppColors.warning),
+//     title: Text(address, style: text14(fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal)),
+//     onTap: onTap,
+//     selected: isSelected,
+//     selectedTileColor: Colors.orange.withOpacity(0.1),
+//   );
+// }

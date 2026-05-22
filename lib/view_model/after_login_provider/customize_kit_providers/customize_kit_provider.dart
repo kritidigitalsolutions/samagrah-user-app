@@ -29,14 +29,6 @@ class CustomizeKitNotifier extends Notifier<List<Item>> {
     state = [...originalItems];
   }
 
-  // void initializeFromUser(UserKitData kit) {
-  //   originalItems = kit.items
-  //       .map((item) => Item(product: item.product, quantity: item.quantity))
-  //       .toList();
-
-  //   state = [...originalItems];
-  //}
-
   void updateQuantity(int index, int newQuantity) {
     if (newQuantity < 1 || index < 0 || index >= state.length) return;
 
@@ -145,85 +137,6 @@ class UserKitNotifier extends AsyncNotifier<CustomizekitState> {
 
     return CustomizekitState(defaultKit: defaultKitRes);
   }
-
-  // referash my kit
-
-  // Future<void> refreshUserKit() async {
-  //   final previousState = state.value;
-
-  //   state = const AsyncLoading();
-
-  //   state = await AsyncValue.guard(() async {
-  //     final res = await _repo.getMyKit(); // 👈 only this API
-  //     return CustomizekitState(
-  //       userKit: res,
-  //       defaultKit: previousState?.defaultKit, // 👈 preserve old
-  //     );
-  //   });
-  // }
-
-  // Updated method - Accept CreateKitRequest
-  // Future<UserKitData?> createDraftKit(CreateKitRequest request) async {
-  //   final previousState = state.value;
-
-  //   state = const AsyncLoading();
-
-  //   try {
-  //     final res = await _repo.createCustoizeKits(request);
-
-  //     // ✅ Extract actual kit
-  //     final createdKit = res.data;
-
-  //     // Refresh list
-  //     final userKitRes = await _repo.getMyKit();
-
-  //     state = AsyncData(
-  //       CustomizekitState(
-  //         userKit: userKitRes,
-  //         defaultKit: previousState?.defaultKit,
-  //       ),
-  //     );
-
-  //     return createdKit; // ✅ RETURN THIS
-  //   } catch (e, st) {
-  //     state = AsyncError(e, st);
-  //     rethrow;
-  //   }
-  // }
-
-  // Future<void> deleteMyKit(String id) async {
-  //   final previousState = state.value;
-  //   if (previousState == null) return;
-
-  //   try {
-  //     // ✅ Safe list handling
-  //     final updatedList = (previousState.userKit?.data ?? [])
-  //         .where((kit) => kit.id != id)
-  //         .toList();
-
-  //     // ✅ Preserve old fields
-  //     final updatedUserKit = UserDraftKitResModel(
-  //       data: updatedList,
-  //       success: previousState.userKit?.success,
-  //       count: updatedList.length, // 👈 optional better update
-  //     );
-
-  //     // ✅ Update UI instantly
-  //     state = AsyncData(
-  //       CustomizekitState(
-  //         userKit: updatedUserKit,
-  //         defaultKit: previousState.defaultKit,
-  //       ),
-  //     );
-
-  //     // ✅ API call
-  //     await _repo.deleteMyKit(id);
-  //   } catch (e, st) {
-  //     // ❌ rollback
-  //     state = AsyncError(e, st);
-  //     state = AsyncData(previousState);
-  //   }
-  // }
 }
 
 // add to cart

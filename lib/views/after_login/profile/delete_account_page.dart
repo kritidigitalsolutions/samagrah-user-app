@@ -142,22 +142,30 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
   }
 
   Future<void> _deleteAccount() async {
-    Navigator.pop(context);
+    // ✅ Dialog pehle band karo (caller mein already ho raha hai)
+    // Yahan se Navigator.pop(context) HATAO
+
+    if (!mounted) return; // ✅ safety check
 
     try {
       final isDeleted = await ref
           .read(deleteAccountProvider.notifier)
           .deleteAccount(_selectedReason!);
 
+      if (!mounted) return; // ✅ await ke baad check karo
+
       if (isDeleted) {
+        ref.read(cartProvider.notifier).clearCart();
+        await AuthLocalstorageService.clear();
+
+        if (!mounted) return; // ✅ async ke baad phir check
+
         AppSnackbar.show(
           context,
           message: "Your account has been permanently deleted",
           type: SnackBarType.success,
         );
 
-        ref.read(cartProvider.notifier).clearCart();
-        await AuthLocalstorageService.clear();
         Navigator.pushReplacementNamed(context, AppRoutes.register);
       } else {
         AppSnackbar.show(
@@ -167,6 +175,8 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
         );
       }
     } catch (e) {
+      if (!mounted) return; // ✅
+
       AppSnackbar.show(
         context,
         message: "Failed to delete account",

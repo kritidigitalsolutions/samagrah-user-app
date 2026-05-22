@@ -63,7 +63,7 @@ class AppUrls {
 
   static const String term = "$baseUrl/legal/term";
   static const String privacy = "$baseUrl/legal/privacy";
-  static const String aboutUs = "$baseUrl/aboutus";
+  static const String aboutUs = "$baseUrl/legal/aboutus";
 
   //========================== profile edit api =================================
 

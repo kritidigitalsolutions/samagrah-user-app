@@ -25,7 +25,7 @@ class PaymentPage extends ConsumerStatefulWidget {
 
 class _PaymentPageState extends ConsumerState<PaymentPage> {
   String selectedPaymentMethod = 'online';
-  int walletBalance = 0;
+  num walletBalance = 0.0;
 
   final double codCharges = 25.00;
   final double shippingCharges = 40.00;
@@ -134,11 +134,11 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     walletAsync.when(
                       data: (data) {
                         final amount = data.data?.wallet?.balance;
-                        walletBalance = amount ?? 0;
+                        walletBalance = amount ?? 0.0;
                         return _buildWalletOption(effectiveTotal);
                       },
                       loading: () => const _ShimmerBox(height: 140),
-                      error: (_, __) =>
+                      error: (_, _) =>
                           _ErrorText(message: "Offers load nahi ho paye"),
                     ),
                     const SizedBox(height: 12),
@@ -377,7 +377,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: validOffers.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
             itemBuilder: (context, i) =>
                 _buildOfferChip(validOffers[i], totalAmount),
           ),
@@ -993,7 +993,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       child: Image.asset(
         path,
         height: 20,
-        errorBuilder: (_, __, ___) =>
+        errorBuilder: (_, _, _) =>
             const Icon(Icons.payment, size: 20, color: AppColors.grey600),
       ),
     );

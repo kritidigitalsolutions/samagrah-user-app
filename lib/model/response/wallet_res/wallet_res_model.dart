@@ -143,7 +143,7 @@ class Wallet {
 
   final String? id;
   final String? user;
-  final int? balance;
+  final num? balance;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final int? v;

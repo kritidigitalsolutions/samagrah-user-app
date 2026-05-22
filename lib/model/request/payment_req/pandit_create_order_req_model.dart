@@ -9,6 +9,7 @@ class PanditCreateOrderReqModel {
   final Address? address;
   final OnlineDetails? onlineDetails;
   final num price;
+  final num? walletAmount;
 
   PanditCreateOrderReqModel({
     required this.ritualId,
@@ -19,6 +20,7 @@ class PanditCreateOrderReqModel {
     this.onlineDetails,
     required this.price,
     this.templeId,
+    this.walletAmount,
   });
 
   Map<String, dynamic> toJson() {
@@ -28,6 +30,7 @@ class PanditCreateOrderReqModel {
       "panditId": panditId,
       "dateAndTime": dateAndTime.toJson(),
       "price": price,
+      "walletAmount": walletAmount,
     };
 
     // ✅ If home visit → send address

@@ -114,9 +114,15 @@ class PanditPaymentBookingNotifier extends StateNotifier<PaymentState> {
 
       final data = response["data"];
 
-      final String orderId = data["payment"]["razorpayOrderId"];
+      final payment = data["booking"]?["payment"];
+
+      if (payment == null) {
+        throw Exception("Payment data not found");
+      }
+
+      final String orderId = payment["razorpayOrderId"] ?? "";
       //final String bookingId = data["_id"];
-      final String bookingId = response["bookingIntentToken"];
+      final String bookingId = data["booking"]?["_id"];
       final double amount = model.price.toDouble();
 
       debugPrint("🧾 OrderId: $orderId");
@@ -153,6 +159,7 @@ class PanditPaymentBookingNotifier extends StateNotifier<PaymentState> {
       );
 
       if (context.mounted) {
+        print(e.toString());
         AppSnackbar.show(
           context,
           message: "Order Creation Failed: ${e.toString()}",

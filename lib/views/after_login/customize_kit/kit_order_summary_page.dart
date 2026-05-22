@@ -158,11 +158,6 @@ class KitOrderSummaryPage extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // _buildSummaryRow(
-                  //   'Item Total',
-                  //   isCustomizeKit ? "₹$totalPrice" : '₹$itemTotal',
-                  // ),
-                  // // _buildSummaryRow('Delivery Fee', '₹$deliveryFee'),
                   const Divider(height: 20),
                   _buildSummaryRow(
                     'Total Amount',
@@ -174,12 +169,30 @@ class KitOrderSummaryPage extends ConsumerWidget {
                   AppButton(
                     title: "Continue",
                     onTap: () {
-                      final verifyItems = VerifyItem(productId: kit.id);
-                      ref.read(bookingItemProvider.notifier).state = [
-                        verifyItems,
-                      ];
-                      ref.read(totalPriceProvider.notifier).state =
-                          kit.totalPrice;
+                      // ✅ Provider check hatao, direct boolean use karo
+                      if (kit.isCustomized) {
+                        print("is customized kit ----------------");
+
+                        final customizedItems = kit.items.map((item) {
+                          return VerifyItem(
+                            productId: item.id,
+                            quantity: item.quantity,
+                          );
+                        }).toList();
+
+                        ref.read(bookingItemProvider.notifier).state =
+                            customizedItems;
+                        ref.read(totalPriceProvider.notifier).state =
+                            kit.totalPrice;
+                      } else {
+                        print("is not ------- customized kit ----------------");
+
+                        ref.read(bookingItemProvider.notifier).state = [
+                          VerifyItem(productId: kit.id),
+                        ];
+                        ref.read(totalPriceProvider.notifier).state =
+                            kit.totalPrice;
+                      }
 
                       Navigator.pushNamed(context, AppRoutes.addressPage);
                     },
@@ -268,12 +281,14 @@ class OrderSummaryModel {
   final String name;
   final List<OrderItemModel> items;
   final num totalPrice;
+  final bool isCustomized; // ✅
 
   OrderSummaryModel({
     required this.id,
     required this.name,
     required this.items,
     required this.totalPrice,
+    required this.isCustomized, // ✅
   });
 }
 
@@ -294,14 +309,14 @@ class OrderItemModel {
 }
 
 OrderSummaryModel mapToOrderSummary(dynamic args) {
-  if (args is DefaultKitData) {
+  if (args is KitOrderArgs) {
+    final kit = args.kit;
     return OrderSummaryModel(
-      id: args.id ?? '',
-      name: args.name ?? "",
-      totalPrice:
-          args.kitPrice ??
-          0, // kitPrice = actual price (customized ya original)
-      items: args.items.map((e) {
+      id: kit.id ?? '',
+      name: kit.name ?? "",
+      totalPrice: kit.kitPrice ?? 0,
+      isCustomized: args.isCustomized, // ✅
+      items: kit.items.map((e) {
         return OrderItemModel(
           id: e.product?.id ?? '',
           title: e.product?.title ?? "",
@@ -314,6 +329,12 @@ OrderSummaryModel mapToOrderSummary(dynamic args) {
       }).toList(),
     );
   }
+  throw Exception("Invalid data: expected KitOrderArgs");
+}
 
-  throw Exception("Invalid data: expected DefaultKitData");
+class KitOrderArgs {
+  final DefaultKitData kit;
+  final bool isCustomized;
+
+  KitOrderArgs({required this.kit, required this.isCustomized});
 }
