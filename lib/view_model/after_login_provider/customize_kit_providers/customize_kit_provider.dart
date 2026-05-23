@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:samagrah/model/response/kit_response/default_kit_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
-import 'package:samagrah/repo/kit/customize_kit_repo.dart';
+import 'package:samagrah/repo/customize_kit_repo.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/state/customizeKit_state.dart';
 
 final selectedPoojaProvider = StateProvider<String?>((ref) => null);

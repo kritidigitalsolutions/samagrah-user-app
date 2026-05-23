@@ -192,6 +192,11 @@ class PanditDetailsPage extends ConsumerWidget {
                               _buildKeyValue("Travel", "Available"),
 
                             /// 🔴 CUSTOM ITEMS (if any)
+                            if (_visibleSamagriNotes(pooja).isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              _buildSamagriNotes(_visibleSamagriNotes(pooja)),
+                            ],
+
                             if (pooja.customSamagriItems.isNotEmpty) ...[
                               const SizedBox(height: 10),
                               Text(
@@ -321,6 +326,54 @@ class PanditDetailsPage extends ConsumerWidget {
   }
 
   /// 🔹 Common Card
+  List<String> _visibleSamagriNotes(PoojaOffering pooja) {
+    return pooja.customSamagriNotes
+        .map((note) => note.trim())
+        .where((note) => note.isNotEmpty)
+        .toList();
+  }
+
+  Widget _buildSamagriNotes(List<String> notes) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppColors.warningLighter,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.warningLight),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.info_outline,
+                size: 16,
+                color: AppColors.warningDark,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                "Samagri Note",
+                style: text12(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.warningDark,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ...notes.map(
+            (note) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(note, style: text12(color: AppColors.grey800)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInfoCard({required String title, required Widget child}) {
     return Container(
       width: double.infinity,

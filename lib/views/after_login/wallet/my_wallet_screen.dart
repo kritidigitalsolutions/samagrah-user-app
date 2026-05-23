@@ -327,24 +327,24 @@ class _PrimaryButton extends StatelessWidget {
   }
 }
 
-class _RoundIconButton extends StatelessWidget {
-  final IconData icon;
-  const _RoundIconButton({required this.icon});
+// class _RoundIconButton extends StatelessWidget {
+//   final IconData icon;
+//   const _RoundIconButton({required this.icon});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white24, width: 1),
-      ),
-      child: Icon(icon, color: AppColors.grey300, size: 18),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       width: 42,
+//       height: 42,
+//       decoration: BoxDecoration(
+//         color: Colors.white.withOpacity(0.1),
+//         borderRadius: BorderRadius.circular(12),
+//         border: Border.all(color: Colors.white24, width: 1),
+//       ),
+//       child: Icon(icon, color: AppColors.grey300, size: 18),
+//     );
+//   }
+// }
 
 // ─── Stats Row ────────────────────────────────────────────────────────────────
 class _StatsRow extends StatelessWidget {

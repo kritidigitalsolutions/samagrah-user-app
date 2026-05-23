@@ -286,7 +286,7 @@ class _PanditRecKitPageState extends ConsumerState<PanditRecKitPage> {
     media: Media(
       image: product.thumbnail != null
           ? [product.thumbnail.toString()]
-          : (product.images ?? []).map((e) => e.toString()).toList(),
+          : (product.images).map((e) => e.toString()).toList(),
     ),
     slug: '',
     category: null,

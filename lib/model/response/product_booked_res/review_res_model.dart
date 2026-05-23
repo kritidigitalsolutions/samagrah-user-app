@@ -63,53 +63,6 @@ class Pagination {
   }
 }
 
-// class Ratings {
-//     Ratings({
-//         required this.average,
-//         required this.totalReviews,
-//         required this.counts,
-//     });
-
-//     final int? average;
-//     final int? totalReviews;
-//     final Counts? counts;
-
-//     factory Ratings.fromJson(Map<String, dynamic> json){
-//         return Ratings(
-//             average: json["average"],
-//             totalReviews: json["totalReviews"],
-//             counts: json["counts"] == null ? null : Counts.fromJson(json["counts"]),
-//         );
-//     }
-
-// }
-
-// class Counts {
-//     Counts({
-//         required this.rating1,
-//         required this.rating2,
-//         required this.rating3,
-//         required this.rating4,
-//         required this.rating5,
-//     });
-
-//     final int? rating1;
-//     final int? rating2;
-//     final int? rating3;
-//     final int? rating4;
-//     final int? rating5;
-
-//     factory Counts.fromJson(Map<String, dynamic> json){
-//         return Counts(
-//             rating1: json["rating1"],
-//             rating2: json["rating2"],
-//             rating3: json["rating3"],
-//             rating4: json["rating4"],
-//             rating5: json["rating5"],
-//         );
-//     }
-// }
-
 class Review {
   Review({
     required this.id,

@@ -21,7 +21,6 @@ import 'package:samagrah/views/after_login/pandit/checkout_pandit/service_select
 import 'package:samagrah/views/after_login/pandit/checkout_pandit/temple_selection_screen.dart';
 import 'package:samagrah/views/after_login/pandit/checkout_pandit/time_slot_selection_screen.dart';
 import 'package:samagrah/views/after_login/pandit/pandit_recommended_kit_pages/pandit_rec_kit_page.dart';
-import 'package:samagrah/views/after_login/pandit/pandit_recommended_kit_pages/pandit_rec_kit_selection.dart';
 import 'package:samagrah/views/after_login/product/checkout/address_page.dart';
 import 'package:samagrah/views/after_login/product/checkout/order_summary_page.dart';
 import 'package:samagrah/views/after_login/product/checkout/payment_page.dart';
@@ -71,7 +70,6 @@ class AppPages {
     AppRoutes.accoundDelete: (context) => const DeleteAccountScreen(),
     AppRoutes.aboutUs: (context) => const AboutUsPage(),
 
-    // AppRoutes.editAddAddress: (context) => const EditAddAddressPage(),
     AppRoutes.bookPandit: (context) => const BookPanditPage(),
     AppRoutes.panditDetails: (context) => const PanditDetailsPage(),
     AppRoutes.serviceSelection: (context) => ServiceSelectionScreen(),
@@ -82,14 +80,10 @@ class AppPages {
     AppRoutes.onlineDetails: (context) => const OnlineBookingDetails(),
     AppRoutes.templeSelection: (context) => const TempleSelectionScreen(),
     AppRoutes.panditRecKit: (context) => const PanditRecKitPage(),
-    AppRoutes.panditRecKit2: (context) => const PanditRecKitSelection(),
     AppRoutes.myBooking: (context) => const MyBookingsPage(),
     AppRoutes.myBookingDetails: (context) => const MyBookingDetails(),
     AppRoutes.cancelBooking: (context) => const CancelBooking(),
 
-    // AppRoutes.kitItems: (context) => const CustomizeItemsPage(),
-    // AppRoutes.selectedCusKit: (context) => const SelectedCusKitItems(),
-    // AppRoutes.festivalKit: (context) => const FestivalKitPage(),
     AppRoutes.festivalKitDetails: (context) => const FestivalKitDetails(),
     AppRoutes.kitOrderSummary: (context) => const KitOrderSummaryPage(),
 

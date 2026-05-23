@@ -21,14 +21,6 @@ class ProfileApi {
     required String token,
   }) async {
     try {
-      print("📤 API CALL: UPDATE PROFILE");
-      print("➡️ Name: $name");
-      print("➡️ Email: $email");
-      print("➡️ Address: $address");
-      print("➡️ Image: ${imageFile?.path}");
-      print("➡️ Image: $userId");
-      print("➡️ Token: $token");
-
       /// 📦 Form Data
       final formData = FormData.fromMap({
         "name": name,
@@ -54,23 +46,17 @@ class ProfileApi {
           },
         ),
       );
-      print("✅ RESPONSE STATUS: ${response.statusCode}");
-      print("📦 RESPONSE DATA: ${response.data}");
+
       return response.data;
     } on DioException catch (e) {
-      print("❌ DIO ERROR: ${e.message}");
+      ;
 
       if (e.response != null) {
-        print("❌ STATUS CODE: ${e.response?.statusCode}");
-        print("❌ RESPONSE: ${e.response?.data}");
-
         throw Exception(e.response?.data['message'] ?? "Server error");
       } else {
-        print("❌ NO RESPONSE (maybe network issue)");
         throw Exception("No internet connection");
       }
     } catch (e) {
-      print("❌ UNKNOWN ERROR: $e");
       throw Exception("Something went wrong");
     }
   }
