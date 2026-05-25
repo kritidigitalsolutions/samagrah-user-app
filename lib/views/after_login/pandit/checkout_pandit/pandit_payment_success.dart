@@ -11,7 +11,6 @@ import 'package:samagrah/view_model/after_login_provider/pandit_provider/pandit_
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/wallet_provider/coupon_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/wallet_provider/wallet_provider.dart';
-import 'package:samagrah/views/after_login/pandit/checkout_pandit/booking_confirmed_page.dart';
 
 class PaymentSuccessScreen extends ConsumerStatefulWidget {
   const PaymentSuccessScreen({super.key});
@@ -178,18 +177,18 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: buildRecommendationCard(
-                    'Keep this required',
-                    'Pooja Samagri',
-                    'Pooja Kits for the Griha Pravesh pooja',
-                    true,
-                    () {
-                      Navigator.pushNamed(context, AppRoutes.panditRecKit);
-                    },
-                  ),
-                ),
+                // Padding(
+                //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                //   child: buildRecommendationCard(
+                //     'Keep this required',
+                //     'Pooja Samagri',
+                //     'Pooja Kits for the Griha Pravesh pooja',
+                //     true,
+                //     () {
+                //       Navigator.pushNamed(context, AppRoutes.panditRecKit);
+                //     },
+                //   ),
+                // ),
               ],
             ),
           ),

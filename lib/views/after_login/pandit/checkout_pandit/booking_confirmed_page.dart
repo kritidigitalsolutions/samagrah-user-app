@@ -361,107 +361,107 @@ import 'package:samagrah/utils/textstyle.dart';
 //   }
 // }
 
-Widget buildRecommendationCard(
-  String badge,
-  String title,
-  String description,
-  bool isPrimary,
-  VoidCallback onTap,
-) {
-  return GestureDetector(
-    onTap: onTap,
-    child: Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            gradient: AppColors.primaryGradient,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isPrimary
-                            ? AppColors.button
-                            : Colors.transparent,
-                        border: Border.all(
-                          color: isPrimary
-                              ? Colors.transparent
-                              : AppColors.white,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        badge,
-                        style: text10(
-                          color: AppColors.white,
+// Widget buildRecommendationCard(
+//   String badge,
+//   String title,
+//   String description,
+//   bool isPrimary,
+//   VoidCallback onTap,
+// ) {
+//   return GestureDetector(
+//     onTap: onTap,
+//     child: Stack(
+//       children: [
+//         Container(
+//           decoration: BoxDecoration(
+//             gradient: AppColors.primaryGradient,
+//             borderRadius: BorderRadius.circular(12),
+//           ),
+//           padding: const EdgeInsets.all(16),
+//           child: Row(
+//             children: [
+//               Expanded(
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Container(
+//                       padding: const EdgeInsets.symmetric(
+//                         horizontal: 12,
+//                         vertical: 4,
+//                       ),
+//                       decoration: BoxDecoration(
+//                         color: isPrimary
+//                             ? AppColors.button
+//                             : Colors.transparent,
+//                         border: Border.all(
+//                           color: isPrimary
+//                               ? Colors.transparent
+//                               : AppColors.white,
+//                         ),
+//                         borderRadius: BorderRadius.circular(12),
+//                       ),
+//                       child: Text(
+//                         badge,
+//                         style: text10(
+//                           color: AppColors.white,
 
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      title,
-                      style: text18(
-                        color: AppColors.yellow,
+//                           fontWeight: FontWeight.w600,
+//                         ),
+//                       ),
+//                     ),
+//                     const SizedBox(height: 8),
+//                     Text(
+//                       title,
+//                       style: text18(
+//                         color: AppColors.yellow,
 
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: text12(
-                        color: AppColors.grey300,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.yellow,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'View All',
-                        style: text11(
-                          color: AppColors.black,
+//                         fontWeight: FontWeight.bold,
+//                       ),
+//                     ),
+//                     const SizedBox(height: 4),
+//                     Text(
+//                       description,
+//                       style: text12(
+//                         color: AppColors.grey300,
+//                         fontWeight: FontWeight.w600,
+//                       ),
+//                     ),
+//                     const SizedBox(height: 12),
+//                     Container(
+//                       padding: const EdgeInsets.symmetric(
+//                         horizontal: 16,
+//                         vertical: 8,
+//                       ),
+//                       decoration: BoxDecoration(
+//                         color: AppColors.yellow,
+//                         borderRadius: BorderRadius.circular(20),
+//                       ),
+//                       child: Text(
+//                         'View All',
+//                         style: text11(
+//                           color: AppColors.black,
 
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        Positioned(
-          bottom: 0,
-          right: 0,
-          child: Image.asset(
-            "assets/icon/plate.png",
-            width: 130,
-            height: 130,
-            fit: BoxFit.contain,
-          ),
-        ),
-      ],
-    ),
-  );
-}
+//                           fontWeight: FontWeight.w600,
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//         Positioned(
+//           bottom: 0,
+//           right: 0,
+//           child: Image.asset(
+//             "assets/icon/plate.png",
+//             width: 130,
+//             height: 130,
+//             fit: BoxFit.contain,
+//           ),
+//         ),
+//       ],
+//     ),
+//   );
+// }

@@ -17,6 +17,10 @@ class BookRetualPage extends ConsumerStatefulWidget {
 class _BookRitualViewState extends ConsumerState<BookRetualPage> {
   final TextEditingController _searchController = TextEditingController();
 
+  Future<void> _refreshRituals() {
+    return ref.refresh(ritualProvider.future);
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -161,9 +165,31 @@ class _BookRitualViewState extends ConsumerState<BookRetualPage> {
 
             /// 🔹 Ritual List
             ritualAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _refreshRituals,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.55,
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+                  ),
+                ),
+              ),
 
-              error: (e, _) => Center(child: Text("Error: $e")),
+              error: (e, _) => Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _refreshRituals,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.55,
+                      child: Center(child: Text("Error: $e")),
+                    ),
+                  ),
+                ),
+              ),
 
               data: (state) {
                 final rituals = state.searchResults.isNotEmpty
@@ -171,78 +197,83 @@ class _BookRitualViewState extends ConsumerState<BookRetualPage> {
                     : state.rituals;
 
                 return Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    itemCount: rituals.length,
-                    itemBuilder: (context, index) {
-                      final ritual = rituals[index];
-                      final isSelected = selectedRitual?.id == ritual.id;
+                  child: RefreshIndicator(
+                    onRefresh: _refreshRituals,
+                    child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      itemCount: rituals.length,
+                      itemBuilder: (context, index) {
+                        final ritual = rituals[index];
+                        final isSelected = selectedRitual?.id == ritual.id;
 
-                      return GestureDetector(
-                        onTap: () {
-                          ref.read(selectedRitualProvider.notifier).state =
-                              ritual;
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 14),
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.button
-                                  : Colors.transparent,
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.black.withOpacity(0.05),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+                        return GestureDetector(
+                          onTap: () {
+                            ref.read(selectedRitualProvider.notifier).state =
+                                ritual;
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 14),
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppColors.button
+                                    : Colors.transparent,
+                                width: 2,
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              /// Text
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      ritual.title ?? '',
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      ritual.description ?? '',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  ],
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.black.withOpacity(0.05),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
                                 ),
-                              ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                /// Text
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        ritual.title ?? '',
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        ritual.description ?? '',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
 
-                              const SizedBox(width: 10),
+                                const SizedBox(width: 10),
 
-                              /// Image
-                              CustomCachedImage(
-                                imageUrl: ritual.image ?? '',
-                                width: 65,
-                                height: 65,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ],
+                                /// Image
+                                CustomCachedImage(
+                                  imageUrl: ritual.image ?? '',
+                                  width: 65,
+                                  height: 65,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 );
               },

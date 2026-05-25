@@ -7,6 +7,7 @@ import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
+import 'package:samagrah/views/custom_loader.dart/pandit_card_loader.dart';
 
 // ─────────────────────────────────────────────
 // Filter State Model
@@ -94,6 +95,10 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   // COMMENTED: assign pandit booking details map
   // Map<String, dynamic> assignedPanditBookingDetails = {};
 
+  Future<void> _refreshPandits() {
+    return ref.refresh(panditProvider.future);
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -122,11 +127,13 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
         if (!hasLang) return false;
       }
       if (_filters.minExperience != null &&
-          (p.yearsOfExperience ?? 0) < _filters.minExperience!)
+          (p.yearsOfExperience ?? 0) < _filters.minExperience!) {
         return false;
+      }
       if (_filters.minRating != null &&
-          (p.ratingAverage ?? 0) < _filters.minRating!)
+          (p.ratingAverage ?? 0) < _filters.minRating!) {
         return false;
+      }
       return true;
     }).toList();
   }
@@ -702,9 +709,26 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
             // ══════════════════════════════════
             Expanded(
               child: panditAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) =>
-                    const Center(child: Text('Something went wrong')),
+                loading: () => RefreshIndicator(
+                  onRefresh: _refreshPandits,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.55,
+                      child: const Center(child: PanditCardLoader()),
+                    ),
+                  ),
+                ),
+                error: (e, _) => RefreshIndicator(
+                  onRefresh: _refreshPandits,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.55,
+                      child: const Center(child: Text('Something went wrong')),
+                    ),
+                  ),
+                ),
                 data: (data) {
                   final base = data.searchResults.isNotEmpty
                       ? data.searchResults
@@ -712,116 +736,127 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                   final pandits = _applyFilters(base);
 
                   if (pandits.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: AppColors.grey100,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.search_off_rounded,
-                              size: 40,
-                              color: AppColors.grey400,
-                            ),
+                    return RefreshIndicator(
+                      onRefresh: _refreshPandits,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.55,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: AppColors.grey100,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.search_off_rounded,
+                                  size: 40,
+                                  color: AppColors.grey400,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No pandits found',
+                                style: text16(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Try adjusting your filters',
+                                style: text13(color: AppColors.grey500),
+                              ),
+                              const SizedBox(height: 16),
+                              TextButton(
+                                onPressed: () => setState(
+                                  () => _filters = const PanditFilterState(),
+                                ),
+                                child: Text(
+                                  'Clear filters',
+                                  style: text13(color: AppColors.button),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No pandits found',
-                            style: text16(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Try adjusting your filters',
-                            style: text13(color: AppColors.grey500),
-                          ),
-                          const SizedBox(height: 16),
-                          TextButton(
-                            onPressed: () => setState(
-                              () => _filters = const PanditFilterState(),
-                            ),
-                            child: Text(
-                              'Clear filters',
-                              style: text13(color: AppColors.button),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     );
                   }
 
-                  return ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-                    children: [
-                      // Results count row
-                      Row(
-                        children: [
-                          Text(
-                            '${pandits.length} Pandit${pandits.length == 1 ? '' : 's'} found',
-                            style: text13(
-                              color: AppColors.grey600,
-                              fontWeight: FontWeight.w500,
+                  return RefreshIndicator(
+                    onRefresh: _refreshPandits,
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+                      children: [
+                        // Results count row
+                        Row(
+                          children: [
+                            Text(
+                              '${pandits.length} Pandit${pandits.length == 1 ? '' : 's'} found',
+                              style: text13(
+                                color: AppColors.grey600,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                          const Spacer(),
-                          if (_filters.hasAnyFilter)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.button.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                'Filtered',
-                                style: text11(
-                                  color: AppColors.button,
-                                  fontWeight: FontWeight.w600,
+                            const Spacer(),
+                            if (_filters.hasAnyFilter)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.button.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  'Filtered',
+                                  style: text11(
+                                    color: AppColors.button,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // COMMENTED: option cards — kept for future use
+                        // _buildOptionCard(1, 'Assign Best Available Pandit', ...)
+                        // _buildOptionCard(2, 'Choose Pandit', ...)
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 14,
+                                mainAxisSpacing: 14,
+                                childAspectRatio: 0.72,
+                              ),
+                          itemCount: pandits.length,
+                          itemBuilder: (context, index) =>
+                              _buildPanditCard(pandits[index]),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        TextButton(
+                          onPressed: () {},
+                          child: Text(
+                            'View More',
+                            style: text14(
+                              color: AppColors.button,
+                              fontWeight: FontWeight.w600,
                             ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // COMMENTED: option cards — kept for future use
-                      // _buildOptionCard(1, 'Assign Best Available Pandit', ...)
-                      // _buildOptionCard(2, 'Choose Pandit', ...)
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 14,
-                              mainAxisSpacing: 14,
-                              childAspectRatio: 0.72,
-                            ),
-                        itemCount: pandits.length,
-                        itemBuilder: (context, index) =>
-                            _buildPanditCard(pandits[index]),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      TextButton(
-                        onPressed: () {},
-                        child: Text(
-                          'View More',
-                          style: text14(
-                            color: AppColors.button,
-                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   );
                 },
               ),

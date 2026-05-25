@@ -87,7 +87,6 @@ class AppSnackbar {
           icon: Icons.warning_rounded,
         );
       case SnackBarType.info:
-      default:
         return _SnackBarConfig(
           color: const Color(0xFF3498DB),
           icon: Icons.info_rounded,

@@ -17,6 +17,7 @@ final showFormProvider = StateProvider<bool>((ref) => false);
 final isEditProvider = StateProvider<bool>((ref) => false);
 final selectedAddressType = StateProvider<String>((ref) => "work");
 final addressIdProvider = StateProvider<String>((ref) => "");
+final panditIdProvider = StateProvider<String>((ref) => "");
 
 final addressProvider = AsyncNotifierProvider<AddressNotifier, AddressState>(
   () => AddressNotifier(),

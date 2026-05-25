@@ -23,8 +23,8 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
   Widget build(BuildContext context) {
     final cartItems = ref.watch(cartProvider);
     final itemTotal = ref.watch(totalPriceProvider);
-    const deliveryFee = 20;
-    final totalAmount = itemTotal + deliveryFee;
+    // const deliveryFee = 20;
+    final totalAmount = itemTotal;
     return Scaffold(
       backgroundColor: AppColors.headerCard,
       body: SafeArea(
@@ -201,7 +201,7 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _buildSummaryRow('Item Total', '₹$itemTotal'),
-                    _buildSummaryRow('Delivery Fee', '₹$deliveryFee'),
+                    //  _buildSummaryRow('Delivery Fee', '₹$deliveryFee'),
                     const Divider(height: 20),
                     _buildSummaryRow(
                       'Total Amount',

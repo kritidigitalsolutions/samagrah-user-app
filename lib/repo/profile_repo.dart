@@ -49,7 +49,6 @@ class ProfileApi {
 
       return response.data;
     } on DioException catch (e) {
-      ;
 
       if (e.response != null) {
         throw Exception(e.response?.data['message'] ?? "Server error");

@@ -158,7 +158,6 @@ class KitOrderSummaryPage extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Divider(height: 20),
                   _buildSummaryRow(
                     'Total Amount',
                     '₹${kit.totalPrice}',
@@ -257,15 +256,13 @@ class KitOrderSummaryPage extends ConsumerWidget {
         children: [
           Text(
             label,
-            style: TextStyle(
-              fontSize: isTotal ? 16 : 14,
+            style: text16(
               fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
           Text(
             value,
-            style: TextStyle(
-              fontSize: isTotal ? 18 : 15,
+            style: text18(
               fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
               color: isTotal ? AppColors.button : Colors.black87,
             ),

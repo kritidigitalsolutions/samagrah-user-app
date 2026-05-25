@@ -19,8 +19,8 @@ class OrderSummaryScreen extends ConsumerWidget {
       (sum, item) => sum + (item.price * item.quantity),
     );
 
-    const deliveryFee = 20;
-    final totalAmount = itemTotal + deliveryFee;
+    // const deliveryFee = 20;
+    final totalAmount = itemTotal;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -155,9 +155,9 @@ class OrderSummaryScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildSummaryRow('Item Total', '₹$itemTotal'),
-                  _buildSummaryRow('Delivery Fee', '₹$deliveryFee'),
-                  const Divider(height: 20),
+                  //  _buildSummaryRow('Item Total', '₹$itemTotal'),
+                  // _buildSummaryRow('Delivery Fee', '₹$deliveryFee'),
+                  //  const Divider(height: 20),
                   _buildSummaryRow(
                     'Total Amount',
                     '₹$totalAmount',

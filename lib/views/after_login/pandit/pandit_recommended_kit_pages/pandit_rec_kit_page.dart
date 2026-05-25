@@ -12,6 +12,9 @@ import 'package:samagrah/view_model/after_login_provider/customize_kit_providers
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/views/global_widgets/product_details_bottom_sheet.dart';
 
+import '../../../../model/request/payment_req/payment_reqs_models.dart';
+import '../../../../view_model/after_login_provider/checkout_providers/address.provider.dart';
+
 class PanditRecKitPage extends ConsumerStatefulWidget {
   const PanditRecKitPage({super.key});
 
@@ -36,6 +39,27 @@ class _PanditRecKitPageState extends ConsumerState<PanditRecKitPage> {
       final item = items[i];
       _quantities[_itemKey(item, i)] = item.quantity ?? 1;
     }
+  }
+
+  double _calculateTotalPrice() {
+    final kitItems = _kitItems ?? [];
+    if (kitItems.isEmpty) return 0.0;
+
+    final productState = ref.read(productProvider).value;
+    final allProducts = productState?.allProducts ?? [];
+
+    double total = 0.0;
+
+    for (var i = 0; i < kitItems.length; i++) {
+      final samagriItem = kitItems[i];
+      final product = _findProduct(allProducts, samagriItem);
+      final qty = _quantities[_itemKey(samagriItem, i)] ?? 1;
+
+      if (product != null) {
+        total += (product.price ?? 0) * qty;
+      }
+    }
+    return total;
   }
 
   // ─── Build ────────────────────────────────────────────────────────────────
@@ -88,6 +112,7 @@ class _PanditRecKitPageState extends ConsumerState<PanditRecKitPage> {
                 _KitSummary(
                   itemCount: kitItems.length,
                   totalQuantity: _totalQuantity(kitItems),
+                  totalPrice: _calculateTotalPrice(), // ← Added
                 ),
 
                 // ── Items List ──
@@ -149,56 +174,32 @@ class _PanditRecKitPageState extends ConsumerState<PanditRecKitPage> {
       return;
     }
 
-    // Build a DefaultKitData-like object to reuse KitOrderSummaryPage
-    // Map CustomSamagriItem → Item using matched products
     final productState = ref.read(productProvider).value;
     final allProducts = productState?.allProducts ?? [];
 
-    final items = <Item>[];
+    // Create customizedItems for booking
+    final customizedItems = kitItems.map((item) {
+      final qty = _quantities[_itemKey(item, kitItems.indexOf(item))] ?? 1;
+      return VerifyItem(productId: item.id ?? '', quantity: qty);
+    }).toList();
+
+    // Calculate total price
+    double totalPrice = 0.0;
     for (var i = 0; i < kitItems.length; i++) {
       final samagriItem = kitItems[i];
       final product = _findProduct(allProducts, samagriItem);
       final qty = _quantities[_itemKey(samagriItem, i)] ?? 1;
-
       if (product != null) {
-        // Convert Product → UserDraftProduct to fit Item model
-        items.add(
-          Item(
-            product: _toUserDraftProduct(product),
-            quantity: qty,
-            id: samagriItem.id ?? '',
-          ),
-        );
+        totalPrice += (product.price ?? 0) * qty;
       }
     }
 
-    // Calculate total
-    final total = items.fold<num>(
-      0,
-      (sum, item) =>
-          sum + ((item.product?.pricing?.price ?? 0) * (item.quantity ?? 1)),
-    );
+    // Set providers
+    ref.read(bookingItemProvider.notifier).state = customizedItems;
+    ref.read(totalPriceProvider.notifier).state = totalPrice;
 
-    // Build DefaultKitData to pass to KitOrderSummaryPage
-    final kitData = DefaultKitData(
-      id: 'pandit_kit',
-      name: 'Pandit Ji Recommended Kit',
-      image: '',
-      description: '',
-      kitPrice: total,
-      totalPrice: total,
-      savings: 0,
-      status: 'active',
-      items: items,
-      festivalType: '',
-      kitType: 'pandit',
-      category: '',
-      isMostPopularKit: false,
-      isMostUserUse: false,
-      isPanditApproved: true,
-    );
-
-    Navigator.pushNamed(context, AppRoutes.kitOrderSummary, arguments: kitData);
+    // Navigate to Address Page
+    Navigator.pushNamed(context, AppRoutes.addressPage);
   }
 
   void _openAddMoreSheet(BuildContext context) {
@@ -271,26 +272,26 @@ class _PanditRecKitPageState extends ConsumerState<PanditRecKitPage> {
     }
   }
 
-  UserDraftProduct _toUserDraftProduct(Product product) => UserDraftProduct(
-    id: product.id,
-    title: product.title,
-    pricing: Pricing(
-      price: product.price,
-      mrp: product.oldPrice,
-      currency: 'INR',
-      basePrice: null,
-      gstAmount: null,
-      gstPercent: null,
-      priceIncludesGst: null,
-    ),
-    media: Media(
-      image: product.thumbnail != null
-          ? [product.thumbnail.toString()]
-          : (product.images).map((e) => e.toString()).toList(),
-    ),
-    slug: '',
-    category: null,
-  );
+  // UserDraftProduct _toUserDraftProduct(Product product) => UserDraftProduct(
+  //   id: product.id,
+  //   title: product.title,
+  //   pricing: Pricing(
+  //     price: product.price,
+  //     mrp: product.oldPrice,
+  //     currency: 'INR',
+  //     basePrice: null,
+  //     gstAmount: null,
+  //     gstPercent: null,
+  //     priceIncludesGst: null,
+  //   ),
+  //   media: Media(
+  //     image: product.thumbnail != null
+  //         ? [product.thumbnail.toString()]
+  //         : (product.images).map((e) => e.toString()).toList(),
+  //   ),
+  //   slug: '',
+  //   category: null,
+  // );
 
   // ─── Quantity & State Helpers ─────────────────────────────────────────────
 
@@ -983,10 +984,15 @@ class _KitProductItem {
 }
 
 class _KitSummary extends StatelessWidget {
-  const _KitSummary({required this.itemCount, required this.totalQuantity});
+  const _KitSummary({
+    required this.itemCount,
+    required this.totalQuantity,
+    required this.totalPrice, // ← New parameter
+  });
 
   final int itemCount;
   final int totalQuantity;
+  final double totalPrice;
 
   @override
   Widget build(BuildContext context) {
@@ -998,7 +1004,9 @@ class _KitSummary extends StatelessWidget {
         border: Border(bottom: BorderSide(color: AppColors.grey200)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Left Side - Icon + Info
           Container(
             height: 44,
             width: 44,
@@ -1009,6 +1017,8 @@ class _KitSummary extends StatelessWidget {
             child: const Icon(Icons.inventory_2_outlined),
           ),
           const SizedBox(width: 12),
+
+          // Middle - Items Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1021,6 +1031,22 @@ class _KitSummary extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+
+          // Right Side - Total Price
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('Total', style: text13(color: AppColors.grey600)),
+              const SizedBox(height: 2),
+              Text(
+                '₹${totalPrice.toStringAsFixed(0)}',
+                style: text20(
+                  color: AppColors.button,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1161,9 +1187,9 @@ class _KitItemCard extends StatelessWidget {
     if (product == null) return null;
     final thumbnail = product.thumbnail?.trim() ?? '';
     if (thumbnail.isNotEmpty) return thumbnail;
-    final images = product.images ?? [];
+    final images = product.images;
     for (final img in images) {
-      final url = img.trim() ?? '';
+      final url = img.trim();
       if (url.isNotEmpty) return url;
     }
     return null;

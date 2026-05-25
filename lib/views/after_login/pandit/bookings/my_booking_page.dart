@@ -17,6 +17,10 @@ final bookingFilterProvider = StateProvider<String>((ref) => "All");
 class MyBookingsPage extends ConsumerWidget {
   const MyBookingsPage({super.key});
 
+  Future<void> _refreshBookings(WidgetRef ref) {
+    return ref.refresh(panditBookingProvider.future);
+  }
+
   String _mapStatus(String? status) {
     if (status == null) return "Pending";
 
@@ -116,71 +120,89 @@ class MyBookingsPage extends ConsumerWidget {
 
                 /// ✅ LIST
                 Expanded(
-                  child: filteredBookings.isEmpty
-                      ? EmptyDataWidget(
-                          title: "No Bookings Found",
-                          subtitle: "Your upcoming bookings will appear here",
-                          animationPath: AppImages.nothing,
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: filteredBookings.length,
-                          itemBuilder: (context, index) {
-                            final booking = filteredBookings[index];
-
-                            return BookingCard(
-                              type: _formatBookingType(booking.bookingMode),
-                              title:
-                                  booking.ritual?.name ??
-                                  booking.ritualRef?.title ??
-                                  "Pooja",
-                              date: _formatDate(booking.bookingDate),
-                              time: _formatTime(
-                                booking.dateAndTime?.dateAndTime,
+                  child: RefreshIndicator(
+                    onRefresh: () => _refreshBookings(ref),
+                    child: filteredBookings.isEmpty
+                        ? SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.6,
+                              child: EmptyDataWidget(
+                                title: "No Bookings Found",
+                                subtitle:
+                                    "Your upcoming bookings will appear here",
+                                animationPath: AppImages.nothing,
                               ),
-                              image:
-                                  booking.ritual?.image ??
-                                  booking.ritualRef?.image ??
-                                  "assets/retual.png",
-                              status: _mapStatus(booking.bookingStatus),
-                              panditName:
-                                  booking.pandit?.fullName ?? "Pandit Ji",
-                              onTap: () {
-                                ref.watch(typeSelected.notifier).state =
-                                    booking.bookingMode?.toLowerCase() ??
-                                    "home";
-                                ref
-                                        .watch(selectedBookingProvider.notifier)
-                                        .state =
-                                    booking;
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.myBookingDetails,
-                                );
-                              },
-                            );
-                          },
-                        ),
+                            ),
+                          )
+                        : ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                            ),
+                            itemCount: filteredBookings.length,
+                            itemBuilder: (context, index) {
+                              final booking = filteredBookings[index];
+
+                              return BookingCard(
+                                type: _formatBookingType(booking.bookingMode),
+                                title:
+                                    booking.ritual?.name ??
+                                    booking.ritualRef?.title ??
+                                    "Pooja",
+                                date: _formatDate(booking.bookingDate),
+                                time: _formatTime(
+                                  booking.dateAndTime?.dateAndTime,
+                                ),
+                                image:
+                                    booking.ritual?.image ??
+                                    booking.ritualRef?.image ??
+                                    "assets/retual.png",
+                                status: _mapStatus(booking.bookingStatus),
+                                panditName:
+                                    booking.pandit?.fullName ?? "Pandit Ji",
+                                onTap: () {
+                                  ref.watch(typeSelected.notifier).state =
+                                      booking.bookingMode?.toLowerCase() ??
+                                      "home";
+                                  ref
+                                          .watch(
+                                            selectedBookingProvider.notifier,
+                                          )
+                                          .state =
+                                      booking;
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.myBookingDetails,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                  ),
                 ),
               ],
             ),
           );
         },
-        loading: () => ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: 5,
-          itemBuilder: (context, index) {
-            return const BookingCardSkeleton();
-          },
-        ),
-        error: (error, stack) => Scaffold(
-          backgroundColor: AppColors.background,
-          appBar: CustomAppBar(
-            title: "My Bookings",
-            subtitle: "View and manage your pandit bookings",
+        loading: () => RefreshIndicator(
+          onRefresh: () => _refreshBookings(ref),
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            itemCount: 5,
+            itemBuilder: (context, index) {
+              return const BookingCardSkeleton();
+            },
           ),
-          body: Center(
-            child: Column(
+        ),
+        error: (error, stack) => RefreshIndicator(
+          onRefresh: () => _refreshBookings(ref),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.75,
+              child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.error_outline, size: 48, color: AppColors.error),
@@ -197,10 +219,11 @@ class MyBookingsPage extends ConsumerWidget {
                 ),
                 SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => ref.refresh(panditBookingProvider),
+                    onPressed: () => ref.invalidate(panditBookingProvider),
                   child: Text("Retry"),
                 ),
               ],
+              ),
             ),
           ),
         ),

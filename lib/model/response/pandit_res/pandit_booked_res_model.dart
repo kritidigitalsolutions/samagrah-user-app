@@ -1,3 +1,5 @@
+import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
+
 class PanditBookedResModel {
   PanditBookedResModel({
     required this.success,
@@ -217,6 +219,7 @@ class Pandit {
     required this.ratingAverage,
     required this.yearsOfExperience,
     required this.languagesSpoken,
+    required this.poojaOfferings,
   });
 
   final String? id;
@@ -226,6 +229,7 @@ class Pandit {
   final double? ratingAverage;
   final int? yearsOfExperience;
   final List<String> languagesSpoken;
+  final List<PoojaOffering> poojaOfferings;
 
   factory Pandit.fromJson(Map<String, dynamic> json) {
     return Pandit(
@@ -238,6 +242,11 @@ class Pandit {
       languagesSpoken: json["languagesSpoken"] == null
           ? []
           : List<String>.from(json["languagesSpoken"]!.map((x) => x)),
+      poojaOfferings: json["poojaOfferings"] == null
+          ? []
+          : List<PoojaOffering>.from(
+              json["poojaOfferings"]!.map((x) => PoojaOffering.fromJson(x)),
+            ),
     );
   }
 }

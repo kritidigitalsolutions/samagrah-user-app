@@ -11,6 +11,10 @@ import 'package:samagrah/view_model/after_login_provider/order_provider/order_pr
 class TrackOrderPage extends ConsumerWidget {
   const TrackOrderPage({super.key});
 
+  Future<void> _refreshOrder(WidgetRef ref, String orderId) {
+    return ref.refresh(trackOrderProvider(orderId).future);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final orderId = ModalRoute.of(context)!.settings.arguments as String;
@@ -28,23 +32,48 @@ class TrackOrderPage extends ConsumerWidget {
         ],
       ),
       body: orderAsync.when(
-        data: (response) => _buildOrderContent(response),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        data: (response) => RefreshIndicator(
+          onRefresh: () => _refreshOrder(ref, orderId),
+          child: _buildOrderContent(response),
+        ),
+        loading: () => RefreshIndicator(
+          onRefresh: () => _refreshOrder(ref, orderId),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.75,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+          ),
+        ),
         error: (error, stackTrace) {
           debugPrint('Track Order Error: $error');
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 16),
-                Text('Failed to load order:\n$error'),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => ref.refresh(trackOrderProvider(orderId)),
-                  child: const Text('Retry'),
+          return RefreshIndicator(
+            onRefresh: () => _refreshOrder(ref, orderId),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.75,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Failed to load order:\n$error'),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => ref.invalidate(
+                        trackOrderProvider(orderId),
+                      ),
+                      child: const Text('Retry'),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           );
         },
@@ -68,6 +97,7 @@ class TrackOrderPage extends ConsumerWidget {
     }
 
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,73 +183,73 @@ class TrackOrderPage extends ConsumerWidget {
     return 'Pending';
   }
 
-  Widget _buildDeliveryPartnerSection(Tracking? tracking) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Delivery Partner',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Road Runner',
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  _buildIconButton('📞'),
-                  const SizedBox(width: 8),
-                  _buildIconButton('💬'),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Divider(color: AppColors.dividerDark),
-          const SizedBox(height: 10),
-          const Text(
-            'Estimated Delivery Time',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            tracking?.lastUpdatedAt != null
-                ? 'Updated: ${tracking!.lastUpdatedAt!.toString().substring(0, 16)}'
-                : 'Today, by 6:05 PM',
-            style: const TextStyle(color: Colors.grey, fontSize: 14),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildDeliveryPartnerSection(Tracking? tracking) {
+  //   return Container(
+  //     padding: const EdgeInsets.all(16),
+  //     decoration: BoxDecoration(
+  //       color: Colors.grey.shade100,
+  //       borderRadius: BorderRadius.circular(12),
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //           children: [
+  //             const Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 Text(
+  //                   'Delivery Partner',
+  //                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+  //                 ),
+  //                 SizedBox(height: 4),
+  //                 Text(
+  //                   'Road Runner',
+  //                   style: TextStyle(color: Colors.grey, fontSize: 14),
+  //                 ),
+  //               ],
+  //             ),
+  //             Row(
+  //               children: [
+  //                 _buildIconButton('📞'),
+  //                 const SizedBox(width: 8),
+  //                 _buildIconButton('💬'),
+  //               ],
+  //             ),
+  //           ],
+  //         ),
+  //         const SizedBox(height: 10),
+  //         Divider(color: AppColors.dividerDark),
+  //         const SizedBox(height: 10),
+  //         const Text(
+  //           'Estimated Delivery Time',
+  //           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+  //         ),
+  //         const SizedBox(height: 4),
+  //         Text(
+  //           tracking?.lastUpdatedAt != null
+  //               ? 'Updated: ${tracking!.lastUpdatedAt!.toString().substring(0, 16)}'
+  //               : 'Today, by 6:05 PM',
+  //           style: const TextStyle(color: Colors.grey, fontSize: 14),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-  Widget _buildIconButton(String emoji) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 4)],
-      ),
-      child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
-    );
-  }
+  // Widget _buildIconButton(String emoji) {
+  //   return Container(
+  //     width: 40,
+  //     height: 40,
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       shape: BoxShape.circle,
+  //       boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 4)],
+  //     ),
+  //     child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
+  //   );
+  // }
 
   Widget _buildOrderItem(dynamic item) {
     final kit = item.product;

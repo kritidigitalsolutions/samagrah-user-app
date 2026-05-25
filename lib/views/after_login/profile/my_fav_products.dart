@@ -16,14 +16,15 @@ import 'package:samagrah/views/global_widgets/product_details_bottom_sheet.dart'
 class MyFavProducts extends ConsumerWidget {
   const MyFavProducts({super.key});
 
+  Future<void> _refreshWishlist(WidgetRef ref) {
+    return ref.read(wishlistProvider.notifier).loadWishlist();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wishlistState = ref.watch(wishlistProvider);
-    if (wishlistState.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
     final items = wishlistState.items;
+
     return Scaffold(
       backgroundColor: AppColors.background,
 
@@ -63,22 +64,57 @@ class MyFavProducts extends ConsumerWidget {
               decoration: BoxDecoration(color: AppColors.background),
               child: Column(
                 children: [
-                  items.isEmpty
+                  wishlistState.isLoading
                       ? Expanded(
-                          child: EmptyDataWidget(
-                            title: "Your Wishlist is Empty",
-                            subtitle: "Save items you love to view them later",
-                            animationPath: AppImages.empty,
-                            height: 250,
+                          child: RefreshIndicator(
+                            onRefresh: () => _refreshWishlist(ref),
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: SizedBox(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.65,
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      : items.isEmpty
+                      ? Expanded(
+                          child: RefreshIndicator(
+                            onRefresh: () => _refreshWishlist(ref),
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: SizedBox(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.65,
+                                child: EmptyDataWidget(
+                                  title: "Your Wishlist is Empty",
+                                  subtitle:
+                                      "Save items you love to view them later",
+                                  animationPath: AppImages.empty,
+                                  height: 250,
+                                ),
+                              ),
+                            ),
                           ),
                         )
                       : Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(15),
-                            itemCount: items.length,
-                            itemBuilder: (context, index) {
-                              return _buildCartItem(context, ref, items[index]);
-                            },
+                          child: RefreshIndicator(
+                            onRefresh: () => _refreshWishlist(ref),
+                            child: ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(15),
+                              itemCount: items.length,
+                              itemBuilder: (context, index) {
+                                return _buildCartItem(
+                                  context,
+                                  ref,
+                                  items[index],
+                                );
+                              },
+                            ),
                           ),
                         ),
 

@@ -512,9 +512,9 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                                 model: model,
                               );
                         } else {
-                          final _repo = PaymentRepo();
+                          final repo = PaymentRepo();
 
-                          final response = await _repo.panditCreateOrder(model);
+                          final response = await repo.panditCreateOrder(model);
 
                           debugPrint(
                             "📥 Full Response: ${jsonEncode(response)}",

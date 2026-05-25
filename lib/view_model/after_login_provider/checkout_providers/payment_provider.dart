@@ -18,6 +18,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
   late Razorpay _razorpay;
   late Address address;
   String couponCode = "";
+  String panditId = "";
   late List<VerifyItem> items;
   final PaymentRepo _repo = PaymentRepo();
 
@@ -40,6 +41,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
     Address address,
     List<VerifyItem> items,
     String couponCode,
+    String panditId,
   ) async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -51,6 +53,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
       this.address = address;
       this.items = items;
       this.couponCode = couponCode;
+      this.panditId = panditId;
 
       final user = await AuthLocalstorageService.getUser();
       debugPrint("👤 User: $user");
@@ -59,6 +62,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
         deliveryFee: 20,
         items: items,
         couponCode: couponCode,
+        panditId: panditId,
       );
 
       debugPrint("📤 CreateOrder Request: ${createReq.toJson()}");
@@ -182,6 +186,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
         razorpayOrderId: res.orderId!,
         razorpayPaymentId: res.paymentId!,
         razorpaySignature: res.signature!,
+        panditId: panditId,
       );
 
       debugPrint("📤 Verify Request JSON:");

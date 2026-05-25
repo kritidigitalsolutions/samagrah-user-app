@@ -108,6 +108,112 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
     }
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // FIXED: Handle System Back Button
+  // ─────────────────────────────────────────────────────────────
+  void _onPopInvoked(bool didPop, Object? result) async {
+    if (didPop) return;
+
+    final currentIndex = ref.read(bottomNavProvider);
+
+    // If not on Home → Go back to Home
+    if (currentIndex != 0) {
+      ref.read(bottomNavProvider.notifier).state = 0;
+      return;
+    }
+
+    // Show Exit Confirmation Dialog
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: AppColors.white,
+        elevation: 8,
+        titlePadding: const EdgeInsets.only(top: 24, left: 24, right: 24),
+        contentPadding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.logout_rounded,
+                color: AppColors.error,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Text(
+                'Exit App',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Are you sure you want to leave the app?',
+          style: TextStyle(fontSize: 15.5, color: Colors.black87, height: 1.4),
+        ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppColors.grey700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Exit',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (shouldExit == true) {
+      ref.read(bottomNavProvider.notifier).state = 0;
+      // Allow system to exit the app
+      Navigator.of(context).pop(); // This triggers actual app exit
+    }
+  }
+
   final List<Widget> _screens = [
     const HomeScreen(), // Main screen
     const BookRetualPage(),
@@ -118,11 +224,15 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(bottomNavProvider);
-   ref.read(userProvider);
-    return Scaffold(
-      backgroundColor: AppColors.headerCard,
-      body: IndexedStack(index: currentIndex, children: _screens),
-      bottomNavigationBar: SafeArea(child: _customBottomBar(currentIndex)),
+    ref.read(userProvider);
+    return PopScope(
+      canPop: false, // Important: Prevent default pop
+      onPopInvokedWithResult: _onPopInvoked,
+      child: Scaffold(
+        backgroundColor: AppColors.headerCard,
+        body: IndexedStack(index: currentIndex, children: _screens),
+        bottomNavigationBar: SafeArea(child: _customBottomBar(currentIndex)),
+      ),
     );
   }
 

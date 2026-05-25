@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:samagrah/model/request/payment_req/pandit_create_order_req_model.dart';
 import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_booked_res_model.dart';
+import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
@@ -11,6 +12,7 @@ import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/service/helper_methods.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/booking_provider.dart';
 import 'package:samagrah/views/after_login/pandit/bookings/vedio_call_page.dart';
 import 'package:samagrah/views/after_login/pandit/checkout_pandit/booking_confirmed_page.dart';
@@ -437,22 +439,18 @@ class MyBookingDetails extends ConsumerWidget {
 
               const SizedBox(height: 15),
 
-              Text(
-                "Recommended Pooja Kit",
-                style: text15(fontWeight: FontWeight.bold),
-              ),
+              if (pandit!.poojaOfferings.isNotEmpty) ...[
+                Text(
+                  "Recommended Pooja Kit",
+                  style: text15(fontWeight: FontWeight.bold),
+                ),
 
-              const SizedBox(height: 10),
-
-              buildRecommendationCard(
-                'Keep this required',
-                'Pooja Samagri',
-                'ready before the pandit arrives',
-                true,
-                () {
-                  Navigator.pushNamed(context, AppRoutes.panditRecKit);
-                },
-              ),
+                const SizedBox(height: 10),
+                ...pandit.poojaOfferings.map(
+                  (p) =>
+                      _PoojaCard(pooja: p, panditId: pandit.id ?? '', ref: ref),
+                ),
+              ],
 
               if (type == "temple") ...[
                 const SizedBox(height: 15),
@@ -547,12 +545,12 @@ class MyBookingDetails extends ConsumerWidget {
                         MaterialPageRoute(
                           builder: (_) => AgoraVideoCallScreen(
                             bookingId: booking.id ?? '',
-                            panditId: pandit?.id ?? '',
+                            panditId: pandit.id ?? '',
                             localUid: 1,
                             // ↑ use your logged-in user's int ID, or generate one:
                             // localUid: DateTime.now().millisecondsSinceEpoch % 100000,
-                            panditName: pandit?.fullName ?? 'Pandit Ji',
-                            panditImage: pandit?.profileImage,
+                            panditName: pandit.fullName ?? 'Pandit Ji',
+                            panditImage: pandit.profileImage,
                           ),
                         ),
                       );
@@ -579,7 +577,7 @@ class MyBookingDetails extends ConsumerWidget {
                     final model = PanditCreateOrderReqModel(
                       ritualId: booking.ritualRef?.id ?? '',
                       bookingMode: booking.bookingMode ?? '',
-                      panditId: pandit?.id ?? '',
+                      panditId: pandit.id ?? '',
                       templeId: booking.temple?.id ?? '',
                       dateAndTime: DateAndTimeWrapper(
                         dateAndTime: [selectedSlot],
@@ -891,4 +889,260 @@ void showCancelOrderBottomSheet(
       );
     },
   );
+}
+
+class _PoojaCard extends StatelessWidget {
+  const _PoojaCard({
+    required this.pooja,
+    required this.panditId,
+    required this.ref,
+  });
+  final PoojaOffering pooja;
+  final String panditId;
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context) {
+    final notes = pooja.customSamagriNotes
+        .map((n) => n.trim())
+        .where((n) => n.isNotEmpty)
+        .toList();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Name row
+          Row(
+            children: [
+              const Icon(
+                Icons.auto_awesome_outlined,
+                size: 15,
+                color: Color(0xFFB8860B),
+              ),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  pooja.name ?? 'Pooja',
+                  style: text14(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          if (pooja.description != null && pooja.description!.isNotEmpty) ...[
+            const SizedBox(height: 7),
+            Text(
+              pooja.description!,
+              style: text13(
+                color: AppColors.textSecondary,
+              ).copyWith(height: 1.5),
+            ),
+          ],
+
+          const SizedBox(height: 10),
+
+          // Tags
+          Wrap(
+            spacing: 7,
+            runSpacing: 6,
+            children: [
+              if (pooja.durationHours != null)
+                _Tag(Icons.schedule_outlined, '${pooja.durationHours} hrs'),
+              if (pooja.standardSamagri == true)
+                _Tag(Icons.check_circle_outline_rounded, 'Samagri included'),
+              if (pooja.customSamagri == true)
+                _Tag(Icons.shopping_bag_outlined, 'Custom samagri'),
+              if (pooja.travelForSpecialPooja == true)
+                _Tag(Icons.luggage_outlined, 'Travel available'),
+            ],
+          ),
+
+          // Samagri notes
+          if (notes.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBF0),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFE8CC6A)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline_rounded,
+                        size: 13,
+                        color: Color(0xFF9E7500),
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        'Note',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF9E7500),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  ...notes.map(
+                    (n) => Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: Text(
+                        n,
+                        style: text12(color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // Samagri kit link
+          if (pooja.customSamagriItems.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () {
+                print(panditId);
+                ref.read(panditIdProvider.notifier).state = panditId;
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.panditRecKit,
+                  arguments: pooja.customSamagriItems,
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFFF8E1), Color(0xFFFFF0C4)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: const Color(0xFFFFD38A),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.orange.withOpacity(0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // Icon Container
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.orange.withOpacity(0.2),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.inventory_2_rounded,
+                        size: 26,
+                        color: Color(0xFFB8860B),
+                      ),
+                    ),
+
+                    const SizedBox(width: 14),
+
+                    // Text Content
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Recommended Samagri Kit',
+                            style: text15(
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFFB8860B),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            '${pooja.customSamagriItems.length} items included',
+                            style: text13(color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Arrow
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 18,
+                        color: Color(0xFFB8860B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _Tag extends StatelessWidget {
+  const _Tag(this.icon, this.label);
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2F2F2),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: const Color(0xFF555555)),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: text12(
+              color: Color(0xFF444444),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

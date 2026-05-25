@@ -1,5 +1,6 @@
 import 'package:samagrah/data/network/network_api_service.dart';
 import 'package:samagrah/model/request/payment_req/pandit_create_order_req_model.dart';
+import 'package:samagrah/model/response/pandit_res/availability_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_booked_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/ritual_res_model.dart';
@@ -17,6 +18,7 @@ class PanditRepo {
   }
 
   //  Get all ritual
+
   Future<RitualResModel> getRituals() async {
     try {
       final token = await _getToken();
@@ -36,6 +38,19 @@ class PanditRepo {
       _api.setToken(token);
       final res = await _api.getApi(AppUrls.pandit);
       return PanditResModel.fromJson(res);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // =========================  Get availability ==============================
+
+  Future<AvailabilityResModel> getAvailability(String panditId) async {
+    try {
+      final token = await _getToken();
+      _api.setToken(token);
+      final res = await _api.getApi("${AppUrls.availability}/$panditId");
+      return AvailabilityResModel.fromJson(res);
     } catch (e) {
       rethrow;
     }

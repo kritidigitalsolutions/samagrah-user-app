@@ -90,24 +90,13 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       }
     });
     final address = ref.watch(storeAddressProvider);
+    final panditId = ref.watch(panditIdProvider);
     final items = ref.watch(bookingItemProvider);
     final totalAmount = ref.watch(totalPriceProvider);
 
     final effectiveTotal = couponState.isCouponApplied
         ? couponState.finalAmount
         : totalAmount;
-
-    // final validCoupons = couponState.coupon.where((coupon) {
-    //   final usageLeft = (coupon.usageLimit ?? 0) > (coupon.usedCount ?? 0);
-
-    //   final perUserAvailable = (coupon.perUserLimit ?? 0) > 0;
-
-    //   final isNotExpired = coupon.expiresAt == null
-    //       ? true
-    //       : coupon.expiresAt!.isAfter(DateTime.now());
-
-    //   return usageLeft && perUserAvailable && isNotExpired;
-    // }).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -154,7 +143,13 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                 ),
               ),
             ),
-            _buildBottomCTA(effectiveTotal, address, items, couponState),
+            _buildBottomCTA(
+              effectiveTotal,
+              address,
+              items,
+              couponState,
+              panditId,
+            ),
           ],
         ),
       ),
@@ -1103,7 +1098,9 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     Address? address,
     List<VerifyItem> items,
     CouponState couponState,
+    String panditId,
   ) {
+    print("pandit id $panditId");
     final paymentState = ref.watch(paymentProvider);
     final loading = ref.watch(loadingProvider);
 
@@ -1171,6 +1168,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                       address: address,
                       items: items,
                       couponCode: couponState.appliedCode,
+                      panditId: panditId,
                     );
                     final success = await repo.productVerifyPayment(verifyReq);
                     ref.read(loadingProvider.notifier).state = false;
@@ -1188,6 +1186,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                         address: address,
                         items: items,
                         couponCode: couponState.appliedCode,
+                        panditId: panditId,
                       );
                       final success = await repo.productVerifyPayment(
                         verifyReq,
@@ -1210,6 +1209,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                           address,
                           items,
                           couponState.appliedCode ?? '',
+                          panditId,
                         );
                   }
                 },

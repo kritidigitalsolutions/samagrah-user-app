@@ -53,6 +53,7 @@ class AppUrls {
 
   static const String rituals = "$baseUrl/pandit-bookings/rituals";
   static const String pandit = "$baseUrl/pandit-bookings/pandits";
+  static const String availability = "$baseUrl/pandit-availability";
   static const String panditCreateOrder = "$baseUrl/pandit-bookings";
   static const String panditVerifyPayment = "$baseUrl/order/place";
   static const String slotPanditBooking = "$baseUrl/booking-price/price";
