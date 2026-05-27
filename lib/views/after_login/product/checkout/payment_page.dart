@@ -27,8 +27,8 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
   String selectedPaymentMethod = 'online';
   num walletBalance = 0.0;
 
-  final double codCharges = 25.00;
-  final double shippingCharges = 40.00;
+  final double codCharges = 0.00;
+  final double shippingCharges = 0.00;
 
   final TextEditingController _couponController = TextEditingController();
 

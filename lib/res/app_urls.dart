@@ -1,5 +1,5 @@
 class AppUrls {
-  static const String baseUrl = "http://192.168.1.4:8000/api";
+  static const String baseUrl = "http://192.168.1.8:8000/api";
 
   //static const String baseUrl = "https://samagran-backend.vercel.app/api";
 
@@ -85,11 +85,11 @@ class AppUrls {
 
   static const String couponApply = "$baseUrl/user/coupons/apply";
 
-  // video call
+  // // video call
 
-  static const String video = '$baseUrl/user/video';
-  static const String videoToken = '$baseUrl/user/video/token';
-  static const String videoStart = '$baseUrl/user/video/start';
+  // static const String video = '$baseUrl/user/video';
+  // static const String videoToken = '$baseUrl/user/video/token';
+  // static const String videoStart = '$baseUrl/user/video/start';
 
   // notification
 

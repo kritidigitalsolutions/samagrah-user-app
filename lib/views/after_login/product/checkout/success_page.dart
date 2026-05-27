@@ -8,6 +8,8 @@ import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/payment_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/notification_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/order_provider/order_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/wallet_provider/coupon_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/wallet_provider/wallet_provider.dart';
 
@@ -163,6 +165,8 @@ class _SuccessPageState extends ConsumerState<SuccessPage>
     ref.invalidate(paymentProvider); // ←←← Ye line add karo
     ref.invalidate(loadingProvider); // Ye bhi add karo
     ref.invalidate(offerProvider);
+    ref.invalidate(orderProvider);
+    ref.invalidate(notificationProvider);
 
     if (!mounted) return;
 

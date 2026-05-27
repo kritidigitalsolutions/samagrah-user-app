@@ -59,7 +59,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
       debugPrint("👤 User: $user");
 
       final createReq = CreateOrderReqModel(
-        deliveryFee: 20,
+        deliveryFee: 0,
         items: items,
         couponCode: couponCode,
         panditId: panditId,

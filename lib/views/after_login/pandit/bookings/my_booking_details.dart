@@ -15,7 +15,6 @@ import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/booking_provider.dart';
 import 'package:samagrah/views/after_login/pandit/bookings/vedio_call_page.dart';
-import 'package:samagrah/views/after_login/pandit/checkout_pandit/booking_confirmed_page.dart';
 import 'package:intl/intl.dart';
 
 class MyBookingDetails extends ConsumerWidget {
@@ -537,25 +536,7 @@ class MyBookingDetails extends ConsumerWidget {
               if (!(booking.bookingStatus == "cancelled")) ...[
                 const SizedBox(height: 20),
                 if (type == "online")
-                  AppOutlineButton(
-                    title: "Join Video Call",
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => AgoraVideoCallScreen(
-                            bookingId: booking.id ?? '',
-                            panditId: pandit.id ?? '',
-                            localUid: 1,
-                            // ↑ use your logged-in user's int ID, or generate one:
-                            // localUid: DateTime.now().millisecondsSinceEpoch % 100000,
-                            panditName: pandit.fullName ?? 'Pandit Ji',
-                            panditImage: pandit.profileImage,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                  AppOutlineButton(title: "Join Video Call", onTap: () {}),
                 const SizedBox(height: 15),
 
                 AppOutlineButton(

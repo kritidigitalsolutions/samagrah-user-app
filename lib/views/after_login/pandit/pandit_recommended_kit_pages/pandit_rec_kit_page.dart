@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:samagrah/model/response/kit_response/default_kit_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_colors.dart';

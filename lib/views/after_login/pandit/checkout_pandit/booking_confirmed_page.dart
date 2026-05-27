@@ -1,8 +1,3 @@
-import 'package:flutter/material.dart';
-
-import 'package:samagrah/res/app_colors.dart';
-import 'package:samagrah/utils/textstyle.dart';
-
 // class BookingConfirmedScreen extends StatelessWidget {
 //   const BookingConfirmedScreen({super.key});
 

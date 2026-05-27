@@ -7,7 +7,7 @@ import 'package:samagrah/res/app_colors.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class PanditCardLoader extends StatelessWidget {
-  const PanditCardLoader();
+  const PanditCardLoader({super.key});
 
   @override
   Widget build(BuildContext context) {

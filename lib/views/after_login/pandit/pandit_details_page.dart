@@ -626,7 +626,7 @@ class _AvailabilityPanel extends StatelessWidget {
                   ),
                 ),
               ),
-              error: (_, __) => Padding(
+              error: (_, _) => Padding(
                 padding: EdgeInsets.all(20),
                 child: Center(
                   child: Text(
