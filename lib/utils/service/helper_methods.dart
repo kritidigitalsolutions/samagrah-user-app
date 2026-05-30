@@ -50,3 +50,11 @@ String capitalizeWords(String text) {
       )
       .join(' ');
 }
+
+Future<void> openZoom(String url) async {
+  final Uri uri = Uri.parse(url);
+
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+}

@@ -26,6 +26,7 @@ class Datum {
   Datum({
     required this.payment,
     required this.panditDecision,
+    required this.zoomMeeting,
     required this.id,
     required this.user,
     required this.pandit,
@@ -50,6 +51,8 @@ class Datum {
 
   final Payment? payment;
   final PanditDecision? panditDecision;
+  final ZoomMeeting? zoomMeeting;
+
   final String? id;
   final String? user;
   final Pandit? pandit;
@@ -79,6 +82,9 @@ class Datum {
       panditDecision: json["panditDecision"] == null
           ? null
           : PanditDecision.fromJson(json["panditDecision"]),
+      zoomMeeting: json["zoomMeeting"] == null
+          ? null
+          : ZoomMeeting.fromJson(json["zoomMeeting"]),
       id: json["_id"],
       user: json["user"],
       pandit: json["pandit"] == null ? null : Pandit.fromJson(json["pandit"]),
@@ -115,6 +121,24 @@ class Datum {
       rescheduleRequests: json["rescheduleRequests"] == null
           ? []
           : List<dynamic>.from(json["rescheduleRequests"]!.map((x) => x)),
+    );
+  }
+}
+
+class ZoomMeeting {
+  final String? meetingId;
+  final String? joinUrl;
+  final String? startUrl;
+  final String? password;
+
+  ZoomMeeting({this.meetingId, this.joinUrl, this.startUrl, this.password});
+
+  factory ZoomMeeting.fromJson(Map<String, dynamic> json) {
+    return ZoomMeeting(
+      meetingId: json["meetingId"],
+      joinUrl: json["join_url"],
+      startUrl: json["start_url"],
+      password: json["password"],
     );
   }
 }

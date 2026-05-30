@@ -14,7 +14,6 @@ import 'package:samagrah/utils/service/helper_methods.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/booking_provider.dart';
-import 'package:samagrah/views/after_login/pandit/bookings/vedio_call_page.dart';
 import 'package:intl/intl.dart';
 
 class MyBookingDetails extends ConsumerWidget {
@@ -536,7 +535,16 @@ class MyBookingDetails extends ConsumerWidget {
               if (!(booking.bookingStatus == "cancelled")) ...[
                 const SizedBox(height: 20),
                 if (type == "online")
-                  AppOutlineButton(title: "Join Video Call", onTap: () {}),
+                  AppOutlineButton(
+                    title: "Join Video Call",
+                    onTap: () {
+                      final url = booking.zoomMeeting?.joinUrl;
+
+                      if (url != null && url.isNotEmpty) {
+                        openZoom(url);
+                      }
+                    },
+                  ),
                 const SizedBox(height: 15),
 
                 AppOutlineButton(
