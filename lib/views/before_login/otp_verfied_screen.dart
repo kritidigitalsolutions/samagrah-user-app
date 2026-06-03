@@ -123,12 +123,11 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
           final res = data.verifyModel;
 
           if (res != null && res.success == true) {
-            Navigator.pushNamedAndRemoveUntil(
+            Navigator.pushNamed(
               context,
-              AppRoutes.home,
-              (route) => false,
+              AppRoutes.locationPage,
+              arguments: true,
             );
-
           } else if (res != null && res.success == false) {
             AppSnackbar.show(
               context,

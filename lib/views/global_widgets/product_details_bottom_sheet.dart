@@ -7,7 +7,7 @@ import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/product_details_provider.dart';
-import 'package:samagrah/views/after_login/home_screen.dart';
+import 'package:samagrah/views/custom_widget/Product_card.dart';
 import 'package:samagrah/views/custom_widget/product_image_slider.dart';
 import 'package:samagrah/views/custom_widget/rating_summary_widget.dart';
 
@@ -256,11 +256,7 @@ class ProductDetailsBottomSheet extends ConsumerWidget {
                                                     ),
                                               );
                                             },
-                                            child: buildDiyaCard(
-                                              item,
-                                              ref,
-                                              context,
-                                            ),
+                                            child: ProductCard(product: item),
                                           ),
                                         ),
                                       ),

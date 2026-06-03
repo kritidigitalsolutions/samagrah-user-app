@@ -14,6 +14,7 @@ import 'package:samagrah/view_model/after_login_provider/home_provider/product_d
 import 'package:samagrah/view_model/after_login_provider/home_provider/wishlist_provider.dart';
 import 'package:samagrah/views/after_login/home_screen.dart';
 import 'package:samagrah/views/after_login/product/checkout/order_summary_page.dart';
+import 'package:samagrah/views/custom_widget/Product_card.dart';
 import 'package:samagrah/views/custom_widget/product_image_slider.dart';
 import 'package:samagrah/views/custom_widget/rating_summary_widget.dart';
 import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
@@ -53,7 +54,7 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
         ? <String, String?>{}
         : {
             "Brand": details.brand,
-            "SKU": details.sku,
+
             "Unit": details.unit,
             "Weight": details.weight,
             "Dimensions": details.dimensions,
@@ -521,10 +522,8 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                                 child: SlideAnimation(
                                   horizontalOffset: 50,
                                   child: FadeInAnimation(
-                                    child: buildDiyaCard(
-                                      filterProduct[index],
-                                      ref,
-                                      context,
+                                    child: ProductCard(
+                                      product: filterProduct[index],
                                     ),
                                   ),
                                 ),

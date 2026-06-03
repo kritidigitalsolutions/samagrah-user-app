@@ -4,8 +4,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:samagrah/res/app_colors.dart';
+import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/localStogare_service/location_storage.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/category_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/views/service_pages/location_provider.dart';
 
 class LocationPage extends ConsumerStatefulWidget {
@@ -28,6 +31,9 @@ class _LocationPageState extends ConsumerState<LocationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isFromHome =
+        ModalRoute.of(context)?.settings.arguments as bool? ?? false;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -40,23 +46,24 @@ class _LocationPageState extends ConsumerState<LocationPage> {
                 const SizedBox(height: 40),
 
                 // Icon
-                Container(
-                  height: 120,
-                  width: 120,
-                  decoration: BoxDecoration(
-                    color: AppColors.button.withAlpha(50),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.location_on,
-                    size: 60,
-                    color: AppColors.button,
+                Center(
+                  child: Container(
+                    height: 120,
+                    width: 120,
+                    decoration: BoxDecoration(
+                      color: AppColors.button.withAlpha(50),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.location_on,
+                      size: 60,
+                      color: AppColors.button,
+                    ),
                   ),
                 ),
 
                 const SizedBox(height: 32),
 
-                // Title
                 Text(
                   'Enable Location',
                   style: text26(
@@ -68,7 +75,6 @@ class _LocationPageState extends ConsumerState<LocationPage> {
 
                 const SizedBox(height: 12),
 
-                // Subtitle
                 Text(
                   'We need your location to provide you with the best experience and personalized services.',
                   style: text16(color: AppColors.grey600),
@@ -192,10 +198,10 @@ class _LocationPageState extends ConsumerState<LocationPage> {
 
                 const SizedBox(height: 12),
 
-                // Continue Button (only show if location is fetched)
+                // Continue Button (location fetch ke baad dikhega)
                 if (_currentAddress != null)
                   ElevatedButton(
-                    onPressed: _continueToApp,
+                    onPressed: () => _continueToApp(isFromHome),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green.shade600,
                       foregroundColor: Colors.white,
@@ -213,17 +219,6 @@ class _LocationPageState extends ConsumerState<LocationPage> {
                       ),
                     ),
                   ),
-
-                const SizedBox(height: 12),
-
-                // Skip Button
-                TextButton(
-                  onPressed: _skipLocation,
-                  child: Text(
-                    'Skip for now',
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                  ),
-                ),
 
                 const SizedBox(height: 16),
               ],
@@ -269,7 +264,6 @@ class _LocationPageState extends ConsumerState<LocationPage> {
     });
 
     try {
-      // Check and request location permission
       final permission = await Permission.location.request();
 
       if (permission.isDenied) {
@@ -291,7 +285,6 @@ class _LocationPageState extends ConsumerState<LocationPage> {
         return;
       }
 
-      // Check if location service is enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         setState(() {
@@ -301,12 +294,10 @@ class _LocationPageState extends ConsumerState<LocationPage> {
         return;
       }
 
-      // Get current position
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      // Get address from coordinates
       List<Placemark> placemarks = await placemarkFromCoordinates(
         position.latitude,
         position.longitude,
@@ -314,7 +305,6 @@ class _LocationPageState extends ConsumerState<LocationPage> {
 
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
-
         setState(() {
           _latitude = position.latitude;
           _longitude = position.longitude;
@@ -322,20 +312,14 @@ class _LocationPageState extends ConsumerState<LocationPage> {
           _state = place.administrativeArea;
           _country = place.country;
           _postalCode = place.postalCode;
-
-          // Build full address
-          _currentAddress =
-              [
-                    place.street,
-                    place.subLocality,
-                    place.locality,
-                    place.administrativeArea,
-                    place.country,
-                    place.postalCode,
-                  ]
-                  .where((element) => element != null && element.isNotEmpty)
-                  .join(', ');
-
+          _currentAddress = [
+            place.street,
+            place.subLocality,
+            place.locality,
+            place.administrativeArea,
+            place.country,
+            place.postalCode,
+          ].where((e) => e != null && e.isNotEmpty).join(', ');
           _isLoading = false;
         });
       }
@@ -347,15 +331,13 @@ class _LocationPageState extends ConsumerState<LocationPage> {
     }
   }
 
-  void _continueToApp() async {
+  Future<void> _continueToApp(bool isHome) async {
     if (_currentAddress == null || _latitude == null || _longitude == null) {
-      setState(() {
-        _errorMessage = "Please fetch location first";
-      });
+      setState(() => _errorMessage = "Please fetch location first");
       return;
     }
 
-    // SAVE LOCATION
+    // 1. Local storage mein save karo
     await LocationStorage.saveLocation(
       address: _currentAddress!,
       lat: _latitude!,
@@ -364,18 +346,26 @@ class _LocationPageState extends ConsumerState<LocationPage> {
       state: _state!,
     );
 
+    // 2. LocationProvider update karo (yeh categoryProvider ko bhi trigger karega)
     ref.read(locationProvider.notifier).state = LocationModel(
       city: _city,
       state: _state,
     );
 
-    // NAVIGATE TO HOME
-    if (mounted) {
-      Navigator.pop(context);
-    }
-  }
+    // 3. categoryProvider aur productProvider dono refresh karo
+    ref.invalidate(categoryProvider);
+    ref.invalidate(productProvider);
 
-  void _skipLocation() {
-    Navigator.pop(context);
+    if (mounted) {
+      if (isHome) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.home,
+          (route) => false,
+        );
+      } else {
+        Navigator.pop(context);
+      }
+    }
   }
 }

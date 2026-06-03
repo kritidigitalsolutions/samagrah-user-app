@@ -1,4 +1,6 @@
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
+import 'package:samagrah/model/response/product_res/wishlist_res_model.dart'
+    hide Ratings;
 
 class ProductBookedResModel {
   ProductBookedResModel({

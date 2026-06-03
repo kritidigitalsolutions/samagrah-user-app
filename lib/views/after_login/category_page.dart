@@ -242,8 +242,8 @@ class CategoryPage extends ConsumerWidget {
             physics: const NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.all(12),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              childAspectRatio: 0.75,
+              crossAxisCount: 2,
+              childAspectRatio: 0.70,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
             ),
@@ -253,7 +253,7 @@ class CategoryPage extends ConsumerWidget {
 
               return AnimationConfiguration.staggeredGrid(
                 position: index,
-                columnCount: 3,
+                columnCount: 2,
                 duration: const Duration(milliseconds: 400),
                 child: SlideAnimation(
                   horizontalOffset: 50,

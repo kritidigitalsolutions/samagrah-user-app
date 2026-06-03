@@ -19,19 +19,12 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
     final res = await _repo.getProducts();
     final products = res.data?.products ?? [];
 
-    print(
-      "product lenght jks ajh --------------------------------- ${products.length}",
-    );
-
-    /// ✅ Extract special lists
     final dailyEssentials = products
         .where((p) => p.isMostPoojaEssentials == true)
         .toList();
-
     final mostUsed = products.where((p) => p.isMostUsed == true).toList();
     final ritualItems = products.where((p) => p.isRitualItems == true).toList();
 
-    /// ✅ Normal products (excluding special ones)
     final normalProducts = products.where((p) {
       return p.isMostPoojaEssentials != true &&
           p.isMostUsed != true &&
@@ -43,61 +36,46 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
       categoryProducts: normalProducts,
       customizeKitItems: products,
       categoryKitProducts: products,
-
-      // ✅ Store originals
       originalDailyEssentials: dailyEssentials,
       originalMostUsed: mostUsed,
       originalRitualItems: ritualItems,
-
-      // ✅ Initially same as originals
       dailyEssentials: dailyEssentials,
       mostUsed: mostUsed,
     );
   }
 
-  /// 🔥 Category Filter - Fixed
-  void filterByCategory(String category) {
+  /// ✅ Category filter ab categoryId (_id) se hoga, category.name se nahi
+  void filterByCategory(String? categoryId) {
     final current = state.value;
     if (current == null) return;
-
-    final String normalizedCategory = category.toLowerCase().trim();
 
     List<Product> baseList;
     List<Product> dailyEss;
     List<Product> mostU;
 
-    if (normalizedCategory == "all") {
-      // ✅ "All" selected - Show everything
+    if (categoryId == null || categoryId == "all") {
+      // "All" selected — sab dikhao
       baseList = current.allProducts;
-      dailyEss = current.originalDailyEssentials; // ← Original full list
-      mostU = current.originalMostUsed; // ← Original full list
+      dailyEss = current.originalDailyEssentials;
+      mostU = current.originalMostUsed;
     } else {
-      // ✅ Specific category selected - Filter everything
+      // categoryId se filter (product.category._id match karo)
       baseList = current.allProducts
-          .where(
-            (p) => (p.category?.name ?? '').toLowerCase() == normalizedCategory,
-          )
+          .where((p) => (p.categoryId?.id ?? '') == categoryId)
           .toList();
 
-      // Filter from original lists (not from already filtered lists)
       dailyEss = current.originalDailyEssentials
-          .where(
-            (p) => (p.category?.name ?? '').toLowerCase() == normalizedCategory,
-          )
+          .where((p) => (p.categoryId?.id ?? '') == categoryId)
           .toList();
 
       mostU = current.originalMostUsed
-          .where(
-            (p) => (p.category?.name ?? '').toLowerCase() == normalizedCategory,
-          )
+          .where((p) => (p.categoryId?.id ?? '') == categoryId)
           .toList();
     }
 
     state = AsyncData(
       current.copyWith(
-        selectedCategory: normalizedCategory == "all"
-            ? "All"
-            : normalizedCategory,
+        selectedCategory: categoryId ?? "all",
         categoryProducts: baseList,
         dailyEssentials: dailyEss,
         mostUsed: mostU,
@@ -105,8 +83,7 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
     );
   }
 
-  // filter inside of customize kit
-
+  /// Customize kit filter (category name se — wahi rakha)
   void filterByCustKitCategory(String category) {
     final current = state.value;
     if (current == null) return;
@@ -114,12 +91,9 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
     final String normalizedCategory = category.toLowerCase().trim();
 
     List<Product> baseList;
-
     if (normalizedCategory == "all") {
-      // ✅ "All" selected - Show everything
       baseList = current.customizeKitItems;
     } else {
-      // ✅ Specific category selected - Filter everything
       baseList = current.customizeKitItems
           .where(
             (p) => (p.category?.name ?? '').toLowerCase() == normalizedCategory,
@@ -137,9 +111,7 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
     );
   }
 
-  // search product
-
-  /// 🔥 Search Products - Dedicated List
+  /// Search products
   void searchProducts(String query) {
     final current = state.value;
     if (current == null) return;
@@ -147,18 +119,16 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
     final String searchTerm = query.toLowerCase().trim();
 
     if (searchTerm.isEmpty) {
-      // Reset search
       state = AsyncData(
         current.copyWith(
           searchResults: [],
           searchQuery: "",
-          selectedCategory: "All", // ya current.selectedCategory
+          selectedCategory: "all",
         ),
       );
       return;
     }
 
-    // Search across all original products
     final List<Product> allSource = [
       ...current.originalDailyEssentials,
       ...current.originalMostUsed,
@@ -166,7 +136,6 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
       ...current.allProducts,
     ];
 
-    // Remove duplicate products (by id)
     final uniqueProducts = <Product>{};
     for (var p in allSource) {
       if (p.id != null) uniqueProducts.add(p);
@@ -184,14 +153,12 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
   }
 }
 
-// image slide
-
+// Image slider index provider
 final imageSliderIndexProvider = StateProvider.family<int, String>(
   (ref, productId) => 0,
 );
 
-// ===================== banner ==================================
-
+// Banner provider
 final productRepoProvider = Provider((ref) => ProductRepo());
 
 final bannerProvider = FutureProvider<BannerResModel>((ref) async {
@@ -199,5 +166,5 @@ final bannerProvider = FutureProvider<BannerResModel>((ref) async {
   return repo.getBanner();
 });
 
-// =========== product details =======================
+// Product details
 final showAllDetailsProvider = StateProvider<bool>((ref) => false);

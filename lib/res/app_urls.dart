@@ -1,7 +1,7 @@
 class AppUrls {
-   static const String baseUrl = "http://192.168.1.8:8000/api";
+  static const String baseUrl = "http://192.168.1.11:8000/api";
 
- // static const String baseUrl = "https://samagran-backend.vercel.app/api";
+  // static const String baseUrl = "https://samagran-backend.vercel.app/api";
 
   // ================ Auth =====================================
 
@@ -18,6 +18,8 @@ class AppUrls {
   static const String defaultKit = "$baseUrl/kits";
 
   // ======================= product===================================
+
+  static const String category = "$baseUrl/category";
 
   static const String getProduct = "$baseUrl/user/items";
   static const String banner = "$baseUrl/banners";

@@ -4,10 +4,12 @@ import 'package:samagrah/data/network/network_api_service.dart';
 import 'package:samagrah/model/response/banner_res_model.dart';
 import 'package:samagrah/model/response/product_booked_res/review_res_model.dart';
 import 'package:samagrah/model/response/product_res/cart_res_model.dart';
+import 'package:samagrah/model/response/product_res/category_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_details_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_urls.dart';
 import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
+import 'package:samagrah/utils/localStogare_service/location_storage.dart';
 
 class ProductRepo {
   final _api = NetworkApiService();
@@ -16,12 +18,26 @@ class ProductRepo {
     return await AuthLocalstorageService.getToken() ?? '';
   }
 
+  // get category
+
+  Future<CategoryResModel> getCategories() async {
+    try {
+      final city = await LocationStorage.getCity();
+      final res = await _api.getApi('${AppUrls.category}?city=$city');
+      return CategoryResModel.fromJson(res);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // 📦 Get all products
   Future<ProductResModel> getProducts() async {
     try {
       final token = await _getToken();
+      final city = await LocationStorage.getCity();
+      // final state = await LocationStorage.getState();
       _api.setToken(token);
-      final res = await _api.getApi(AppUrls.getProduct);
+      final res = await _api.getApi('${AppUrls.getProduct}?city=$city');
       return ProductResModel.fromJson(res);
     } catch (e) {
       rethrow;
