@@ -86,7 +86,45 @@ class ProductCard extends ConsumerWidget {
                   ),
                 ),
 
-                // Wishlist — top right
+                // ── TOP LEFT: badge stack (Recommended + Daily + MostUsed)
+                Positioned(
+                  top: 6,
+                  left: 6,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ⭐ Recommended badge
+                      if (product.isRecommended == true)
+                        _Badge(
+                          label: 'Top Pick',
+                          icon: Icons.star,
+                          color: AppColors.warning,
+                        ),
+                      if (product.isRecommended == true)
+                        const SizedBox(height: 3),
+
+                      // 🪔 Daily Essential badge
+                      if (product.isMostPoojaEssentials == true)
+                        _Badge(
+                          label: 'Daily',
+                          icon: Icons.local_fire_department,
+                          color: AppColors.error,
+                        ),
+                      if (product.isMostPoojaEssentials == true)
+                        const SizedBox(height: 3),
+
+                      // 🔥 Most Used badge
+                      if (product.isMostUsed == true)
+                        _Badge(
+                          label: 'Popular',
+                          icon: Icons.trending_up,
+                          color: Colors.deepPurple,
+                        ),
+                    ],
+                  ),
+                ),
+
+                // ── TOP RIGHT: wishlist
                 Positioned(
                   top: 6,
                   right: 6,
@@ -94,46 +132,22 @@ class ProductCard extends ConsumerWidget {
                     onTap: () => ref
                         .read(wishlistProvider.notifier)
                         .toggle(product.id ?? ''),
-                    child: Icon(
-                      isWishlisted ? Icons.favorite : Icons.favorite_border,
-                      size: 18,
-                      color: isWishlisted ? AppColors.error : AppColors.grey,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withOpacity(0.85),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isWishlisted ? Icons.favorite : Icons.favorite_border,
+                        size: 16,
+                        color: isWishlisted ? AppColors.error : AppColors.grey,
+                      ),
                     ),
                   ),
                 ),
 
-                // Recommended star — top left
-                if (product.isRecommended == true)
-                  Positioned(
-                    top: 6,
-                    left: 6,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.star, color: AppColors.warning, size: 10),
-                          const SizedBox(width: 2),
-                          Text(
-                            'Top',
-                            style: text8(
-                              color: AppColors.warning,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                // Page dots — bottom left
+                // ── BOTTOM LEFT: page dots
                 if (product.images.length > 1)
                   Positioned(
                     bottom: 6,
@@ -162,7 +176,7 @@ class ProductCard extends ConsumerWidget {
                     ),
                   ),
 
-                // ADD / Qty control — bottom right (Blinkit style)
+                // ── BOTTOM RIGHT: ADD / qty control
                 if (product.inStock == true)
                   Positioned(
                     bottom: 6,
@@ -186,12 +200,12 @@ class ProductCard extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Unit / weight  e.g. "35 g"
+                      // Unit / weight
                       if (product.details?.unit != null &&
                           product.details!.unit!.isNotEmpty)
                         Text(
@@ -199,7 +213,7 @@ class ProductCard extends ConsumerWidget {
                           style: text10(color: AppColors.grey),
                         ),
 
-                      // Title — 2 lines max
+                      // Title
                       Text(
                         capitalizeWords(product.title ?? ''),
                         maxLines: 2,
@@ -216,27 +230,26 @@ class ProductCard extends ConsumerWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Old price + discount  (one line)
-                      Row(
-                        children: [
-                          Text(
-                            'Rs. ${product.oldPrice}',
-                            style: text8(
-                              color: AppColors.grey,
-                            ).copyWith(decoration: TextDecoration.lineThrough),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${product.discountPercent}% off',
-                            style: text8(
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w600,
+                      if (product.discountPercent != 0)
+                        Row(
+                          children: [
+                            Text(
+                              'Rs. ${product.oldPrice}',
+                              style: text8(color: AppColors.grey).copyWith(
+                                decoration: TextDecoration.lineThrough,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${product.discountPercent}% off',
+                              style: text8(
+                                color: AppColors.success,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       const SizedBox(height: 1),
-                      // Actual price — bold & prominent
                       Text(
                         'Rs. ${product.price}/-',
                         style: text13(
@@ -251,6 +264,43 @@ class ProductCard extends ConsumerWidget {
                   if (product.inStock != true) _OutOfStockWidget(),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Badge widget ──────────────────────────────────────────────────────────────
+
+class _Badge extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  const _Badge({required this.label, required this.icon, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.4), width: 0.8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 9),
+          const SizedBox(width: 2),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 8,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -323,7 +373,6 @@ class _QuantityControl extends StatelessWidget {
       transitionBuilder: (child, animation) =>
           ScaleTransition(scale: animation, child: child),
       child: quantity <= 0
-          // ── ADD button ────────────────────────────────────────────────
           ? AppButton(
               key: ValueKey('add_$productId'),
               height: 28,
@@ -342,7 +391,6 @@ class _QuantityControl extends StatelessWidget {
                 ),
               ),
             )
-          // ── +  qty  – ─────────────────────────────────────────────────
           : Container(
               key: ValueKey('qty_$productId'),
               height: 28,

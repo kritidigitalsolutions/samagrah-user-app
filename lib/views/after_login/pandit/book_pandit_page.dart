@@ -83,18 +83,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   PanditFilterState _filters = const PanditFilterState();
   final TextEditingController _searchController = TextEditingController();
 
-  // COMMENTED: assign best pandit option
-  // int selectedOption = 2;
-
-  // COMMENTED: controllers for assign pandit sheet — kept for future use
-  // final TextEditingController _nameController = TextEditingController();
-  // final TextEditingController _phoneController = TextEditingController();
-  // final TextEditingController _addressController = TextEditingController();
-  // final TextEditingController _notesController = TextEditingController();
-
-  // COMMENTED: assign pandit booking details map
-  // Map<String, dynamic> assignedPanditBookingDetails = {};
-
   Future<void> _refreshPandits() {
     return ref.refresh(panditProvider.future);
   }
@@ -102,11 +90,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   @override
   void dispose() {
     _searchController.dispose();
-    // COMMENTED: dispose assign pandit controllers
-    // _nameController.dispose();
-    // _phoneController.dispose();
-    // _addressController.dispose();
-    // _notesController.dispose();
+
     super.dispose();
   }
 
@@ -454,21 +438,15 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Row(
                 children: [
-                  // COMMENTED: Location button — kept for future use
-                  // GestureDetector(
-                  //   onTap: () => _showLocationBottomSheet(context),
-                  //   child: Row(children: [ ... ]),
-                  // ),
-                  // const SizedBox(width: 6),
                   Expanded(
                     child: Container(
                       height: 42,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.white,
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color: AppColors.black.withOpacity(0.06),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -532,11 +510,11 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                       decoration: BoxDecoration(
                         color: _filters.hasAnyFilter
                             ? AppColors.button
-                            : Colors.white,
+                            : AppColors.white,
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color: AppColors.black.withOpacity(0.06),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -549,7 +527,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                             Icons.tune_rounded,
                             size: 20,
                             color: _filters.hasAnyFilter
-                                ? Colors.white
+                                ? AppColors.white
                                 : AppColors.grey700,
                           ),
                           // Red dot when filters active
@@ -561,7 +539,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                 width: 7,
                                 height: 7,
                                 decoration: const BoxDecoration(
-                                  color: Colors.white,
+                                  color: AppColors.white,
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -825,9 +803,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
 
                         const SizedBox(height: 12),
 
-                        // COMMENTED: option cards — kept for future use
-                        // _buildOptionCard(1, 'Assign Best Available Pandit', ...)
-                        // _buildOptionCard(2, 'Choose Pandit', ...)
                         GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -1166,139 +1141,4 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
       ),
     );
   }
-
-  // COMMENTED: _buildOptionCard — kept for future use
-  // Widget _buildOptionCard(int index, String title, String description,
-  //     Color color, bool isRec) { ... }
-
-  // COMMENTED: _showAssignPanditBottomSheet — kept for future use
-  // Future<void> _showAssignPanditBottomSheet() async { ... }
-
-  // COMMENTED: _buildServiceStep — kept for future use
-  // Widget _buildServiceStep({...}) { ... }
-
-  // COMMENTED: _buildDateTimeStep — kept for future use
-  // Widget _buildDateTimeStep({...}) { ... }
-
-  // COMMENTED: _buildOtherDetailsStep — kept for future use
-  // Widget _buildOtherDetailsStep({...}) { ... }
-
-  // COMMENTED: _buildPickerTile — kept for future use
-  // Widget _buildPickerTile({...}) { ... }
-
-  // COMMENTED: _buildDetailField — kept for future use
-  // Widget _buildDetailField({...}) { ... }
-
-  // Widget _buildSheetStep(int step, bool isActive) {
-  //   return Container(
-  //     width: 28,
-  //     height: 28,
-  //     alignment: Alignment.center,
-  //     decoration: BoxDecoration(
-  //       shape: BoxShape.circle,
-  //       color: isActive ? AppColors.button : AppColors.grey300,
-  //     ),
-  //     child: Text(step.toString(),
-  //         style: text12(
-  //             color: isActive ? AppColors.white : AppColors.grey700,
-  //             fontWeight: FontWeight.bold)),
-  //   );
-  // }
-
-  // Widget _buildSheetLine(bool isActive) {
-  //   return Expanded(
-  //     child: Container(
-  //       height: 2,
-  //       margin: const EdgeInsets.symmetric(horizontal: 8),
-  //       color: isActive ? AppColors.button : AppColors.grey300,
-  //     ),
-  //   );
-  // }
-
-  // String _formatTime(TimeOfDay time) {
-  //   final now = DateTime.now();
-  //   final dt =
-  //       DateTime(now.year, now.month, now.day, time.hour, time.minute);
-  //   return TimeOfDay.fromDateTime(dt).format(context);
-  // }
-
-  // String _monthName(int month) {
-  //   const months = [
-  //     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  //     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  //   ];
-  //   return months[month - 1];
-  // }
-
-  // void _showMessage(String message) {
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     SnackBar(
-  //         content: Text(message), behavior: SnackBarBehavior.floating),
-  //   );
-  // }
 }
-
-// ─────────────────────────────────────────────
-// Location Bottom Sheet — COMMENTED OUT
-// Kept for future use
-// ─────────────────────────────────────────────
-
-// void _showLocationBottomSheet(BuildContext context) {
-//   showModalBottomSheet(
-//     context: context,
-//     isScrollControlled: true,
-//     shape: const RoundedRectangleBorder(
-//       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-//     ),
-//     builder: (context) {
-//       return Container(
-//         padding: const EdgeInsets.all(16),
-//         height: MediaQuery.of(context).size.height * 0.65,
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-//               Text("Select Location", style: text18(fontWeight: FontWeight.bold)),
-//               IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
-//             ]),
-//             const SizedBox(height: 16),
-//             ElevatedButton.icon(
-//               onPressed: () { Navigator.pop(context); },
-//               icon: const Icon(Icons.map, color: AppColors.button),
-//               label: Text("Search on Map", style: text14(color: AppColors.button)),
-//               style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 48)),
-//             ),
-//             const SizedBox(height: 12),
-//             ElevatedButton.icon(
-//               onPressed: () { Navigator.pop(context); },
-//               icon: const Icon(Icons.my_location, color: AppColors.button),
-//               label: Text("Near Me", style: text14(color: AppColors.button)),
-//               style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 48)),
-//             ),
-//             const SizedBox(height: 20),
-//             const Text("Recent / Saved Locations", style: TextStyle(fontWeight: FontWeight.w600)),
-//             const SizedBox(height: 12),
-//             Expanded(
-//               child: ListView(children: [
-//                 _buildLocationTile("MG Road, Near City Mall, Sector 18, Noida", onTap: () => Navigator.pop(context)),
-//                 _buildLocationTile("Linking Road, Bandra West, Mumbai, Maharashtra", isSelected: true, onTap: () => Navigator.pop(context)),
-//                 _buildLocationTile("Brigade Road, Ashok Nagar, Bengaluru, Karnataka", onTap: () => Navigator.pop(context)),
-//               ]),
-//             ),
-//           ],
-//         ),
-//       );
-//     },
-//   );
-// }
-
-// Widget _buildLocationTile(String address, {bool isSelected = false, VoidCallback? onTap}) {
-//   return ListTile(
-//     contentPadding: const EdgeInsets.symmetric(vertical: 4),
-//     leading: const Icon(Icons.location_on, color: AppColors.warning),
-//     title: Text(address, style: text14(fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal)),
-//     onTap: onTap,
-//     selected: isSelected,
-//     selectedTileColor: Colors.orange.withOpacity(0.1),
-//   );
-// }

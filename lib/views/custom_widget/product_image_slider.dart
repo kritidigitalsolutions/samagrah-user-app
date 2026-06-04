@@ -51,7 +51,7 @@ class _ProductImageSliderState extends State<ProductImageSlider> {
                 child: CustomCachedImage(
                   imageUrl: cleanImage,
                   fit: BoxFit.cover,
-                  width: double.infinity,
+                  //  width: double.infinity,
                 ),
               );
             }).toList(),

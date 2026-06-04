@@ -9,6 +9,7 @@ import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/service/helper_methods.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/category_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/views/after_login/customize_kit/kit_order_summary_page.dart';
 import 'package:samagrah/views/global_widgets/product_details_bottom_sheet.dart';
@@ -42,7 +43,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
     final kit = ModalRoute.of(context)!.settings.arguments as DefaultKitData;
     final isLoading = ref.watch(defaultKitLoaderPro);
 
-    // ✅ Use model field instead of hardcoded string
     final bool isSpecialKit = (kit.kitType ?? '').toLowerCase() == 'special';
     final bool isPanditApproved = kit.isPanditApproved == true;
     final bool isMostUsed = kit.isMostUserUse == true;
@@ -56,7 +56,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          // ── Sliver App Bar ──
+          // ── Sliver App Bar ──────────────────────────────────────────
           SliverAppBar(
             expandedHeight: 260,
             pinned: true,
@@ -65,12 +65,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             ),
-            // actions: [
-            //   IconButton(
-            //     onPressed: () {},
-            //     icon: const Icon(Icons.shopping_cart_outlined),
-            //   ),
-            // ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -92,8 +86,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                       ),
                     ),
                   ),
-
-                  // ✅ Image overlay badges from model flags
                   Positioned(
                     top: 50,
                     left: 16,
@@ -121,7 +113,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                       ],
                     ),
                   ),
-
                   Positioned(
                     left: 16,
                     right: 16,
@@ -261,10 +252,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                             ),
                         ],
                       ),
-
                       const SizedBox(height: 8),
-
-                      // ✅ Trust row — driven by model booleans
                       Wrap(
                         spacing: 12,
                         runSpacing: 6,
@@ -287,14 +275,12 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                               label: 'Most Popular',
                               color: Colors.orange.shade600,
                             ),
-                          // ✅ Category tag
                           if (kit.category != null && kit.category!.isNotEmpty)
                             _trustRow(
                               icon: Icons.category_outlined,
                               label: kit.category!,
                               color: AppColors.button,
                             ),
-                          // ✅ Festival type tag
                           if (kit.festivalType != null &&
                               kit.festivalType!.isNotEmpty)
                             _trustRow(
@@ -326,7 +312,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                         style: text14(color: AppColors.grey600),
                       ),
                       const Spacer(),
-                      // ✅ Kit type chip
                       if (kit.kitType != null && kit.kitType!.isNotEmpty)
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -458,22 +443,16 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                     : () => Navigator.pushNamed(
                         context,
                         AppRoutes.kitOrderSummary,
-                        arguments: KitOrderArgs(
-                          kit: kit,
-                          isCustomized: false,
-                        ), // ✅
+                        arguments: KitOrderArgs(kit: kit, isCustomized: false),
                       ),
               ),
               const SizedBox(height: 10),
-
-              // ✅ Show customize button only for non-special kits
               if (!isSpecialKit)
                 AppOutlineButton(
                   title: 'Customize This Kit ✏️',
                   onTap: () => _openCustomizeSheet(context, ref, kit),
                 )
               else
-                // ✅ Helpful message for special kit instead of button
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(
@@ -508,7 +487,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
     );
   }
 
-  // ── Read-only item row ──
   Widget _buildReadOnlyItemRow(
     BuildContext context,
     Item item,
@@ -516,7 +494,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
   ) {
     final product = item.product;
     final imageUrl = product?.media?.image.firstOrNull ?? '';
-    // ✅ Use category from new model
     final categoryName = product?.category?.name ?? '';
     final categorySlug = categoryName.toLowerCase();
 
@@ -527,7 +504,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Product image
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: CustomCachedImage(
@@ -538,8 +514,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                 ),
               ),
               const SizedBox(width: 12),
-
-              // Name + category + view products
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -550,7 +524,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    // ✅ Show category name from new model
                     if (categoryName.isNotEmpty)
                       Text(
                         categoryName,
@@ -575,7 +548,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                         ),
                       )
                     else
-                      // ✅ Special kit — no view products, show locked hint
                       Text(
                         'Fixed item',
                         style: text11(color: Colors.purple.shade400),
@@ -584,8 +556,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                 ),
               ),
               const SizedBox(width: 8),
-
-              // Qty + price
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -628,7 +598,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
     );
   }
 
-  // ── Category Products Bottom Sheet ──
   void _showCategoryProductsSheet(
     BuildContext context,
     String categorySlug,
@@ -660,7 +629,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
     );
   }
 
-  // ── Helpers ──
+  // ── Helpers ──────────────────────────────────────────────────────────
 
   Widget _statBadge(IconData icon, String label) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -678,7 +647,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
     ),
   );
 
-  /// ✅ Image overlay badge (top of hero image)
   Widget _overlayBadge({
     required IconData icon,
     required String label,
@@ -702,7 +670,6 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
     ),
   );
 
-  /// ✅ Inline trust row item (price section)
   Widget _trustRow({
     required IconData icon,
     required String label,
@@ -768,9 +735,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                       : kit.savings,
                   status: kit.status,
                   items: finalItems,
-
                   festivalType: kit.festivalType ?? '',
-
                   kitType: kit.kitType ?? '',
                   category: kit.category ?? '',
                   isMostPopularKit: kit.isMostPopularKit,
@@ -784,7 +749,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                   arguments: KitOrderArgs(
                     kit: customizedKit,
                     isCustomized: true,
-                  ), // ✅
+                  ),
                 );
               },
             );
@@ -796,7 +761,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
 }
 
 // ════════════════════════════════════════════════════════════
-//  CATEGORY PRODUCTS BOTTOM SHEET
+//  CATEGORY PRODUCTS BOTTOM SHEET  (dynamic categories)
 // ════════════════════════════════════════════════════════════
 class _CategoryProductsSheet extends ConsumerWidget {
   final String categoryLabel;
@@ -812,6 +777,7 @@ class _CategoryProductsSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final productState = ref.watch(productProvider);
+    final categoryAsync = ref.watch(categoryProvider); // ← dynamic
     final selectedCategory = productState.value?.selectedKitCategory ?? 'All';
 
     return Container(
@@ -858,52 +824,54 @@ class _CategoryProductsSheet extends ConsumerWidget {
             ),
           ),
 
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                _chip(
-                  context,
-                  ref,
-                  'All',
-                  'All',
-                  'assets/home/select-all.png',
-                  selectedCategory == 'All',
+          // ── Dynamic category chips ────────────────────────────────
+          categoryAsync.when(
+            loading: () => SizedBox(
+              height: 36,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: 4,
+                itemBuilder: (_, __) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Container(
+                    width: 80,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.grey200,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
                 ),
-                _chip(
-                  context,
-                  ref,
-                  'Agri batti',
-                  'agarbatti',
-                  'assets/home/incense.png',
-                  selectedCategory == 'agarbatti',
-                ),
-                _chip(
-                  context,
-                  ref,
-                  'Fruits',
-                  'fruits',
-                  'assets/home/fruit.png',
-                  selectedCategory == 'fruits',
-                ),
-                _chip(
-                  context,
-                  ref,
-                  'Flowers',
-                  'flowers',
-                  'assets/home/flower.png',
-                  selectedCategory == 'flowers',
-                ),
-                _chip(
-                  context,
-                  ref,
-                  'Mala',
-                  'garland',
-                  'assets/home/mala.png',
-                  selectedCategory == 'garland',
-                ),
-              ],
+              ),
+            ),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (categories) => SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  _categoryChip(
+                    context: context,
+                    ref: ref,
+                    label: 'All',
+                    categoryId: 'All',
+                    imageAsset: 'assets/home/select-all.png',
+                    selected: selectedCategory == 'All',
+                  ),
+                  ...categories.map(
+                    (cat) => _categoryChip(
+                      context: context,
+                      ref: ref,
+                      label: cat.name ?? '',
+                      categoryId: (cat.name ?? '').toLowerCase(),
+                      networkImage: cat.image,
+                      selected:
+                          selectedCategory == (cat.name ?? '').toLowerCase(),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -966,7 +934,12 @@ class _CategoryProductsSheet extends ConsumerWidget {
 
   Widget _buildProductCard(BuildContext context, Product product) {
     return GestureDetector(
-      onTap: () => _openProductDetail(context, product.id ?? ''),
+      onTap: () => showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => ProductDetailsBottomSheet(productId: product.id ?? ''),
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.white,
@@ -1048,24 +1021,41 @@ class _CategoryProductsSheet extends ConsumerWidget {
     );
   }
 
-  Widget _chip(
-    BuildContext context,
-    WidgetRef ref,
-    String label,
-    String type,
-    String img,
-    bool selected,
-  ) {
+  Widget _categoryChip({
+    required BuildContext context,
+    required WidgetRef ref,
+    required String label,
+    required String categoryId,
+    String? imageAsset,
+    String? networkImage,
+    required bool selected,
+  }) {
+    Widget avatar;
+    if (networkImage != null && networkImage.isNotEmpty) {
+      avatar = ClipOval(
+        child: CustomCachedImage(
+          imageUrl: networkImage,
+          width: 18,
+          height: 18,
+          fit: BoxFit.cover,
+        ),
+      );
+    } else if (imageAsset != null) {
+      avatar = Image.asset(imageAsset, width: 18, height: 18);
+    } else {
+      avatar = const SizedBox(width: 18, height: 18);
+    }
+
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: GestureDetector(
         onTap: () => ref
             .read(productProvider.notifier)
-            .filterByCustKitCategory(type.toLowerCase()),
+            .filterByCustKitCategory(categoryId.toLowerCase()),
         child: Chip(
-          avatar: Image.asset(img, width: 16, height: 16),
+          avatar: avatar,
           label: Text(
-            label,
+            capitalizeWords(label),
             style: text12(color: selected ? AppColors.button : AppColors.black),
           ),
           backgroundColor: selected
@@ -1081,15 +1071,6 @@ class _CategoryProductsSheet extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 4),
         ),
       ),
-    );
-  }
-
-  void _openProductDetail(BuildContext context, String productId) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => ProductDetailsBottomSheet(productId: productId),
     );
   }
 }
@@ -1116,6 +1097,7 @@ class _CustomizeSheet extends ConsumerStatefulWidget {
 
 class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
   late List<Item> _localItems;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -1123,6 +1105,12 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
     _localItems = widget.originalItems
         .map((e) => Item(product: e.product, quantity: e.quantity, id: e.id))
         .toList();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   num get _localTotal => _localItems.fold(0, (sum, item) {
@@ -1162,6 +1150,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
   @override
   Widget build(BuildContext context) {
     final productState = ref.watch(productProvider);
+    final categoryAsync = ref.watch(categoryProvider); // ← dynamic
     final cart = ref.watch(customizeKitCartProvider);
     final cartNotifier = ref.read(customizeKitCartProvider.notifier);
     final selectedCategory = productState.value?.selectedKitCategory ?? 'All';
@@ -1173,6 +1162,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
       ),
       child: Column(
         children: [
+          // ── Handle ───────────────────────────────────────────────
           const SizedBox(height: 10),
           Container(
             height: 4,
@@ -1183,6 +1173,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
             ),
           ),
 
+          // ── Header ───────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 8, 0),
             child: Row(
@@ -1211,7 +1202,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
             ),
           ),
 
-          // ✅ Customize info banner
+          // ── Info Banner ───────────────────────────────────────────
           Container(
             margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1238,6 +1229,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
             ),
           ),
 
+          // ── Included items label ──────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
             child: Row(
@@ -1248,15 +1240,36 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
                 ),
                 const SizedBox(width: 4),
                 Text('(You can edit)', style: text12(color: AppColors.grey600)),
+                const Spacer(),
+                // live item count badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.button.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${_localItems.length} items',
+                    style: text11(
+                      color: AppColors.button,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
 
+          // ── Scrollable Body ───────────────────────────────────────
           Expanded(
             child: ListView(
               controller: widget.scrollController,
               padding: EdgeInsets.zero,
               children: [
+                // Editable kit items
                 ..._localItems.asMap().entries.map(
                   (e) => _buildEditableRow(e.value, e.key),
                 ),
@@ -1267,6 +1280,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
                   color: Color(0xFFF5F5F5),
                 ),
 
+                // Add More header
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
                   child: Text(
@@ -1275,6 +1289,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
                   ),
                 ),
 
+                // Search bar
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Container(
@@ -1283,6 +1298,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: TextField(
+                      controller: _searchController,
                       style: text14(color: AppColors.grey800),
                       decoration: InputDecoration(
                         hintText: 'Search items to add...',
@@ -1304,47 +1320,59 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
 
                 const SizedBox(height: 12),
 
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      _chip(
-                        'All',
-                        'All',
-                        'assets/home/select-all.png',
-                        selectedCategory == 'All',
+                // ── Dynamic category chips ──────────────────────────
+                categoryAsync.when(
+                  loading: () => SizedBox(
+                    height: 36,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: 4,
+                      itemBuilder: (_, __) => Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Container(
+                          width: 80,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: AppColors.grey200,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
                       ),
-                      _chip(
-                        'Agri batti',
-                        'agarbatti',
-                        'assets/home/incense.png',
-                        selectedCategory == 'agarbatti',
-                      ),
-                      _chip(
-                        'Fruits',
-                        'fruits',
-                        'assets/home/fruit.png',
-                        selectedCategory == 'fruits',
-                      ),
-                      _chip(
-                        'Flowers',
-                        'flowers',
-                        'assets/home/flower.png',
-                        selectedCategory == 'flowers',
-                      ),
-                      _chip(
-                        'Mala',
-                        'garland',
-                        'assets/home/mala.png',
-                        selectedCategory == 'garland',
-                      ),
-                    ],
+                    ),
+                  ),
+                  error: (_, __) => const SizedBox.shrink(),
+                  data: (categories) => SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        _dynamicChip(
+                          ref: ref,
+                          label: 'All',
+                          categoryId: 'All',
+                          imageAsset: 'assets/home/select-all.png',
+                          selected: selectedCategory == 'All',
+                        ),
+                        ...categories.map(
+                          (cat) => _dynamicChip(
+                            ref: ref,
+                            label: cat.name ?? '',
+                            categoryId: (cat.name ?? '').toLowerCase(),
+                            networkImage: cat.image,
+                            selected:
+                                selectedCategory ==
+                                (cat.name ?? '').toLowerCase(),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
                 const SizedBox(height: 12),
 
+                // ── Product grid ────────────────────────────────────
                 productState.when(
                   loading: () => const Center(
                     child: Padding(
@@ -1363,7 +1391,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 3,
-                            childAspectRatio: 0.72,
+                            childAspectRatio: 0.68,
                             crossAxisSpacing: 10,
                             mainAxisSpacing: 12,
                           ),
@@ -1390,6 +1418,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
             ),
           ),
 
+          // ── Sticky Checkout Bar ───────────────────────────────────
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
             decoration: BoxDecoration(
@@ -1434,14 +1463,19 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
     );
   }
 
+  // ── Editable kit item row ─────────────────────────────────────────────────
   Widget _buildEditableRow(Item item, int index) {
     final product = item.product;
     final qty = item.quantity ?? 1;
-    // ✅ Category from new model
     final categoryName = product?.category?.name ?? '';
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppColors.grey100,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         children: [
           ClipRRect(
@@ -1464,13 +1498,12 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                // ✅ Show category name from new model
                 if (categoryName.isNotEmpty)
                   Text(categoryName, style: text11(color: AppColors.grey500)),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   '₹${product?.pricing?.price ?? ''}',
-                  style: text14(
+                  style: text13(
                     fontWeight: FontWeight.w600,
                     color: AppColors.button,
                   ),
@@ -1494,13 +1527,20 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
                 AppColors.green,
                 () => _updateQuantity(index, qty + 1),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               GestureDetector(
                 onTap: () => _deleteItem(index),
-                child: const Icon(
-                  Icons.delete_outline,
-                  color: AppColors.error,
-                  size: 20,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.delete_outline,
+                    color: AppColors.error,
+                    size: 18,
+                  ),
                 ),
               ),
             ],
@@ -1510,6 +1550,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
     );
   }
 
+  // ── Improved product card ─────────────────────────────────────────────────
   Widget _buildProductCard(
     Product product,
     bool isInLocalKit,
@@ -1517,81 +1558,184 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
     CustomizeKitCartNotifier cartNotifier,
   ) {
     final isAdded = isInLocalKit || cartQty > 0;
+    final hasDiscount = (product.discountPercent ?? 0) > 0;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 5)],
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.07),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: isAdded
+            ? Border.all(color: AppColors.button.withOpacity(0.4), width: 1.5)
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Image ───────────────────────────────────────────────
           Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
-              child: CustomCachedImage(
-                imageUrl: product.thumbnail ?? '',
-                height: 100,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(7),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Stack(
               children: [
-                Text(
-                  product.title ?? '',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: text12(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '₹${product.price}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(14),
+                  ),
+                  child: CustomCachedImage(
+                    imageUrl: product.thumbnail ?? '',
+                    width: double.infinity,
+                    fit: BoxFit.cover,
                   ),
                 ),
-                const SizedBox(height: 8),
-                if (!isAdded)
-                  AppButton(
-                    height: 30,
-                    radius: 8,
-                    textStyle: text12(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    title: 'Add',
-                    onTap: () {
-                      cartNotifier.addItem(product);
-                      _addProduct(product);
-                    },
-                  )
-                else
-                  Container(
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: AppColors.button.withAlpha(25),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.button),
-                    ),
-                    child: Center(
+                // Discount badge
+                if (hasDiscount)
+                  Positioned(
+                    top: 5,
+                    left: 5,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade600,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
                       child: Text(
-                        isInLocalKit ? 'In Kit' : '$cartQty Added',
-                        style: text12(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.button,
+                        '${product.discountPercent}% off',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
                   ),
+                // "In kit" tick overlay
+                if (isAdded)
+                  Positioned(
+                    top: 5,
+                    right: 5,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.check_circle_rounded,
+                        size: 16,
+                        color: AppColors.button,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // ── Info ────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(7, 6, 7, 7),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  capitalizeWords(product.title ?? ''),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: text11(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 3),
+
+                // Price row
+                Row(
+                  children: [
+                    Text(
+                      '₹${product.price}',
+                      style: text12(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    if ((product.oldPrice ?? 0) > (product.price ?? 0)) ...[
+                      const SizedBox(width: 3),
+                      Text(
+                        '₹${product.oldPrice}',
+                        style: text8(
+                          color: AppColors.grey500,
+                        ).copyWith(decoration: TextDecoration.lineThrough),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 6),
+
+                // Add / Added button
+                isAdded
+                    ? Container(
+                        height: 28,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: AppColors.button.withAlpha(20),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.button),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.check,
+                              size: 12,
+                              color: AppColors.button,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              isInLocalKit ? 'In Kit' : '$cartQty Added',
+                              style: text11(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.button,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : GestureDetector(
+                        onTap: () {
+                          cartNotifier.addItem(product);
+                          _addProduct(product);
+                        },
+                        child: Container(
+                          height: 28,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: AppColors.button,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.add,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Add',
+                                style: text11(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
               ],
             ),
           ),
@@ -1600,43 +1744,71 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
     );
   }
 
+  // ── Dynamic chip ────────────────────────────────────────────────────────────
+  Widget _dynamicChip({
+    required WidgetRef ref,
+    required String label,
+    required String categoryId,
+    String? imageAsset,
+    String? networkImage,
+    required bool selected,
+  }) {
+    Widget avatar;
+    if (networkImage != null && networkImage.isNotEmpty) {
+      avatar = ClipOval(
+        child: CustomCachedImage(
+          imageUrl: networkImage,
+          width: 18,
+          height: 18,
+          fit: BoxFit.cover,
+        ),
+      );
+    } else if (imageAsset != null) {
+      avatar = Image.asset(imageAsset, width: 18, height: 18);
+    } else {
+      avatar = const SizedBox(width: 18, height: 18);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: () => ref
+            .read(productProvider.notifier)
+            .filterByCustKitCategory(categoryId.toLowerCase()),
+        child: Chip(
+          avatar: avatar,
+          label: Text(
+            capitalizeWords(label),
+            style: text12(color: selected ? AppColors.button : AppColors.black),
+          ),
+          backgroundColor: selected
+              ? AppColors.button.withAlpha(30)
+              : AppColors.white,
+          side: BorderSide(
+            color: selected ? AppColors.button : AppColors.grey200,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+        ),
+      ),
+    );
+  }
+
   Widget _qtyBtn(IconData icon, Color color, VoidCallback onTap) =>
       GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(5),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withOpacity(0.12),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, size: 16, color: color),
+          child: Icon(icon, size: 14, color: color),
         ),
       );
-
-  Widget _chip(String label, String type, String img, bool selected) => Padding(
-    padding: const EdgeInsets.only(right: 8),
-    child: GestureDetector(
-      onTap: () => ref
-          .read(productProvider.notifier)
-          .filterByCustKitCategory(type.toLowerCase()),
-      child: Chip(
-        avatar: Image.asset(img, width: 16, height: 16),
-        label: Text(
-          label,
-          style: text12(color: selected ? AppColors.button : AppColors.black),
-        ),
-        backgroundColor: selected
-            ? AppColors.button.withAlpha(30)
-            : AppColors.white,
-        side: BorderSide(
-          color: selected ? AppColors.button : AppColors.grey200,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-      ),
-    ),
-  );
 
   UserDraftProduct _toDefaultProduct(Product product) => UserDraftProduct(
     id: product.id,

@@ -3,6 +3,7 @@
 import 'package:samagrah/data/network/network_api_service.dart';
 import 'package:samagrah/model/response/banner_res_model.dart';
 import 'package:samagrah/model/response/product_booked_res/review_res_model.dart';
+import 'package:samagrah/model/response/product_res/brands_res_model.dart';
 import 'package:samagrah/model/response/product_res/cart_res_model.dart';
 import 'package:samagrah/model/response/product_res/category_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_details_res_model.dart';
@@ -25,6 +26,18 @@ class ProductRepo {
       final city = await LocationStorage.getCity();
       final res = await _api.getApi('${AppUrls.category}?city=$city');
       return CategoryResModel.fromJson(res);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // get category
+
+  Future<BrandsResModel> getBrands() async {
+    try {
+      final city = await LocationStorage.getCity();
+      final res = await _api.getApi('${AppUrls.brands}?city=$city');
+      return BrandsResModel.fromJson(res);
     } catch (e) {
       rethrow;
     }

@@ -16,17 +16,6 @@ class PanditCardLoader extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
         children: [
-          // Fake results count
-          Container(
-            height: 20,
-            width: 160,
-            decoration: BoxDecoration(
-              color: AppColors.grey300,
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          const SizedBox(height: 16),
-
           // Grid of skeleton cards
           GridView.builder(
             shrinkWrap: true,

@@ -3,24 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:samagrah/model/response/banner_res_model.dart';
-import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
-import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/service/helper_methods.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
-import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/category_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
-import 'package:samagrah/view_model/after_login_provider/home_provider/wishlist_provider.dart';
 import 'package:samagrah/views/after_login/product/daliy_pooja_essential_page.dart';
 import 'package:samagrah/views/custom_loader.dart/product_loader.dart';
 import 'package:samagrah/views/custom_widget/Product_card.dart';
 import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
 import 'package:samagrah/views/service_pages/location_provider.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../view_model/after_login_provider/home_provider/notification_provider.dart';
 
@@ -39,8 +34,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final selectedCategory = productState.value?.selectedCategory ?? "all";
     final location = ref.watch(locationProvider);
     final bannerAsync = ref.watch(bannerProvider);
-
-    // ✅ Dynamic categories
     final categoryAsync = ref.watch(categoryProvider);
 
     return Stack(
@@ -70,13 +63,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             style: text15(fontWeight: FontWeight.bold),
                           ),
                           InkWell(
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.locationPage,
-                                arguments: false,
-                              );
-                            },
+                            onTap: () => Navigator.pushNamed(
+                              context,
+                              AppRoutes.locationPage,
+                              arguments: false,
+                            ),
                             child: Row(
                               children: [
                                 Icon(
@@ -99,9 +90,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       userAsync.when(
                         data: (user) => GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(context, AppRoutes.profile);
-                          },
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.profile),
                           child: CircleAvatar(
                             radius: 30,
                             child: CustomCachedImage(
@@ -128,9 +118,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Expanded(
                       child: GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, AppRoutes.searchProduct);
-                        },
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          AppRoutes.searchProduct,
+                        ),
                         child: AbsorbPointer(
                           child: TextField(
                             style: text14(
@@ -248,7 +239,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
-                      // ✅ "All" chip — hamesha pehle
                       _buildChip(
                         label: 'All',
                         categoryId: 'all',
@@ -256,13 +246,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         selected: selectedCategory == 'all',
                         ref: ref,
                       ),
-                      // ✅ API se aayi categories
                       ...categories.map(
                         (cat) => _buildChip(
                           label: cat.name ?? '',
                           categoryId: cat.id ?? '',
-                          // API mein image field hai to use karo,
-                          // warna fallback asset
                           networkImage: cat.image,
                           selected: selectedCategory == cat.id,
                           ref: ref,
@@ -281,16 +268,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const Center(child: Text("Something went wrong")),
                   data: (state) {
                     final products = state.categoryProducts.take(6).toList();
-                    final dailyEss = state.dailyEssentials.take(20).toList();
-                    final mostUsed = state.mostUsed.take(20).toList();
                     final hasMoreProducts = state.categoryProducts.length > 6;
 
-                    final bool allEmpty =
-                        products.isEmpty &&
-                        dailyEss.isEmpty &&
-                        mostUsed.isEmpty;
-
-                    if (allEmpty) {
+                    if (products.isEmpty) {
                       return const Center(child: Text("No Products Found"));
                     }
 
@@ -324,7 +304,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           const SizedBox(height: 10),
 
-                          // Main product grid
+                          // Product grid
                           AnimationLimiter(
                             key: ValueKey("grid_${products.length}"),
                             child: GridView.builder(
@@ -362,17 +342,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                           if (hasMoreProducts)
                             TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const TypeOfCategoryPage(
-                                      title: 'Buy Item for Pooja',
-                                      categoryType: 'allItems',
-                                    ),
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const TypeOfCategoryPage(
+                                    title: 'Buy Item for Pooja',
+                                    categoryType: 'allItems',
                                   ),
-                                );
-                              },
+                                ),
+                              ),
                               child: Text(
                                 "View More",
                                 style: text13(
@@ -381,148 +359,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                               ),
                             ),
-
-                          // Daily Pooja Essentials
-                          if (dailyEss.isNotEmpty) ...[
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Daily Pooja Essentials',
-                                    style: text15(fontWeight: FontWeight.bold),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const TypeOfCategoryPage(
-                                              title: 'Daily Pooja Essentials',
-                                              categoryType: 'daily',
-                                            ),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'View all >',
-                                      style: text13(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.warningDark,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              height: 175,
-                              child: AnimationLimiter(
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  itemCount: dailyEss.length,
-                                  itemBuilder: (context, index) {
-                                    return AnimationConfiguration.staggeredList(
-                                      position: index,
-                                      duration: const Duration(
-                                        milliseconds: 400,
-                                      ),
-                                      child: SlideAnimation(
-                                        horizontalOffset: 50,
-                                        child: FadeInAnimation(
-                                          child: ProductCard(
-                                            product: dailyEss[index],
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                          ],
-
-                          // Most Used Items
-                          if (mostUsed.isNotEmpty) ...[
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Most Used Items in Pooja',
-                                    style: text15(fontWeight: FontWeight.bold),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const TypeOfCategoryPage(
-                                              title: 'Most Used Items in Pooja',
-                                              categoryType: 'mostUsed',
-                                            ),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'View all >',
-                                      style: text13(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.warningDark,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              height: 175,
-                              child: AnimationLimiter(
-                                key: ValueKey("mostUsed_${mostUsed.length}"),
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  itemCount: mostUsed.length,
-                                  itemBuilder: (context, index) {
-                                    return AnimationConfiguration.staggeredList(
-                                      position: index,
-                                      duration: const Duration(
-                                        milliseconds: 400,
-                                      ),
-                                      child: SlideAnimation(
-                                        horizontalOffset: 50,
-                                        child: FadeInAnimation(
-                                          child: GestureDetector(
-                                            onTap: () => Navigator.pushNamed(
-                                              context,
-                                              AppRoutes.productDetails,
-                                            ),
-                                            child: ProductCard(
-                                              product: mostUsed[index],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
 
                           const SizedBox(height: 100),
                         ],
@@ -561,7 +397,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  /// ✅ Dynamic chip — asset ya network image support karta hai
   Widget _buildChip({
     required String label,
     required String categoryId,
@@ -589,13 +424,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: GestureDetector(
-        onTap: () {
-          ref.read(productProvider.notifier).filterByCategory(categoryId);
-        },
+        onTap: () =>
+            ref.read(productProvider.notifier).filterByCategory(categoryId),
         child: Chip(
           avatar: avatar,
           label: Text(
-            label,
+            capitalizeWords(label),
             style: text13(color: selected ? AppColors.button : AppColors.black),
           ),
           backgroundColor: selected
@@ -709,283 +543,3 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 }
-
-// Widget buildDiyaCard(Product product, WidgetRef ref, BuildContext context) {
-//   final cartNotifier = ref.read(cartProvider.notifier);
-//   final quantity = ref.watch(cartQuantityProvider(product.id ?? '')); // ✅ Fixed
-
-//   final isWishlisted = ref.watch(isWishlistedProvider(product.id ?? ''));
-//   final currentIndex = ref.watch(imageSliderIndexProvider(product.id ?? ''));
-
-//   return Container(
-//     width: 130,
-
-//     margin: const EdgeInsets.only(right: 12),
-//     decoration: BoxDecoration(
-//       color: AppColors.white,
-//       borderRadius: BorderRadius.circular(12),
-//       boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
-//     ),
-//     child: Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         // Image + Heart Icon (same as before)
-//         Expanded(
-//           child: Stack(
-//             children: [
-//               Positioned.fill(
-//                 child: InkWell(
-//                   borderRadius: const BorderRadius.vertical(
-//                     top: Radius.circular(12),
-//                   ),
-//                   onTap: () {
-//                     Navigator.pushNamed(
-//                       context,
-//                       AppRoutes.productDetails,
-//                       arguments: product,
-//                     );
-//                   },
-//                   child: CarouselSlider(
-//                     options: CarouselOptions(
-//                       autoPlay: false,
-//                       viewportFraction: 1,
-
-//                       enlargeCenterPage: false,
-//                       onPageChanged: (index, reason) {
-//                         ref
-//                                 .read(
-//                                   imageSliderIndexProvider(
-//                                     product.id ?? '',
-//                                   ).notifier,
-//                                 )
-//                                 .state =
-//                             index;
-//                       },
-//                     ),
-//                     items: product.images.map((image) {
-//                       final cleanImage = image.replaceAll("\\", "/");
-
-//                       return CustomCachedImage(
-//                         borderRadius: BorderRadius.vertical(
-//                           top: Radius.circular(12),
-//                         ),
-//                         imageUrl: cleanImage,
-//                         fit: BoxFit.cover,
-//                         width: double.infinity,
-//                       );
-//                     }).toList(),
-//                   ),
-//                 ),
-//               ),
-
-//               if (product.isRecommended == true)
-//                 Positioned(
-//                   top: 6,
-//                   left: 6,
-//                   child: Container(
-//                     padding: const EdgeInsets.symmetric(
-//                       horizontal: 8,
-//                       vertical: 3,
-//                     ),
-//                     margin: const EdgeInsets.only(bottom: 4),
-//                     decoration: BoxDecoration(
-//                       color: AppColors.warning.withValues(alpha: 0.2),
-//                       shape: BoxShape.circle,
-//                     ),
-//                     child: Icon(Icons.star, color: AppColors.warning, size: 12),
-//                   ),
-//                 ),
-
-//               Positioned(
-//                 top: 6,
-//                 right: 6,
-//                 child: GestureDetector(
-//                   onTap: () {
-//                     ref
-//                         .read(wishlistProvider.notifier)
-//                         .toggle(product.id ?? '');
-//                   },
-//                   child: Icon(
-//                     isWishlisted ? Icons.favorite : Icons.favorite_border,
-//                     size: 16,
-//                     color: isWishlisted ? AppColors.error : AppColors.grey,
-//                   ),
-//                 ),
-//               ),
-//               if (product.images.length >
-//                   1) // ← only show dots if more than 1 image
-//                 Positioned(
-//                   bottom: 5,
-//                   left: 5,
-//                   child: Container(
-//                     decoration: BoxDecoration(
-//                       boxShadow: [
-//                         BoxShadow(
-//                           color: Colors.black.withOpacity(0.5),
-//                           blurRadius: 8,
-//                           spreadRadius: 2,
-//                         ),
-//                       ],
-//                     ),
-//                     child: AnimatedSmoothIndicator(
-//                       activeIndex: currentIndex.clamp(
-//                         0,
-//                         product.images.length - 1,
-//                       ), // ← clamp safety
-//                       count: product.images.length,
-//                       effect: product.images.length <= 5
-//                           ? WormEffect(
-//                               dotHeight: 7,
-//                               dotWidth: 7,
-//                               activeDotColor: AppColors.black,
-//                               dotColor: AppColors.white.withOpacity(0.5),
-//                             )
-//                           : ScrollingDotsEffect(
-//                               activeDotColor: AppColors.black,
-//                               dotColor: AppColors.white.withOpacity(0.5),
-//                               dotHeight: 7,
-//                               dotWidth: 7,
-//                               spacing: 4,
-//                               maxVisibleDots: 5,
-//                             ),
-//                     ),
-//                   ),
-//                 ),
-//             ],
-//           ),
-//         ),
-
-//         Container(height: 1, color: AppColors.grey300),
-
-//         Padding(
-//           padding: const EdgeInsets.all(6),
-//           child: Column(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               Text(
-//                 capitalizeWords(product.title ?? ''),
-//                 overflow: TextOverflow.ellipsis,
-//                 style: text12(fontWeight: FontWeight.w500),
-//               ),
-//               const SizedBox(height: 2),
-//               Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 //mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                 children: [
-//                   Row(
-//                     children: [
-//                       Text(
-//                         'Rs. ${product.oldPrice}/-',
-//                         style: text8(
-//                           color: AppColors.grey,
-//                         ).copyWith(decoration: TextDecoration.lineThrough),
-//                       ),
-//                       SizedBox(width: 8),
-
-//                       Text(
-//                         '${product.discountPercent}% off',
-//                         style: text10(color: AppColors.grey500),
-//                       ),
-//                     ],
-//                   ),
-//                   Text(
-//                     'Rs. ${product.price}/-',
-//                     style: text11(
-//                       fontWeight: FontWeight.bold,
-//                       color: AppColors.button,
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//               SizedBox(height: 5),
-
-//               AnimatedSwitcher(
-//                 duration: Duration(milliseconds: 200),
-//                 transitionBuilder: (child, animation) {
-//                   return ScaleTransition(scale: animation, child: child);
-//                 },
-//                 child: quantity == 0
-//                     ? AppButton(
-//                         key: ValueKey('add_button_${product.id}'),
-//                         height: 22,
-//                         radius: 4,
-//                         textStyle: text11(
-//                           color: AppColors.white,
-//                           fontWeight: FontWeight.w600,
-//                         ),
-//                         title: "Add",
-//                         onTap: () {
-//                           cartNotifier.addItem(
-//                             CartItem(
-//                               productId: product.id ?? '',
-//                               title: product.title ?? '',
-//                               thumbnail: product.thumbnail ?? '',
-//                               price: product.price?.toDouble() ?? 0.0,
-//                             ),
-//                           );
-//                         },
-//                       )
-//                     : Container(
-//                         key: ValueKey('quantity_control_${product.id}'),
-//                         height: 22,
-//                         decoration: BoxDecoration(
-//                           color: AppColors.button,
-//                           borderRadius: BorderRadius.circular(4),
-//                         ),
-//                         child: Row(
-//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                           children: [
-//                             InkWell(
-//                               onTap: () {
-//                                 cartNotifier.decreaseQuantity(product.id ?? '');
-//                               },
-//                               child: Container(
-//                                 width: 22,
-//                                 height: 22,
-//                                 alignment: Alignment.center,
-//                                 child: Icon(
-//                                   Icons.remove,
-//                                   size: 12,
-//                                   color: AppColors.white,
-//                                 ),
-//                               ),
-//                             ),
-//                             Expanded(
-//                               child: Container(
-//                                 alignment: Alignment.center,
-//                                 color: AppColors.white,
-//                                 child: Text(
-//                                   '$quantity',
-//                                   style: text11(
-//                                     fontWeight: FontWeight.bold,
-//                                     color: AppColors.button,
-//                                   ),
-//                                 ),
-//                               ),
-//                             ),
-//                             InkWell(
-//                               onTap: () {
-//                                 cartNotifier.increaseQuantity(product.id ?? '');
-//                               },
-//                               child: Container(
-//                                 width: 22,
-//                                 height: 22,
-//                                 alignment: Alignment.center,
-//                                 child: Icon(
-//                                   Icons.add,
-//                                   size: 12,
-//                                   color: AppColors.white,
-//                                 ),
-//                               ),
-//                             ),
-//                           ],
-//                         ),
-//                       ),
-//               ),
-//             ],
-//           ),
-//         ),
-//       ],
-//     ),
-//   );
-// }

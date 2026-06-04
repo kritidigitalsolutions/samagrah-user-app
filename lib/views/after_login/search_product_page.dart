@@ -163,8 +163,8 @@ class _SearchProductPageState extends ConsumerState<SearchProductPage> {
                               padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
                               gridDelegate:
                                   const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 3,
-                                    childAspectRatio: 0.75,
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 0.70,
                                     crossAxisSpacing: 10,
                                     mainAxisSpacing: 10,
                                   ),
@@ -174,7 +174,7 @@ class _SearchProductPageState extends ConsumerState<SearchProductPage> {
 
                                 return AnimationConfiguration.staggeredGrid(
                                   position: index,
-                                  columnCount: 3,
+                                  columnCount: 2,
                                   duration: const Duration(milliseconds: 400),
                                   child: SlideAnimation(
                                     verticalOffset: 60,

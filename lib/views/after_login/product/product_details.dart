@@ -12,7 +12,6 @@ import 'package:samagrah/view_model/after_login_provider/home_provider/cart_prov
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/product_details_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/wishlist_provider.dart';
-import 'package:samagrah/views/after_login/home_screen.dart';
 import 'package:samagrah/views/after_login/product/checkout/order_summary_page.dart';
 import 'package:samagrah/views/custom_widget/Product_card.dart';
 import 'package:samagrah/views/custom_widget/product_image_slider.dart';
@@ -41,40 +40,65 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
   @override
   Widget build(BuildContext context) {
     final product = ModalRoute.of(context)!.settings.arguments as Product;
-
     final quantity = ref.watch(cartQuantityProvider(product.id ?? ''));
     final cartNotifier = ref.read(cartProvider.notifier);
     final productState = ref.watch(productProvider);
     final isWishlisted = ref.watch(isWishlistedProvider(product.id ?? ''));
     final showAllDetails = ref.watch(showAllDetailsProvider);
-
     final details = product.details;
 
-    final detailItems = details == null
+    // All detail fields — show ALL, even if null (will display "N/A")
+    final allDetailFields = details == null
         ? <String, String?>{}
         : {
-            "Brand": details.brand,
-
-            "Unit": details.unit,
-            "Weight": details.weight,
-            "Dimensions": details.dimensions,
-            "Material": details.material,
-            "Color": details.color,
-            "Manufacturer": details.manufacturer,
-            "Country of Origin": details.countryOfOrigin,
-            "Package Contents": details.packageContents,
-            "Usage Instructions": details.usageInstructions,
-            "Care Instructions": details.careInstructions,
-            "Expiry Info": details.expiryInfo,
+            'Brand': details.brand,
+            'Sub Brand': details.subBrand,
+            'Unit': details.unit,
+            'Weight': details.weight,
+            'Dimensions': details.dimensions,
+            'Material': details.material,
+            'Color': details.color,
+            'Manufacturer': details.manufacturer,
+            'Country of Origin': details.countryOfOrigin,
+            'Package Contents': details.packageContents,
+            'Usage Instructions': details.usageInstructions,
+            'Care Instructions': details.careInstructions,
+            'Expiry Info': details.expiryInfo,
           };
 
-    final visibleItems = detailItems.entries
+    // Filled items (have real data)
+    final filledItems = allDetailFields.entries
         .where((e) => e.value != null && e.value!.trim().isNotEmpty)
         .toList();
 
+    // Empty items (null or blank)
+    final emptyItems = allDetailFields.entries
+        .where((e) => e.value == null || e.value!.trim().isEmpty)
+        .toList();
+
+    // Combine: filled first, then empty
+    final visibleItems = [...filledItems, ...emptyItems];
     final displayedItems = showAllDetails
         ? visibleItems
         : visibleItems.take(5).toList();
+
+    // Badges
+    final badges = <_BadgeData>[
+      if (product.isRecommended == true)
+        _BadgeData('Recommended', Icons.star_rounded, const Color(0xFFF59E0B)),
+      if (product.isMostPoojaEssentials == true)
+        _BadgeData(
+          'Pooja Essential',
+          Icons.local_fire_department,
+          Colors.deepOrange,
+        ),
+      if (product.isMostUsed == true)
+        _BadgeData('Most Used', Icons.trending_up, Colors.deepPurple),
+      if (product.isEveryDayRitual == true)
+        _BadgeData('Daily Ritual', Icons.wb_sunny_rounded, Colors.teal),
+      if (product.isRitualItems == true)
+        _BadgeData('Ritual Item', Icons.auto_awesome, Colors.indigo),
+    ];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -83,9 +107,9 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
           children: [
             CustomScrollView(
               slivers: [
-                // ── SliverAppBar — image + back + wishlist ──
+                // ── SliverAppBar ──────────────────────────────────────────
                 SliverAppBar(
-                  expandedHeight: 320,
+                  expandedHeight: 250,
                   pinned: true,
                   backgroundColor: AppColors.white,
                   automaticallyImplyLeading: false,
@@ -126,22 +150,34 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                   ),
                 ),
 
-                // ── Product Info Card ──
+                // ── Product Info Card ─────────────────────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
                     child: Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: AppColors.white,
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Title + Add/Qty button
+                          // ── Badges row ──────────────────────────────────
+                          if (badges.isNotEmpty) ...[
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: badges
+                                  .map((b) => _BadgeChip(data: b))
+                                  .toList(),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+
+                          // ── Title + Add/Qty ─────────────────────────────
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
                                 child: Text(
@@ -149,110 +185,40 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                                   style: text14(fontWeight: FontWeight.w600),
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               SizedBox(
                                 width: 100,
-                                child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 200),
-                                  transitionBuilder: (child, animation) =>
-                                      ScaleTransition(
-                                        scale: animation,
-                                        child: child,
-                                      ),
-                                  child: quantity == 0
-                                      ? AppButton(
-                                          key: ValueKey('add_${product.id}'),
-                                          height: 22,
-                                          radius: 4,
-                                          textStyle: text11(
-                                            color: AppColors.white,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                          title: 'Add',
-                                          onTap: () {
-                                            cartNotifier.addItem(
-                                              CartItem(
-                                                productId: product.id ?? '',
-                                                title: product.title ?? '',
-                                                thumbnail:
-                                                    product.thumbnail ?? '',
-                                                price:
-                                                    product.price?.toDouble() ??
-                                                    0.0,
-                                              ),
-                                            );
-                                          },
-                                        )
-                                      : Container(
-                                          key: ValueKey('qty_${product.id}'),
-                                          height: 22,
-                                          decoration: BoxDecoration(
-                                            color: AppColors.button,
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              InkWell(
-                                                onTap: () => cartNotifier
-                                                    .decreaseQuantity(
-                                                      product.id ?? '',
-                                                    ),
-                                                child: Container(
-                                                  width: 22,
-                                                  height: 22,
-                                                  alignment: Alignment.center,
-                                                  child: const Icon(
-                                                    Icons.remove,
-                                                    size: 12,
-                                                    color: AppColors.white,
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Container(
-                                                  alignment: Alignment.center,
-                                                  color: AppColors.white,
-                                                  child: Text(
-                                                    '$quantity',
-                                                    style: text11(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: AppColors.button,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              InkWell(
-                                                onTap: () => cartNotifier
-                                                    .increaseQuantity(
-                                                      product.id ?? '',
-                                                    ),
-                                                child: Container(
-                                                  width: 22,
-                                                  height: 22,
-                                                  alignment: Alignment.center,
-                                                  child: const Icon(
-                                                    Icons.add,
-                                                    size: 12,
-                                                    color: AppColors.white,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
+                                child: _QuantityControl(
+                                  quantity: quantity,
+                                  product: product,
+                                  cartNotifier: cartNotifier,
                                 ),
                               ),
                             ],
                           ),
 
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
 
-                          // Price row
+                          // ── Unit tag ────────────────────────────────────
+                          if (details?.unit != null &&
+                              details!.unit!.isNotEmpty)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.grey200,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                details.unit!,
+                                style: text11(color: AppColors.grey700),
+                              ),
+                            ),
+
+                          // ── Price row ───────────────────────────────────
                           Row(
                             children: [
                               Text(
@@ -262,11 +228,21 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                '${product.discountPercent}% OFF',
-                                style: text13(
-                                  color: AppColors.green,
-                                  fontWeight: FontWeight.w600,
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade50,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  '${product.discountPercent}% OFF',
+                                  style: text11(
+                                    color: Colors.green.shade700,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
                             ],
@@ -274,137 +250,214 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                           const SizedBox(height: 4),
                           Text(
                             '₹${product.price}/-',
-                            style: text16(fontWeight: FontWeight.bold),
+                            style: text18(fontWeight: FontWeight.bold),
                           ),
 
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 8),
 
-                          // Rating badge
+                          // ── Rating + stock row ──────────────────────────
                           Row(
                             children: [
+                              // Rating badge
+                              if (product.ratings != null) ...[
+                                GestureDetector(
+                                  onTap: () => showReviewBottomSheet(
+                                    context,
+                                    ref,
+                                    product.id ?? '',
+                                  ),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.success,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          '${product.ratings!.average ?? 0}',
+                                          style: text13(
+                                            color: AppColors.white,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 2),
+                                        const Icon(
+                                          Icons.star,
+                                          color: AppColors.warningLight,
+                                          size: 16,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                GestureDetector(
+                                  onTap: () => showReviewBottomSheet(
+                                    context,
+                                    ref,
+                                    product.id ?? '',
+                                  ),
+                                  child: Text(
+                                    '(${product.ratings!.totalReviews ?? 0} reviews)',
+                                    style: text13(color: AppColors.grey),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                              ],
+
+                              // Stock pill
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 4,
+                                  horizontal: 8,
+                                  vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.success,
+                                  color: (product.inStock ?? false)
+                                      ? Colors.green.shade50
+                                      : Colors.red.shade50,
                                   borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: (product.inStock ?? false)
+                                        ? Colors.green.shade300
+                                        : Colors.red.shade300,
+                                  ),
                                 ),
                                 child: Row(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
+                                    Icon(
+                                      (product.inStock ?? false)
+                                          ? Icons.check_circle_outline
+                                          : Icons.cancel_outlined,
+                                      size: 12,
+                                      color: (product.inStock ?? false)
+                                          ? Colors.green.shade700
+                                          : Colors.red.shade700,
+                                    ),
+                                    const SizedBox(width: 4),
                                     Text(
-                                      product.ratings?.average.toString() ?? '',
-                                      style: text13(
-                                        color: AppColors.white,
+                                      (product.inStock ?? false)
+                                          ? 'In Stock'
+                                          : 'Out of Stock',
+                                      style: text11(
+                                        color: (product.inStock ?? false)
+                                            ? Colors.green.shade700
+                                            : Colors.red.shade700,
                                         fontWeight: FontWeight.w600,
                                       ),
-                                    ),
-                                    const SizedBox(width: 2),
-                                    const Icon(
-                                      Icons.star,
-                                      color: AppColors.warningLight,
-                                      size: 20,
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 5),
-                              Text(
-                                '(${product.ratings?.totalReviews ?? ''})',
-                                style: text15(color: AppColors.grey),
-                              ),
                             ],
                           ),
 
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 14),
+                          const Divider(height: 1),
+                          const SizedBox(height: 14),
 
-                          // Stock status
-                          Text(
-                            (product.inStock ?? false)
-                                ? 'In Stock'
-                                : 'Out of Stock',
-                            style: text13(
-                              color: (product.inStock ?? false)
-                                  ? AppColors.green
-                                  : AppColors.error,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-
-                          // Product details section
-                          if (visibleItems.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            Text(
-                              'Product Details',
-                              style: text15(fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(height: 8),
-                            AnimatedSize(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                              child: Column(
-                                children: displayedItems
-                                    .map(
-                                      (item) => Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 6,
-                                        ),
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Expanded(
-                                              flex: 2,
-                                              child: Text(
-                                                item.key,
-                                                style: text13(
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 3,
-                                              child: Text(
-                                                item.value!,
-                                                style: text13(
-                                                  color: AppColors.grey700,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
+                          // ── Product Details Section ─────────────────────
+                          Row(
+                            children: [
+                              Text(
+                                'Product Details',
+                                style: text15(fontWeight: FontWeight.w600),
                               ),
-                            ),
-                            if (visibleItems.length > 5)
-                              TextButton.icon(
-                                onPressed: () {
-                                  ref
-                                          .read(showAllDetailsProvider.notifier)
-                                          .state =
-                                      !showAllDetails;
-                                },
-                                label: Text(
-                                  showAllDetails ? 'Show Less' : 'Show More',
-                                  style: text13(
-                                    color: AppColors.primary,
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 1,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.button.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '${filledItems.length}/${allDetailFields.length}',
+                                  style: text10(
+                                    color: AppColors.button,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                icon: Icon(
-                                  showAllDetails
-                                      ? Icons.keyboard_arrow_up_outlined
-                                      : Icons.keyboard_arrow_down_outlined,
-                                ),
                               ),
-                          ],
-
+                            ],
+                          ),
                           const SizedBox(height: 10),
 
-                          // Buy Now
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            child: Column(
+                              children: displayedItems.map((item) {
+                                final hasValue =
+                                    item.value != null &&
+                                    item.value!.trim().isNotEmpty;
+                                return _DetailRow(
+                                  label: item.key,
+                                  value: hasValue ? item.value! : 'N/A',
+                                  hasValue: hasValue,
+                                );
+                              }).toList(),
+                            ),
+                          ),
+
+                          // Show more / less
+                          if (visibleItems.length > 5)
+                            GestureDetector(
+                              onTap: () {
+                                ref
+                                        .read(showAllDetailsProvider.notifier)
+                                        .state =
+                                    !showAllDetails;
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(top: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                width: double.infinity,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    top: BorderSide(
+                                      color: AppColors.grey200,
+                                      width: 1,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      showAllDetails
+                                          ? 'Show Less'
+                                          : 'Show All ${visibleItems.length} Details',
+                                      style: text13(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      showAllDetails
+                                          ? Icons.keyboard_arrow_up_rounded
+                                          : Icons.keyboard_arrow_down_rounded,
+                                      color: AppColors.primary,
+                                      size: 18,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                          const SizedBox(height: 12),
+
+                          // ── Buy Now ─────────────────────────────────────
                           AppButton(
                             title: 'Buy Now',
                             onTap: () {
@@ -431,14 +484,14 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                   ),
                 ),
 
-                // ── Offer Banner ──
+                // ── Offer Banner ──────────────────────────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
                     child: Stack(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             color: const Color(0xff5c1f2e),
                             borderRadius: BorderRadius.circular(15),
@@ -454,8 +507,10 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
+                                        fontSize: 16,
                                       ),
                                     ),
+                                    SizedBox(height: 2),
                                     Text(
                                       'Add items worth ₹399 more',
                                       style: TextStyle(color: Colors.white70),
@@ -463,6 +518,7 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                                   ],
                                 ),
                               ),
+                              const SizedBox(width: 70),
                             ],
                           ),
                         ),
@@ -481,7 +537,7 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                   ),
                 ),
 
-                // ── Similar Items Header ──
+                // ── Similar Items ─────────────────────────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
@@ -492,7 +548,6 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                   ),
                 ),
 
-                // ── Similar Items Horizontal List ──
                 SliverToBoxAdapter(
                   child: SizedBox(
                     height: 140,
@@ -505,11 +560,9 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                         final filterProduct = state.categoryProducts
                             .where((p) => p.id != product.id)
                             .toList();
-
                         if (filterProduct.isEmpty) {
                           return const Center(child: Text('No Products Found'));
                         }
-
                         return AnimationLimiter(
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
@@ -536,7 +589,7 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                   ),
                 ),
 
-                // ── Ratings & Reviews ──
+                // ── Ratings & Reviews ─────────────────────────────────────
                 if (product.ratings != null)
                   SliverToBoxAdapter(
                     child: Padding(
@@ -548,16 +601,196 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                     ),
                   ),
 
-                // ── Bottom padding so content clears the cart bar ──
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],
             ),
 
-            // ── Floating Cart Bar ──
-            BottomCartBar(),
+            const BottomCartBar(),
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Badge data model ──────────────────────────────────────────────────────────
+class _BadgeData {
+  final String label;
+  final IconData icon;
+  final Color color;
+  const _BadgeData(this.label, this.icon, this.color);
+}
+
+// ── Badge chip ────────────────────────────────────────────────────────────────
+class _BadgeChip extends StatelessWidget {
+  final _BadgeData data;
+  const _BadgeChip({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: data.color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: data.color.withOpacity(0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(data.icon, size: 12, color: data.color),
+          const SizedBox(width: 4),
+          Text(
+            data.label,
+            style: TextStyle(
+              color: data.color,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Detail row ────────────────────────────────────────────────────────────────
+class _DetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool hasValue;
+  const _DetailRow({
+    required this.label,
+    required this.value,
+    required this.hasValue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 1),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.grey200, width: 0.8),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: text12(
+                fontWeight: FontWeight.w600,
+                color: AppColors.grey700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              style: text12(
+                color: hasValue ? AppColors.textPrimary : AppColors.grey300,
+                fontWeight: hasValue ? FontWeight.normal : FontWeight.normal,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Quantity control ──────────────────────────────────────────────────────────
+class _QuantityControl extends StatelessWidget {
+  final int quantity;
+  final Product product;
+  final CartNotifier cartNotifier;
+  const _QuantityControl({
+    required this.quantity,
+    required this.product,
+    required this.cartNotifier,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      transitionBuilder: (child, animation) =>
+          ScaleTransition(scale: animation, child: child),
+      child: quantity == 0
+          ? AppButton(
+              key: ValueKey('add_${product.id}'),
+              height: 34,
+              radius: 6,
+              textStyle: text12(
+                color: AppColors.white,
+                fontWeight: FontWeight.w700,
+              ),
+              title: 'Add to Cart',
+              onTap: () {
+                cartNotifier.addItem(
+                  CartItem(
+                    productId: product.id ?? '',
+                    title: product.title ?? '',
+                    thumbnail: product.thumbnail ?? '',
+                    price: product.price?.toDouble() ?? 0.0,
+                  ),
+                );
+              },
+            )
+          : Container(
+              key: ValueKey('qty_${product.id}'),
+              height: 34,
+              decoration: BoxDecoration(
+                color: AppColors.button,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  InkWell(
+                    onTap: () =>
+                        cartNotifier.decreaseQuantity(product.id ?? ''),
+                    child: const SizedBox(
+                      width: 30,
+                      height: 34,
+                      child: Icon(
+                        Icons.remove,
+                        size: 14,
+                        color: AppColors.white,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      alignment: Alignment.center,
+                      color: AppColors.white,
+                      child: Text(
+                        '$quantity',
+                        style: text13(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.button,
+                        ),
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () =>
+                        cartNotifier.increaseQuantity(product.id ?? ''),
+                    child: const SizedBox(
+                      width: 30,
+                      height: 34,
+                      child: Icon(Icons.add, size: 14, color: AppColors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }
@@ -585,7 +818,6 @@ void showReviewBottomSheet(
 
 class _ReviewBottomSheet extends ConsumerStatefulWidget {
   final String productId;
-
   const _ReviewBottomSheet({required this.productId});
 
   @override
@@ -603,7 +835,6 @@ class _ReviewBottomSheetState extends ConsumerState<_ReviewBottomSheet> {
           .read(reviewProvider.notifier)
           .fetchReviews(widget.productId, limit: 10);
     });
-
     _scrollController.addListener(() {
       final pos = _scrollController.position;
       if (pos.pixels >= pos.maxScrollExtent - 100) {
@@ -626,15 +857,16 @@ class _ReviewBottomSheetState extends ConsumerState<_ReviewBottomSheet> {
       initialChildSize: 0.85,
       minChildSize: 0.5,
       maxChildSize: 0.95,
-      builder: (_, _) => Container(
+      // FIX: use different parameter names for the two positional args
+      builder: (sheetContext, sheetScrollController) => Container(
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: CustomScrollView(
+          // Use our own controller for pagination listening
           controller: _scrollController,
           slivers: [
-            // ── Drag handle + title as pinned header ──
             SliverAppBar(
               pinned: true,
               automaticallyImplyLeading: false,
@@ -683,7 +915,6 @@ class _ReviewBottomSheetState extends ConsumerState<_ReviewBottomSheet> {
                 ),
               )
             else ...[
-              // ── Rating Summary ──
               if (state.ratings != null)
                 SliverToBoxAdapter(
                   child: Padding(
@@ -699,7 +930,6 @@ class _ReviewBottomSheetState extends ConsumerState<_ReviewBottomSheet> {
                 ),
               ),
 
-              // ── Customer Reviews header ──
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -732,7 +962,6 @@ class _ReviewBottomSheetState extends ConsumerState<_ReviewBottomSheet> {
 
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
-              // ── Empty state ──
               if (state.reviews.isEmpty)
                 SliverFillRemaining(
                   child: Center(
@@ -754,7 +983,6 @@ class _ReviewBottomSheetState extends ConsumerState<_ReviewBottomSheet> {
                   ),
                 )
               else
-                // ── Review cards list ──
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverList(
@@ -766,7 +994,6 @@ class _ReviewBottomSheetState extends ConsumerState<_ReviewBottomSheet> {
                   ),
                 ),
 
-              // ── Load more indicator ──
               if (state.isLoadingMore)
                 const SliverToBoxAdapter(
                   child: Padding(
@@ -803,12 +1030,11 @@ class _ReviewBottomSheetState extends ConsumerState<_ReviewBottomSheet> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Rating Summary (compact — inside bottom sheet)
+// Rating Summary Compact
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _RatingSummaryCompact extends StatelessWidget {
   final Ratings ratings;
-
   const _RatingSummaryCompact({required this.ratings});
 
   Color _barColor(int star) {
@@ -830,13 +1056,11 @@ class _RatingSummaryCompact extends StatelessWidget {
       2: counts.rating2 ?? 0,
       1: counts.rating1 ?? 0,
     };
-
     final total = ratingMap.values.fold(0, (s, v) => s + v);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Big score
         Column(
           children: [
             Text(
@@ -864,10 +1088,7 @@ class _RatingSummaryCompact extends StatelessWidget {
             Text('$total ratings', style: text12(color: AppColors.grey600)),
           ],
         ),
-
         const SizedBox(width: 20),
-
-        // Bars
         Expanded(
           child: Column(
             children: ratingMap.entries.map((e) {
@@ -916,12 +1137,11 @@ class _RatingSummaryCompact extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Individual Review Card
+// Review Card
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ReviewCard extends StatelessWidget {
   final Review review;
-
   const _ReviewCard({required this.review});
 
   Color _starColor(int? rating) {

@@ -4,20 +4,12 @@ class ProductState {
   final List<Product> allProducts;
   final List<Product> categoryProducts;
 
-  // customize kit product
+  // customize kit
   final List<Product> customizeKitItems;
   final List<Product> categoryKitProducts;
   final String selectedKitCategory;
 
-  // ✅ Original lists (never filtered)
-  final List<Product> originalDailyEssentials;
-  final List<Product> originalMostUsed;
-  final List<Product> originalRitualItems;
-
-  // ✅ Filtered lists (displayed in UI)
-  final List<Product> dailyEssentials;
-  final List<Product> mostUsed;
-
+  // search
   final List<Product> searchResults;
   final String searchQuery;
 
@@ -30,16 +22,11 @@ class ProductState {
     this.categoryProducts = const [],
     this.customizeKitItems = const [],
     this.categoryKitProducts = const [],
-    this.originalDailyEssentials = const [],
-    this.originalMostUsed = const [],
-    this.originalRitualItems = const [],
-    this.dailyEssentials = const [],
-    this.mostUsed = const [],
-    this.searchResults = const [],
-    this.selectedCategory = "All",
     this.selectedKitCategory = "All",
-    this.isLoading = false,
+    this.searchResults = const [],
     this.searchQuery = "",
+    this.selectedCategory = "all",
+    this.isLoading = false,
     this.error,
   });
 
@@ -48,12 +35,7 @@ class ProductState {
     List<Product>? categoryProducts,
     List<Product>? categoryKitProducts,
     List<Product>? customizeKitItems,
-    List<Product>? originalDailyEssentials,
-    List<Product>? originalMostUsed,
-    List<Product>? originalRitualItems,
-    List<Product>? dailyEssentials,
-    List<Product>? mostUsed,
-    List<Product>? searchResults, // ← New
+    List<Product>? searchResults,
     String? selectedCategory,
     String? selectedKitCategory,
     String? searchQuery,
@@ -65,13 +47,7 @@ class ProductState {
       categoryProducts: categoryProducts ?? this.categoryProducts,
       customizeKitItems: customizeKitItems ?? this.customizeKitItems,
       categoryKitProducts: categoryKitProducts ?? this.categoryKitProducts,
-      originalDailyEssentials:
-          originalDailyEssentials ?? this.originalDailyEssentials,
-      originalMostUsed: originalMostUsed ?? this.originalMostUsed,
-      originalRitualItems: originalRitualItems ?? this.originalRitualItems,
-      dailyEssentials: dailyEssentials ?? this.dailyEssentials,
-      mostUsed: mostUsed ?? this.mostUsed,
-      searchResults: searchResults ?? this.searchResults, // ← New
+      searchResults: searchResults ?? this.searchResults,
       selectedCategory: selectedCategory ?? this.selectedCategory,
       selectedKitCategory: selectedKitCategory ?? this.selectedKitCategory,
       searchQuery: searchQuery ?? this.searchQuery,
