@@ -383,10 +383,10 @@ class _PoojaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final notes = pooja.customSamagriNotes
-        .map((n) => n.trim())
-        .where((n) => n.isNotEmpty)
-        .toList();
+    // final notes = pooja.customSamagriNotes
+    //     .map((n) => n.trim())
+    //     .where((n) => n.isNotEmpty)
+    //     .toList();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -448,98 +448,98 @@ class _PoojaCard extends StatelessWidget {
           ),
 
           // Samagri notes
-          if (notes.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFFBF0),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFE8CC6A)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline_rounded,
-                        size: 13,
-                        color: Color(0xFF9E7500),
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        'Note',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF9E7500),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 5),
-                  ...notes.map(
-                    (n) => Padding(
-                      padding: const EdgeInsets.only(bottom: 2),
-                      child: Text(
-                        n,
-                        style: text12(color: AppColors.textSecondary),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          // if (notes.isNotEmpty) ...[
+          //   const SizedBox(height: 10),
+          //   Container(
+          //     padding: const EdgeInsets.all(10),
+          //     decoration: BoxDecoration(
+          //       color: const Color(0xFFFFFBF0),
+          //       borderRadius: BorderRadius.circular(8),
+          //       border: Border.all(color: const Color(0xFFE8CC6A)),
+          //     ),
+          //     child: Column(
+          //       crossAxisAlignment: CrossAxisAlignment.start,
+          //       children: [
+          //         const Row(
+          //           children: [
+          //             Icon(
+          //               Icons.info_outline_rounded,
+          //               size: 13,
+          //               color: Color(0xFF9E7500),
+          //             ),
+          //             SizedBox(width: 5),
+          //             Text(
+          //               'Note',
+          //               style: TextStyle(
+          //                 fontSize: 12,
+          //                 fontWeight: FontWeight.w600,
+          //                 color: Color(0xFF9E7500),
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //         const SizedBox(height: 5),
+          //         ...notes.map(
+          //           (n) => Padding(
+          //             padding: const EdgeInsets.only(bottom: 2),
+          //             child: Text(
+          //               n,
+          //               style: text12(color: AppColors.textSecondary),
+          //             ),
+          //           ),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ],
 
           // Samagri kit link
-          if (pooja.customSamagriItems.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            GestureDetector(
-              onTap: () {
-                print(panditId);
-                ref.read(panditIdProvider.notifier).state = panditId;
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.panditRecKit,
-                  arguments: pooja.customSamagriItems,
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF7F7F7),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFE0E0E0)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.format_list_bulleted_rounded,
-                      size: 16,
-                      color: AppColors.button,
-                    ),
-                    const SizedBox(width: 9),
-                    Expanded(
-                      child: Text(
-                        'View recommended samagri list',
-                        style: text13(color: AppColors.textPrimary),
-                      ),
-                    ),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: Color(0xFFAAAAAA),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+          // if (pooja.customSamagriItems.isNotEmpty) ...[
+          //   const SizedBox(height: 10),
+          //   GestureDetector(
+          //     onTap: () {
+          //       print(panditId);
+          //       ref.read(panditIdProvider.notifier).state = panditId;
+          //       Navigator.pushNamed(
+          //         context,
+          //         AppRoutes.panditRecKit,
+          //         arguments: pooja.customSamagriItems,
+          //       );
+          //     },
+          //     child: Container(
+          //       padding: const EdgeInsets.symmetric(
+          //         horizontal: 12,
+          //         vertical: 10,
+          //       ),
+          //       decoration: BoxDecoration(
+          //         color: const Color(0xFFF7F7F7),
+          //         borderRadius: BorderRadius.circular(8),
+          //         border: Border.all(color: const Color(0xFFE0E0E0)),
+          //       ),
+          //       child: Row(
+          //         children: [
+          //           Icon(
+          //             Icons.format_list_bulleted_rounded,
+          //             size: 16,
+          //             color: AppColors.button,
+          //           ),
+          //           const SizedBox(width: 9),
+          //           Expanded(
+          //             child: Text(
+          //               'View recommended samagri list',
+          //               style: text13(color: AppColors.textPrimary),
+          //             ),
+          //           ),
+          //           const Icon(
+          //             Icons.chevron_right_rounded,
+          //             size: 18,
+          //             color: Color(0xFFAAAAAA),
+          //           ),
+          //         ],
+          //       ),
+          //     ),
+          //   ),
+          // ],
         ],
       ),
     );

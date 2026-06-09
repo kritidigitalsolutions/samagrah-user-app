@@ -832,7 +832,7 @@ class _CategoryProductsSheet extends ConsumerWidget {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: 4,
-                itemBuilder: (_, __) => Padding(
+                itemBuilder: (_, _) => Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: Container(
                     width: 80,
@@ -845,7 +845,7 @@ class _CategoryProductsSheet extends ConsumerWidget {
                 ),
               ),
             ),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
             data: (categories) => SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1328,7 +1328,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: 4,
-                      itemBuilder: (_, __) => Padding(
+                      itemBuilder: (_, _) => Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: Container(
                           width: 80,
@@ -1341,7 +1341,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
                       ),
                     ),
                   ),
-                  error: (_, __) => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
                   data: (categories) => SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 16),

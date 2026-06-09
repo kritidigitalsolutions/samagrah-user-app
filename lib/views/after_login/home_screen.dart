@@ -176,8 +176,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             final unreadCount = ref.watch(
                               notificationProvider.select((s) => s.unreadCount),
                             );
-                            if (unreadCount == 0)
+                            if (unreadCount == 0) {
                               return const SizedBox.shrink();
+                            }
                             return Positioned(
                               top: 4,
                               right: 4,
@@ -220,7 +221,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: 5,
-                    itemBuilder: (_, __) => Padding(
+                    itemBuilder: (_, _) => Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: Container(
                         width: 80,

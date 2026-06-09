@@ -179,7 +179,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 
       final verifyReq = VerifyPaymentReqModel(
         paymentMethod: "ONLINE",
-        deliveryFee: 20,
+        deliveryFee: 0,
         address: address,
         items: items,
         couponCode: couponCode,
