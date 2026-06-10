@@ -74,14 +74,14 @@ class Order {
   final String? user;
   final String? vendorId;
   final List<OrderItem> items;
-  final int? totalAmount;
+  final num? totalAmount;
   final AmountBreakup? amountBreakup;
   final dynamic couponCode;
   final Offer? offer;
-  final int? discountTotal;
-  final int? cashbackAmount;
-  final int? walletUsed;
-  final int? payableAmount;
+  final num? discountTotal;
+  final num? cashbackAmount;
+  final num? walletUsed;
+  final num? payableAmount;
   final String? addressType;
   final Address? address;
   final String? paymentMethod;
@@ -197,12 +197,12 @@ class AmountBreakup {
     required this.payableAmount,
   });
 
-  final int? itemTotal;
-  final int? deliveryFee;
-  final int? couponDiscount;
-  final int? offerDiscount;
-  final int? walletUsed;
-  final int? payableAmount;
+  final num? itemTotal;
+  final num? deliveryFee;
+  final num? couponDiscount;
+  final num? offerDiscount;
+  final num? walletUsed;
+  final num? payableAmount;
 
   factory AmountBreakup.fromJson(Map<String, dynamic> json) {
     return AmountBreakup(
@@ -227,8 +227,8 @@ class OrderItem {
 
   final String? productType;
   final PurpleProduct? product;
-  final int? quantity;
-  final int? price;
+  final num? quantity;
+  final num? price;
   final String? id;
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -305,9 +305,9 @@ class PurpleProduct {
   final bool? isMostUserUse;
   final bool? isPanditApproved;
   final List<ProductItem> items;
-  final int? totalPrice;
-  final int? kitPrice;
-  final int? savings;
+  final num? totalPrice;
+  final num? kitPrice;
+  final num? savings;
 
   factory PurpleProduct.fromJson(Map<String, dynamic> json) {
     return PurpleProduct(
@@ -443,7 +443,7 @@ class Discount {
   });
 
   final String? type;
-  final int? value;
+  final num? value;
   final bool? isActive;
   final dynamic startsAt;
   final dynamic expiresAt;
@@ -619,13 +619,13 @@ class Pricing {
     required this.mrp,
   });
 
-  final int? price;
-  final int? basePrice;
-  final int? gstPercent;
-  final int? gstAmount;
+  final num? price;
+  final num? basePrice;
+  final num? gstPercent;
+  final num? gstAmount;
   final bool? priceIncludesGst;
   final String? currency;
-  final int? mrp;
+  final num? mrp;
 
   factory Pricing.fromJson(Map<String, dynamic> json) {
     return Pricing(

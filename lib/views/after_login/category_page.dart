@@ -164,10 +164,6 @@ class CategoryPage extends ConsumerWidget {
                               await ref.read(productProvider.future);
                             },
                             child: ListView.builder(
-                              padding: const EdgeInsets.only(
-                                top: 8,
-                                bottom: 100,
-                              ),
                               itemCount: sections.length,
                               itemBuilder: (context, i) {
                                 final s = sections[i];
@@ -252,31 +248,40 @@ class CategoryPage extends ConsumerWidget {
         // Grid
         AnimationLimiter(
           key: ValueKey('cat_${s.category.id}_${preview.length}'),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.70,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-            ),
-            itemCount: preview.length,
-            itemBuilder: (context, index) {
-              return AnimationConfiguration.staggeredGrid(
-                position: index,
-                columnCount: 2,
-                duration: const Duration(milliseconds: 400),
-                child: SlideAnimation(
-                  horizontalOffset: 50,
-                  child: FadeInAnimation(
-                    child: ScaleAnimation(
-                      scale: 0.9,
-                      child: ProductCard(product: preview[index]),
-                    ),
-                  ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final cardWidth = (constraints.maxWidth - 16 - 12) / 3;
+              final imageHeight = cardWidth;
+              const infoHeight = 85.0;
+              final ratio = cardWidth / (imageHeight + infoHeight);
+
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(8, 0, 0, 0),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  childAspectRatio: ratio, // ← dynamic
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
                 ),
+                itemCount: preview.length,
+                itemBuilder: (context, index) {
+                  return AnimationConfiguration.staggeredGrid(
+                    position: index,
+                    columnCount: 3,
+                    duration: const Duration(milliseconds: 400),
+                    child: SlideAnimation(
+                      horizontalOffset: 50,
+                      child: FadeInAnimation(
+                        child: ScaleAnimation(
+                          scale: 0.9,
+                          child: ProductCard(product: preview[index]),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               );
             },
           ),

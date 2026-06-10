@@ -274,6 +274,7 @@ class OrderDetailsContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final invoiceState = ref.watch(invoiceProvider);
     final displayItems = _getDisplayItems();
     final isKit = _isKit();
     final statusColor = OrderUtils.getStatusColor(
@@ -312,7 +313,12 @@ class OrderDetailsContent extends ConsumerWidget {
 
                 // ── Main product / Kit header ─────────────────────────────
                 isKit ? _buildKitHeader() : _buildItemHeader(displayItems),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
+                _InvoiceButton(
+                  orderId: order.id ?? '',
+                  invoiceState: invoiceState,
+                ),
+                const SizedBox(height: 12),
 
                 _divider(),
 
@@ -888,11 +894,126 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
+class _InvoiceButton extends ConsumerWidget {
+  final String orderId;
+  final InvoiceState invoiceState;
+
+  const _InvoiceButton({required this.orderId, required this.invoiceState});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDownloading = invoiceState.status == InvoiceStatus.downloading;
+    final isError = invoiceState.status == InvoiceStatus.error;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        GestureDetector(
+          onTap: isDownloading
+              ? null
+              : () =>
+                    ref.read(invoiceProvider.notifier).downloadAndOpen(orderId),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 48,
+            decoration: BoxDecoration(
+              color: isError
+                  ? Colors.red.shade50
+                  : AppColors.button.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isError
+                    ? Colors.red.shade300
+                    : AppColors.button.withOpacity(0.4),
+              ),
+            ),
+            child: isDownloading
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Stack(
+                      children: [
+                        // Progress fill
+                        AnimatedFractionallySizedBox(
+                          duration: const Duration(milliseconds: 150),
+                          widthFactor: invoiceState.progress,
+                          child: Container(
+                            color: AppColors.button.withOpacity(0.15),
+                          ),
+                        ),
+                        // Text + spinner
+                        Center(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  value: invoiceState.progress > 0
+                                      ? invoiceState.progress
+                                      : null,
+                                  strokeWidth: 2,
+                                  color: AppColors.button,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                invoiceState.progress > 0
+                                    ? 'Downloading ${(invoiceState.progress * 100).toInt()}%'
+                                    : 'Preparing...',
+                                style: text13(
+                                  color: AppColors.button,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        isError
+                            ? Icons.error_outline
+                            : Icons.picture_as_pdf_rounded,
+                        size: 18,
+                        color: isError ? Colors.red : AppColors.button,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        isError
+                            ? 'Failed — Tap to Retry'
+                            : 'View & Download Invoice',
+                        style: text14(
+                          color: isError ? Colors.red : AppColors.button,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+        if (isError && invoiceState.errorMsg != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            invoiceState.errorMsg!,
+            style: text11(color: Colors.red.shade400),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class ProductDisplayItem {
   final String name;
   final String emoji;
-  final int quantity;
-  final int price;
+  final num quantity;
+  final num price;
   final String productId; // needed for rating submission
 
   ProductDisplayItem({

@@ -109,7 +109,7 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
               slivers: [
                 // ── SliverAppBar ──────────────────────────────────────────
                 SliverAppBar(
-                  expandedHeight: 250,
+                  expandedHeight: 270,
                   pinned: true,
                   backgroundColor: AppColors.white,
                   automaticallyImplyLeading: false,
@@ -548,9 +548,10 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                   ),
                 ),
 
+                // Similar Items — replace karo
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 140,
+                    height: 200, // imageHeight + infoHeight
                     child: productState.when(
                       loading: () =>
                           const Center(child: CircularProgressIndicator()),
@@ -560,9 +561,11 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                         final filterProduct = state.categoryProducts
                             .where((p) => p.id != product.id)
                             .toList();
+
                         if (filterProduct.isEmpty) {
                           return const Center(child: Text('No Products Found'));
                         }
+
                         return AnimationLimiter(
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
@@ -575,8 +578,17 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                                 child: SlideAnimation(
                                   horizontalOffset: 50,
                                   child: FadeInAnimation(
-                                    child: ProductCard(
-                                      product: filterProduct[index],
+                                    // ── Fixed width container — ProductCard ko bounded space do
+                                    child: SizedBox(
+                                      width: 120, // cardWidth fixed
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: 8,
+                                        ),
+                                        child: ProductCard(
+                                          product: filterProduct[index],
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),

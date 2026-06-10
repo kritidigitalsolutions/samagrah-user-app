@@ -7,8 +7,9 @@ import 'package:samagrah/repo/pandit_repo.dart';
 final availabilityExpandedProvider = StateProvider<bool>((ref) => false);
 
 // ─── Async availability data per panditId ───────────────────────────────────
-final availabilityProvider =
-FutureProvider.family<AvailabilityResModel, String>((ref, panditId) async {
-  final repo = PanditRepo();
-  return repo.getAvailability(panditId);
-});
+// Pandit availability provider - TimeSlotSelectionScreen ke liye
+final panditAvailabilityProvider =
+    FutureProvider.family<AvailabilityResModel, String>((ref, panditId) async {
+      final repo = PanditRepo();
+      return repo.getAvailability(panditId);
+    });

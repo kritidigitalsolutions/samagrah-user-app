@@ -40,7 +40,7 @@ class PanditCardLoader extends StatelessWidget {
                     children: [
                       // Image skeleton
                       Container(
-                        height: 152, // ← Reduced from 160
+                        height: 140, // ← Reduced from 160
                         color: AppColors.grey300,
                       ),
 

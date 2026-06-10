@@ -437,19 +437,17 @@ class MyBookingDetails extends ConsumerWidget {
 
               const SizedBox(height: 15),
 
-              if (pandit!.poojaOfferings.isNotEmpty) ...[
+              if ((pandit?.poojaOfferings ?? []).isNotEmpty) ...[
                 Text(
                   "Recommended Pooja Kit",
                   style: text15(fontWeight: FontWeight.bold),
                 ),
-
                 const SizedBox(height: 10),
-                ...pandit.poojaOfferings.map(
+                ...pandit!.poojaOfferings.map(
                   (p) =>
                       _PoojaCard(pooja: p, panditId: pandit.id ?? '', ref: ref),
                 ),
               ],
-
               if (type == "temple") ...[
                 const SizedBox(height: 15),
                 Container(
@@ -566,7 +564,7 @@ class MyBookingDetails extends ConsumerWidget {
                     final model = PanditCreateOrderReqModel(
                       ritualId: booking.ritualRef?.id ?? '',
                       bookingMode: booking.bookingMode ?? '',
-                      panditId: pandit.id ?? '',
+                      panditId: pandit?.id ?? '',
                       templeId: booking.temple?.id ?? '',
                       dateAndTime: DateAndTimeWrapper(
                         dateAndTime: [selectedSlot],

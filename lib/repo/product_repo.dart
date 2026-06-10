@@ -23,7 +23,8 @@ class ProductRepo {
 
   Future<CategoryResModel> getCategories() async {
     try {
-      final city = await LocationStorage.getCity();
+      final city = await LocationStorage.getCity() ?? "Agra";
+
       final res = await _api.getApi('${AppUrls.category}?city=$city');
       return CategoryResModel.fromJson(res);
     } catch (e) {
@@ -35,7 +36,7 @@ class ProductRepo {
 
   Future<BrandsResModel> getBrands() async {
     try {
-      final city = await LocationStorage.getCity();
+      final city = await LocationStorage.getCity() ?? "Agra";
       final res = await _api.getApi('${AppUrls.brands}?city=$city');
       return BrandsResModel.fromJson(res);
     } catch (e) {
@@ -47,7 +48,7 @@ class ProductRepo {
   Future<ProductResModel> getProducts() async {
     try {
       final token = await _getToken();
-      final city = await LocationStorage.getCity();
+      final city = await LocationStorage.getCity() ?? "Agra";
       // final state = await LocationStorage.getState();
       _api.setToken(token);
       final res = await _api.getApi('${AppUrls.getProduct}?city=$city');

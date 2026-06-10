@@ -159,32 +159,52 @@ class _SearchProductPageState extends ConsumerState<SearchProductPage> {
                         Expanded(
                           child: AnimationLimiter(
                             key: ValueKey("search_${results.length}"),
-                            child: GridView.builder(
-                              padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    childAspectRatio: 0.70,
-                                    crossAxisSpacing: 10,
-                                    mainAxisSpacing: 10,
-                                  ),
-                              itemCount: results.length,
-                              itemBuilder: (context, index) {
-                                final product = results[index];
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final cardWidth =
+                                    (constraints.maxWidth - 16 - 12) / 3;
+                                final imageHeight = cardWidth;
+                                const infoHeight = 85.0;
+                                final ratio =
+                                    cardWidth / (imageHeight + infoHeight);
 
-                                return AnimationConfiguration.staggeredGrid(
-                                  position: index,
-                                  columnCount: 2,
-                                  duration: const Duration(milliseconds: 400),
-                                  child: SlideAnimation(
-                                    verticalOffset: 60,
-                                    child: FadeInAnimation(
-                                      child: ScaleAnimation(
-                                        scale: 0.92,
-                                        child: ProductCard(product: product),
-                                      ),
-                                    ),
+                                return GridView.builder(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    8,
+                                    0,
+                                    0,
+                                    0,
                                   ),
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 3,
+                                        childAspectRatio: ratio, // ← dynamic
+                                        crossAxisSpacing: 10,
+                                        mainAxisSpacing: 10,
+                                      ),
+                                  itemCount: results.length,
+                                  itemBuilder: (context, index) {
+                                    final product = results[index];
+
+                                    return AnimationConfiguration.staggeredGrid(
+                                      position: index,
+                                      columnCount: 3,
+                                      duration: const Duration(
+                                        milliseconds: 400,
+                                      ),
+                                      child: SlideAnimation(
+                                        verticalOffset: 60,
+                                        child: FadeInAnimation(
+                                          child: ScaleAnimation(
+                                            scale: 0.92,
+                                            child: ProductCard(
+                                              product: product,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 );
                               },
                             ),

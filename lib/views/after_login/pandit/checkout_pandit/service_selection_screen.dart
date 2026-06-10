@@ -26,7 +26,7 @@ class ServiceSelectionScreen extends ConsumerWidget {
           title: 'Home Visit',
           type: "home",
           description: 'Pooja will be performed at your home.',
-          image: 'assets/home_visit.jpg',
+          icon: Icons.home_outlined,
         ),
       );
     }
@@ -37,7 +37,7 @@ class ServiceSelectionScreen extends ConsumerWidget {
           title: 'Online Pooja',
           type: "online",
           description: 'Pooja will be performed online.',
-          image: 'assets/online_pooja.jpg',
+          icon: Icons.video_call_outlined,
         ),
       );
     }
@@ -48,7 +48,7 @@ class ServiceSelectionScreen extends ConsumerWidget {
           title: 'Temple Ritual',
           type: "temple",
           description: 'Pooja will be performed at temple.',
-          image: 'assets/temple_ritual.jpg',
+          icon: Icons.temple_hindu_outlined,
         ),
       );
     }
@@ -228,7 +228,11 @@ class ServiceSelectionScreen extends ConsumerWidget {
                         ref.read(selectedServiceProvider.notifier).state =
                             selected;
 
-                        Navigator.pushNamed(context, AppRoutes.timeSelection);
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.timeSelection,
+                          arguments: pandit,
+                        );
                       },
               ),
             ),
@@ -237,25 +241,6 @@ class ServiceSelectionScreen extends ConsumerWidget {
       ),
     );
   }
-
-  // /// 🔵 Stepper UI
-  // Widget _buildCustomStepper() {
-  //   return Column(
-  //     children: [
-  //       Row(
-  //         children: [
-  //           buildCircle("1", true),
-  //           buildDottedLine(),
-  //           buildCircle("2", false),
-  //           buildDottedLine(),
-  //           buildCircle("3", false),
-  //         ],
-  //       ),
-  //       const SizedBox(height: 8),
-  //       bottomLable(),
-  //     ],
-  //   );
-  // }
 
   /// 🔵 Service Card
   Widget _buildServiceCard(
@@ -313,7 +298,7 @@ class ServiceSelectionScreen extends ConsumerWidget {
                   color: Colors.orange.shade100,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.temple_hindu, color: Colors.orange),
+                child: Icon(service.icon, color: Colors.orange),
               ),
 
               const SizedBox(width: 10),
@@ -338,12 +323,12 @@ class ServiceModel {
   final String title;
   final String type;
   final String description;
-  final String image;
+  final IconData icon;
 
   ServiceModel({
     required this.title,
     required this.type,
     required this.description,
-    required this.image,
+    required this.icon,
   });
 }

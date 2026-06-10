@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:samagrah/model/response/pandit_res/availability_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/textstyle.dart';
-import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
-
-import '../../../view_model/after_login_provider/pandit_provider/pandit_details_provider.dart';
 
 class PanditDetailsPage extends ConsumerWidget {
   const PanditDetailsPage({super.key});
@@ -18,10 +14,10 @@ class PanditDetailsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pandit = ModalRoute.of(context)!.settings.arguments as PanditData;
-    final isExpanded = ref.watch(availabilityExpandedProvider);
-    final availabilityAsync = isExpanded
-        ? ref.watch(availabilityProvider(pandit.id ?? ''))
-        : null;
+
+    final selectedService = ref.read(selectedServiceProvider);
+
+    print(selectedService);
 
     // Status bar transparent so image shows through
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -48,13 +44,7 @@ class PanditDetailsPage extends ConsumerWidget {
             ),
           ),
         ),
-        bottomNavigationBar: _BottomBar(
-          pandit: pandit,
-          isExpanded: isExpanded,
-          onToggle: () {
-            ref.read(availabilityExpandedProvider.notifier).state = !isExpanded;
-          },
-        ),
+        bottomNavigationBar: _BottomBar(pandit: pandit),
         body: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,12 +111,6 @@ class PanditDetailsPage extends ConsumerWidget {
                           ref: ref,
                         ),
                       ),
-                    ],
-
-                    // Availability panel — expands when bottom button tapped
-                    if (isExpanded) ...[
-                      const SizedBox(height: 4),
-                      _AvailabilityPanel(async: availabilityAsync),
                     ],
 
                     const SizedBox(height: 8),
@@ -446,100 +430,6 @@ class _PoojaCard extends StatelessWidget {
                 _Tag(Icons.luggage_outlined, 'Travel available'),
             ],
           ),
-
-          // Samagri notes
-          // if (notes.isNotEmpty) ...[
-          //   const SizedBox(height: 10),
-          //   Container(
-          //     padding: const EdgeInsets.all(10),
-          //     decoration: BoxDecoration(
-          //       color: const Color(0xFFFFFBF0),
-          //       borderRadius: BorderRadius.circular(8),
-          //       border: Border.all(color: const Color(0xFFE8CC6A)),
-          //     ),
-          //     child: Column(
-          //       crossAxisAlignment: CrossAxisAlignment.start,
-          //       children: [
-          //         const Row(
-          //           children: [
-          //             Icon(
-          //               Icons.info_outline_rounded,
-          //               size: 13,
-          //               color: Color(0xFF9E7500),
-          //             ),
-          //             SizedBox(width: 5),
-          //             Text(
-          //               'Note',
-          //               style: TextStyle(
-          //                 fontSize: 12,
-          //                 fontWeight: FontWeight.w600,
-          //                 color: Color(0xFF9E7500),
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //         const SizedBox(height: 5),
-          //         ...notes.map(
-          //           (n) => Padding(
-          //             padding: const EdgeInsets.only(bottom: 2),
-          //             child: Text(
-          //               n,
-          //               style: text12(color: AppColors.textSecondary),
-          //             ),
-          //           ),
-          //         ),
-          //       ],
-          //     ),
-          //   ),
-          // ],
-
-          // Samagri kit link
-          // if (pooja.customSamagriItems.isNotEmpty) ...[
-          //   const SizedBox(height: 10),
-          //   GestureDetector(
-          //     onTap: () {
-          //       print(panditId);
-          //       ref.read(panditIdProvider.notifier).state = panditId;
-          //       Navigator.pushNamed(
-          //         context,
-          //         AppRoutes.panditRecKit,
-          //         arguments: pooja.customSamagriItems,
-          //       );
-          //     },
-          //     child: Container(
-          //       padding: const EdgeInsets.symmetric(
-          //         horizontal: 12,
-          //         vertical: 10,
-          //       ),
-          //       decoration: BoxDecoration(
-          //         color: const Color(0xFFF7F7F7),
-          //         borderRadius: BorderRadius.circular(8),
-          //         border: Border.all(color: const Color(0xFFE0E0E0)),
-          //       ),
-          //       child: Row(
-          //         children: [
-          //           Icon(
-          //             Icons.format_list_bulleted_rounded,
-          //             size: 16,
-          //             color: AppColors.button,
-          //           ),
-          //           const SizedBox(width: 9),
-          //           Expanded(
-          //             child: Text(
-          //               'View recommended samagri list',
-          //               style: text13(color: AppColors.textPrimary),
-          //             ),
-          //           ),
-          //           const Icon(
-          //             Icons.chevron_right_rounded,
-          //             size: 18,
-          //             color: Color(0xFFAAAAAA),
-          //           ),
-          //         ],
-          //       ),
-          //     ),
-          //   ),
-          // ],
         ],
       ),
     );
@@ -577,214 +467,10 @@ class _Tag extends StatelessWidget {
   }
 }
 
-// ─── Availability Panel ───────────────────────────────────────────────────────
-class _AvailabilityPanel extends StatelessWidget {
-  const _AvailabilityPanel({required this.async});
-  final AsyncValue<AvailabilityResModel>? async;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(14, 14, 14, 0),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.calendar_month_outlined,
-                  size: 15,
-                  color: AppColors.button,
-                ),
-                SizedBox(width: 7),
-                Text(
-                  'Available Slots',
-                  style: text13(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          if (async == null)
-            const SizedBox.shrink()
-          else
-            async!.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.symmetric(vertical: 28),
-                child: Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.button,
-                  ),
-                ),
-              ),
-              error: (_, _) => Padding(
-                padding: EdgeInsets.all(20),
-                child: Center(
-                  child: Text(
-                    'Could not load slots',
-                    style: text13(color: AppColors.textPrimary),
-                  ),
-                ),
-              ),
-              data: (res) {
-                final slots = res.data?.availability ?? [];
-                if (slots.isEmpty) {
-                  return Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Center(
-                      child: Text(
-                        'No slots available',
-                        style: text13(color: AppColors.textPrimary),
-                      ),
-                    ),
-                  );
-                }
-
-                final availCount = slots
-                    .where((s) => s.status?.toLowerCase() == 'available')
-                    .length;
-
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          _Dot(color: Colors.green.shade600),
-                          const SizedBox(width: 5),
-                          Text(
-                            '$availCount available',
-                            style: text12(color: AppColors.textPrimary),
-                          ),
-                          const SizedBox(width: 14),
-                          _Dot(color: Colors.grey.shade400),
-                          const SizedBox(width: 5),
-                          Text(
-                            '${slots.length - availCount} booked',
-                            style: text12(color: AppColors.textPrimary),
-                          ),
-                        ],
-                      ),
-
-                      GridView.builder(
-                        padding: EdgeInsets.only(top: 15),
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: slots.length,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
-                              mainAxisSpacing: 8,
-                              crossAxisSpacing: 8,
-                              childAspectRatio: 1.35,
-                            ),
-                        itemBuilder: (_, i) => _SlotCell(
-                          date: slots[i].date ?? '',
-                          isAvailable:
-                              slots[i].status?.toLowerCase() == 'available',
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Dot extends StatelessWidget {
-  const _Dot({required this.color});
-  final Color color;
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 8,
-    height: 8,
-    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-  );
-}
-
-class _SlotCell extends StatelessWidget {
-  const _SlotCell({required this.date, required this.isAvailable});
-  final String date;
-  final bool isAvailable;
-
-  String _fmt(String raw) {
-    try {
-      final p = raw.split('-');
-      if (p.length < 3) return raw;
-      const m = [
-        '',
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
-      return '${int.parse(p[2])}\n${m[int.tryParse(p[1]) ?? 0]}';
-    } catch (_) {
-      return date;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isAvailable ? const Color(0xFFF0F7F1) : const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isAvailable
-              ? const Color(0xFFA8CCA9)
-              : const Color(0xFFDDDDDD),
-        ),
-      ),
-      child: Center(
-        child: Text(
-          _fmt(date),
-          textAlign: TextAlign.center,
-          style: text12(
-            fontWeight: FontWeight.w600,
-
-            color: isAvailable
-                ? const Color(0xFF2E7D32)
-                : const Color(0xFFBBBBBB),
-          ).copyWith(height: 1.4),
-        ),
-      ),
-    );
-  }
-}
-
 // ─── Bottom Bar ───────────────────────────────────────────────────────────────
 class _BottomBar extends ConsumerWidget {
-  const _BottomBar({
-    required this.pandit,
-    required this.isExpanded,
-    required this.onToggle,
-  });
+  const _BottomBar({required this.pandit});
   final PanditData pandit;
-  final bool isExpanded;
-  final VoidCallback onToggle;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -801,47 +487,29 @@ class _BottomBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          // Availability toggle
           Expanded(
-            child: OutlinedButton.icon(
-              onPressed: onToggle,
-              icon: Icon(
-                isExpanded
-                    ? Icons.keyboard_arrow_up_rounded
-                    : Icons.calendar_today_outlined,
-                size: 16,
-                color: AppColors.button,
-              ),
-              label: Text(
-                isExpanded ? 'Hide Slots' : 'Availability',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.button,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                side: BorderSide(color: AppColors.button),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Book Now
-          Expanded(
-            flex: 2,
             child: ElevatedButton.icon(
               onPressed: () {
                 ref.read(selectedPanditProvider.notifier).state = pandit;
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.serviceSelection,
-                  arguments: pandit,
-                );
+
+                final selectedService = ref.read(selectedServiceProvider);
+
+                if (selectedService == null) {
+                  print(selectedService);
+                  // ❌ no service selected → go to service selection page
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.serviceSelection,
+                    arguments: pandit,
+                  );
+                } else {
+                  // ✅ service already selected → go to next page
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.timeSelection, // change this to your page
+                    arguments: pandit,
+                  );
+                }
               },
               icon: const Icon(
                 Icons.check_circle_outline_rounded,

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
+import 'package:samagrah/model/response/pandit_res/ritual_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
+import 'package:samagrah/views/after_login/pandit/checkout_pandit/service_selection_screen.dart';
 import 'package:samagrah/views/custom_loader.dart/pandit_card_loader.dart';
 
 // ─────────────────────────────────────────────
@@ -57,15 +60,32 @@ const _sentinel = Object();
 class _QuickFilter {
   final String label;
   final IconData icon;
-  final String type; // matches serviceType values
+  final String type;
+  final String dec;
+  // matches serviceType values
 
-  const _QuickFilter(this.label, this.icon, this.type);
+  const _QuickFilter(this.label, this.icon, this.type, this.dec);
 }
 
 const _quickFilters = [
-  _QuickFilter('Home Visit', Icons.home_outlined, 'home'),
-  _QuickFilter('Online', Icons.video_call_outlined, 'online'),
-  _QuickFilter('Temple', Icons.temple_hindu_outlined, 'temple'),
+  _QuickFilter(
+    'Home Visit',
+    Icons.home_outlined,
+    'home',
+    'Pooja will be performed at your home.',
+  ),
+  _QuickFilter(
+    'Online',
+    Icons.video_call_outlined,
+    'online',
+    'Pooja will be performed online.',
+  ),
+  _QuickFilter(
+    'Temple',
+    Icons.temple_hindu_outlined,
+    'temple',
+    'Pooja will be performed at temple.',
+  ),
 ];
 
 // ─────────────────────────────────────────────
@@ -85,6 +105,16 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
 
   Future<void> _refreshPandits() {
     return ref.refresh(panditProvider.future);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ritual = ModalRoute.of(context)!.settings.arguments as RitualData;
+      _searchController.text = ritual.name ?? '';
+    });
   }
 
   @override
@@ -401,6 +431,15 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(panditProvider, (previous, next) {
+      next.whenData((_) {
+        if (_searchController.text.isNotEmpty) {
+          ref
+              .read(panditProvider.notifier)
+              .searchPandit(_searchController.text);
+        }
+      });
+    });
     final panditAsync = ref.watch(panditProvider);
 
     return Scaffold(
@@ -584,6 +623,17 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                         icon: qf.icon,
                         selected: _filters.serviceType == qf.type,
                         onTap: () => setState(() {
+                          final selected = ServiceModel(
+                            title: qf.label,
+                            type: qf.type,
+                            description: qf.dec,
+                            icon: qf.icon,
+                          );
+
+                          ref.read(selectedServiceProvider.notifier).state =
+                              selected;
+
+                          print(ref.read(selectedServiceProvider));
                           _filters = _filters.copyWith(
                             serviceType: _filters.serviceType == qf.type
                                 ? null
@@ -671,8 +721,10 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () =>
-                          setState(() => _filters = const PanditFilterState()),
+                      onTap: () {
+                        setState(() => _filters = const PanditFilterState());
+                        ref.invalidate(selectedServiceProvider);
+                      },
                       child: Text(
                         'Clear all',
                         style: text12(color: AppColors.error),
@@ -693,7 +745,11 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: SizedBox(
                       height: MediaQuery.of(context).size.height * 0.55,
-                      child: const Center(child: PanditCardLoader()),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.button,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -708,10 +764,15 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                   ),
                 ),
                 data: (data) {
-                  final base = data.searchResults.isNotEmpty
-                      ? data.searchResults
-                      : data.pandit;
-                  final pandits = _applyFilters(base);
+                  final isSearching = _searchController.text.trim().isNotEmpty;
+
+                  final pandits = _applyFilters(
+                    isSearching ? data.searchResults : data.pandit,
+                  );
+                  // final base = data.searchResults.isNotEmpty
+                  //     ? data.searchResults
+                  //     : data.pandit;
+                  // final pandits = _applyFilters(base);
 
                   if (pandits.isEmpty) {
                     return RefreshIndicator(
