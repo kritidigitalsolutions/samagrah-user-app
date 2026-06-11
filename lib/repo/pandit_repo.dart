@@ -7,6 +7,7 @@ import 'package:samagrah/model/response/pandit_res/ritual_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/temple_res_model.dart';
 import 'package:samagrah/res/app_urls.dart';
 import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
+import 'package:samagrah/utils/localStogare_service/location_storage.dart';
 
 class PanditRepo {
   final _api = NetworkApiService();
@@ -23,7 +24,11 @@ class PanditRepo {
     try {
       final token = await _getToken();
       _api.setToken(token);
-      final res = await _api.getApi(AppUrls.rituals);
+      final city = await LocationStorage.getCity() ?? "Agra";
+      final pincode = await LocationStorage.getPincode() ?? '';
+      final res = await _api.getApi(
+        "${AppUrls.rituals}?city=$city&pincode=$pincode",
+      );
       return RitualResModel.fromJson(res);
     } catch (e) {
       rethrow;
@@ -36,7 +41,12 @@ class PanditRepo {
     try {
       final token = await _getToken();
       _api.setToken(token);
-      final res = await _api.getApi(AppUrls.pandit);
+      final city = await LocationStorage.getCity() ?? "Agra";
+      final pincode = await LocationStorage.getPincode() ?? '';
+
+      final res = await _api.getApi(
+        "${AppUrls.pandit}?city=$city&pincode=$pincode",
+      );
       return PanditResModel.fromJson(res);
     } catch (e) {
       rethrow;

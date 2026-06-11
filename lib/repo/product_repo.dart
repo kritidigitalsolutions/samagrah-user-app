@@ -24,8 +24,11 @@ class ProductRepo {
   Future<CategoryResModel> getCategories() async {
     try {
       final city = await LocationStorage.getCity() ?? "Agra";
+      final pincode = await LocationStorage.getPincode() ?? '';
 
-      final res = await _api.getApi('${AppUrls.category}?city=$city');
+      final res = await _api.getApi(
+        '${AppUrls.category}?city=$city&pincode=$pincode',
+      );
       return CategoryResModel.fromJson(res);
     } catch (e) {
       rethrow;
@@ -37,7 +40,10 @@ class ProductRepo {
   Future<BrandsResModel> getBrands() async {
     try {
       final city = await LocationStorage.getCity() ?? "Agra";
-      final res = await _api.getApi('${AppUrls.brands}?city=$city');
+      final pincode = await LocationStorage.getPincode() ?? '';
+      final res = await _api.getApi(
+        '${AppUrls.brands}?city=$city&pincode=$pincode',
+      );
       return BrandsResModel.fromJson(res);
     } catch (e) {
       rethrow;
@@ -49,9 +55,11 @@ class ProductRepo {
     try {
       final token = await _getToken();
       final city = await LocationStorage.getCity() ?? "Agra";
-      // final state = await LocationStorage.getState();
+      final pincode = await LocationStorage.getPincode() ?? '';
       _api.setToken(token);
-      final res = await _api.getApi('${AppUrls.getProduct}?city=$city');
+      final res = await _api.getApi(
+        '${AppUrls.getProduct}?city=$city&pincode=$pincode',
+      );
       return ProductResModel.fromJson(res);
     } catch (e) {
       rethrow;

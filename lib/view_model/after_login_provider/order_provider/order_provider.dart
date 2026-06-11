@@ -12,7 +12,6 @@ import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/res/app_urls.dart';
 import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
 import 'package:samagrah/view_model/after_login_provider/order_provider/order_state.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 final orderProvider = AsyncNotifierProvider<BookingNotifier, BookingState>(
   () => BookingNotifier(),

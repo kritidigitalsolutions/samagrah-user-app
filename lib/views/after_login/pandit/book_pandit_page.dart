@@ -10,7 +10,6 @@ import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
 import 'package:samagrah/views/after_login/pandit/checkout_pandit/service_selection_screen.dart';
-import 'package:samagrah/views/custom_loader.dart/pandit_card_loader.dart';
 
 // ─────────────────────────────────────────────
 // Filter State Model

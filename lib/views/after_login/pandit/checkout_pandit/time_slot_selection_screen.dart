@@ -71,10 +71,11 @@ class _TimeSlotSelectionScreenState
       final exists = list.any((s) => s.time == slot.time);
       if (exists) {
         list.removeWhere((s) => s.time == slot.time);
-        if (list.isEmpty)
+        if (list.isEmpty) {
           _selectedSlots.remove(date);
-        else
+        } else {
           _selectedSlots[date] = list;
+        }
       } else {
         _selectedSlots[date] = [...list, slot];
       }
@@ -178,7 +179,7 @@ class _TimeSlotSelectionScreenState
               'assets/panditLogo.png',
               width: 70,
               height: 70,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, _, _) => Container(
                 width: 70,
                 height: 70,
                 color: AppColors.grey500,

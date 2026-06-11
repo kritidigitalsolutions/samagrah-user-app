@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:samagrah/repo/notification_repo.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_pages.dart';
@@ -20,24 +21,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Firebase
   await Firebase.initializeApp();
-
-  // Initialize FCM Service
   await FCMNotificationService().initialize();
-  runApp(
-    const ProviderScope(
-      // ← Must wrap the entire app
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -67,10 +58,10 @@ class MyHomeScreen extends ConsumerStatefulWidget {
 
 class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
   final NotificationRepo _repo = NotificationRepo();
+
   @override
   void initState() {
     super.initState();
-
     Future.microtask(() {
       ref.read(bottomNavProvider.notifier).state = widget.index ?? 0;
     });
@@ -78,10 +69,17 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
     _handleLocationCheck();
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // LOCATION CHECK LOGIC
+  //
+  // Case 1: City not saved at all → LocationPage (select city)
+  // Case 2: City saved + GPS permission granted → ✅ do nothing
+  // Case 3: City saved + GPS permission NOT granted → show popup
+  // ─────────────────────────────────────────────────────────────
   void _handleLocationCheck() async {
+    // FCM token
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('fcm_token');
-
     if (token == null || token.isEmpty) {
       token = await FirebaseMessaging.instance.getToken();
       await _repo.postFCMToken(token ?? '');
@@ -89,17 +87,31 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
       await _repo.postFCMToken(token);
     }
 
-    final hasPermission = await checkLocationPermission();
+    // Step 1 — city saved hai?
+    final savedCity = await LocationStorage.getCity();
+    final savedState = await LocationStorage.getState();
+    final hasSavedCity =
+        savedCity != null &&
+        savedCity.isNotEmpty &&
+        savedState != null &&
+        savedState.isNotEmpty;
 
+    if (!hasSavedCity) {
+      // City nahi → LocationPage pe bhejo
+      if (mounted) Navigator.pushNamed(context, AppRoutes.locationPage);
+      return;
+    }
+
+    // Step 2 — city hai, GPS permission check karo
+    final hasPermission = await checkLocationPermission();
     if (!hasPermission && mounted) {
-      Navigator.pushNamed(context, AppRoutes.locationPage);
+      _showLocationPermissionPopup();
     }
   }
 
   void _loadSavedLocation() async {
     final city = await LocationStorage.getCity();
     final state = await LocationStorage.getState();
-
     if (city != null && state != null) {
       ref.read(locationProvider.notifier).state = LocationModel(
         city: city,
@@ -109,20 +121,118 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // FIXED: Handle System Back Button
+  // PERMISSION POPUP
+  // City saved hai but GPS off — gentle reminder, skip allowed
+  // ─────────────────────────────────────────────────────────────
+  void _showLocationPermissionPopup() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: AppColors.white,
+        contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 8),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: 68,
+              width: 68,
+              decoration: BoxDecoration(
+                color: AppColors.button.withAlpha(30),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.location_on_rounded,
+                color: AppColors.button,
+                size: 34,
+              ),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              'Enable Location Access',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Allow location permission for accurate delivery estimates and better experience near you.',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.grey600,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Primary — Enable
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  final status = await Permission.location.request();
+                  if (status.isPermanentlyDenied && mounted) {
+                    await openAppSettings();
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.button,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Enable Location',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Secondary — Skip
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'Skip for now',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.grey600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // BACK BUTTON HANDLER
   // ─────────────────────────────────────────────────────────────
   void _onPopInvoked(bool didPop, Object? result) async {
     if (didPop) return;
 
     final currentIndex = ref.read(bottomNavProvider);
 
-    // If not on Home → Go back to Home
     if (currentIndex != 0) {
       ref.read(bottomNavProvider.notifier).state = 0;
       return;
     }
 
-    // Show Exit Confirmation Dialog
     final shouldExit = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
@@ -209,13 +319,12 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
 
     if (shouldExit == true) {
       ref.read(bottomNavProvider.notifier).state = 0;
-      // Allow system to exit the app
-      Navigator.of(context).pop(); // This triggers actual app exit
+      Navigator.of(context).pop();
     }
   }
 
   final List<Widget> _screens = [
-    const HomeScreen(), // Main screen
+    const HomeScreen(),
     const BookRetualPage(),
     CustomizePoojaKitScreen(),
     const CategoryPage(),
@@ -226,7 +335,7 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
     final currentIndex = ref.watch(bottomNavProvider);
     ref.read(userProvider);
     return PopScope(
-      canPop: false, // Important: Prevent default pop
+      canPop: false,
       onPopInvokedWithResult: _onPopInvoked,
       child: Scaffold(
         backgroundColor: AppColors.headerCard,
@@ -241,11 +350,11 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
       padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
       decoration: const BoxDecoration(color: AppColors.background),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(30),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2),
           ],
         ),
@@ -263,7 +372,6 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
 
   Widget _navItem(String path, String label, int index, int currentIndex) {
     final isSelected = currentIndex == index;
-
     return Expanded(
       child: InkWell(
         onTap: () {

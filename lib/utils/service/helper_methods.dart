@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:samagrah/res/app_urls.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 Future<void> makePhoneCall(String? phone) async {

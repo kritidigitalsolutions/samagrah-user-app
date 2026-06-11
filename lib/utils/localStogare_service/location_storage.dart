@@ -14,6 +14,7 @@ class LocationStorage {
     required double lng,
     required String city,
     required String state,
+    String pincode = '',
   }) async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -22,6 +23,7 @@ class LocationStorage {
     await prefs.setDouble(_lngKey, lng);
     await prefs.setString(_cityKey, city);
     await prefs.setString(_stateKey, state);
+    await prefs.setString('pincode', pincode);
   }
 
   // Get
@@ -48,5 +50,10 @@ class LocationStorage {
   static Future<double?> getLng() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getDouble(_lngKey);
+  }
+
+  static Future<String?> getPincode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('pincode');
   }
 }

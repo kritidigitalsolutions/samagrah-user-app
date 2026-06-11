@@ -21,10 +21,9 @@ class ProductCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // ProductCard mein — bilkul sahi calculation
     final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = (screenWidth - 28) / 3; // 8+8 padding + 6+6 spacing
-    final imageHeight = cardWidth; // square imaightly taller than square
+    final cardWidth = (screenWidth - 28) / 3;
+    final imageHeight = cardWidth;
 
     final cartState = ref.watch(cartProvider);
     final quantity = ref.watch(cartQuantityProvider(product.id ?? ''));
@@ -33,6 +32,7 @@ class ProductCard extends ConsumerWidget {
     final currentIndex = ref.watch(imageSliderIndexProvider(product.id ?? ''));
 
     final hasDiscount = (product.discountPercent ?? 0) != 0;
+    final inStock = product.inStock == true;
 
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
@@ -44,14 +44,12 @@ class ProductCard extends ConsumerWidget {
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(10),
-          //   border: Border.all(color: AppColors.grey200, width: 0.8),
         ),
-        // ── No fixed height — card grows with content ──
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── IMAGE SECTION — fixed height ──────────────────────
+            // ── IMAGE SECTION ──────────────────────────────────────
             SizedBox(
               height: imageHeight,
               child: Stack(
@@ -179,24 +177,42 @@ class ProductCard extends ConsumerWidget {
                       ),
                     ),
 
-                  // BOTTOM-RIGHT: ADD / stepper
-                  if (product.inStock == true)
-                    Positioned(
-                      bottom: 5,
-                      right: 5,
-                      child: _QuantityControl(
-                        quantity: quantity,
-                        productId: product.id ?? '',
-                        isLoading: cartState.isLoading,
-                        product: product,
-                        cartNotifier: cartNotifier,
-                      ),
-                    ),
+                  // BOTTOM: ADD button OR "Out of Stock" overlay
+                  // ✅ Both are inside image — info section mein kuch extra nahi
+                  Positioned(
+                    bottom: 5,
+                    right: 5,
+                    // Out of stock → full width strip; in stock → right-side button
+                    left: inStock ? null : 5,
+                    child: inStock
+                        ? _QuantityControl(
+                            quantity: quantity,
+                            productId: product.id ?? '',
+                            isLoading: cartState.isLoading,
+                            product: product,
+                            cartNotifier: cartNotifier,
+                          )
+                        : Container(
+                            height: 20,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.52),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Text(
+                              'Out of Stock',
+                              style: text8(
+                                color: AppColors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                  ),
                 ],
               ),
             ),
 
-            // ── INFO SECTION — grows with content, no fixed height ──
+            // ── INFO SECTION ───────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(7, 5, 7, 7),
               child: Column(
@@ -266,27 +282,7 @@ class ProductCard extends ConsumerWidget {
                       color: AppColors.textPrimary,
                     ),
                   ),
-
-                  // Out of stock
-                  if (product.inStock != true) ...[
-                    const SizedBox(height: 4),
-                    Container(
-                      height: 22,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(5),
-                        border: Border.all(color: AppColors.error, width: 0.7),
-                      ),
-                      child: Text(
-                        "Out of Stock",
-                        style: text8(
-                          color: AppColors.error,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
+                  // ✅ "Out of Stock" yahan se hata diya — image overlay pe hai ab
                 ],
               ),
             ),

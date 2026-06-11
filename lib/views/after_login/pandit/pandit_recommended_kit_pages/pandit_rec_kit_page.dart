@@ -176,7 +176,7 @@ class _PanditRecKitPageState extends ConsumerState<PanditRecKitPage> {
                   ? const _EmptyKit()
                   : categoryAsync.when(
                       loading: () => _buildList(kitItems, [], isLoading: true),
-                      error: (_, __) => _buildList(kitItems, []),
+                      error: (_, _) => _buildList(kitItems, []),
                       data: (categories) => _buildList(kitItems, categories),
                     ),
             ),
