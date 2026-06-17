@@ -23,12 +23,10 @@ class _TimeSlotSelectionScreenState
     extends ConsumerState<TimeSlotSelectionScreen> {
   int? _selectedDateIndex;
 
-  // -1 means "custom date" tab
   bool _showCustomPicker = false;
 
   final Map<String, List<Slot>> _selectedSlots = {};
 
-  // Custom date/time picked by user
   DateTime? _customDate;
   TimeOfDay? _customTimeStart;
   TimeOfDay? _customTimeEnd;
@@ -86,7 +84,6 @@ class _TimeSlotSelectionScreenState
     return (_selectedSlots[date] ?? []).any((s) => s.time == slot.time);
   }
 
-  // Returns the last date present in pandit availability list
   DateTime _getLastPanditDate(List<Availability> availability) {
     DateTime last = DateTime.now();
     for (final a in availability) {
@@ -105,7 +102,6 @@ class _TimeSlotSelectionScreenState
     return "$h:$m $p";
   }
 
-  // Pick custom date
   Future<void> _pickCustomDate(DateTime minDate) async {
     final picked = await showDatePicker(
       context: context,
@@ -128,7 +124,6 @@ class _TimeSlotSelectionScreenState
     }
   }
 
-  // Pick start time
   Future<void> _pickStartTime() async {
     final picked = await showTimePicker(
       context: context,
@@ -143,7 +138,6 @@ class _TimeSlotSelectionScreenState
     if (picked != null) setState(() => _customTimeStart = picked);
   }
 
-  // Pick end time
   Future<void> _pickEndTime() async {
     final picked = await showTimePicker(
       context: context,
@@ -163,6 +157,66 @@ class _TimeSlotSelectionScreenState
     if (picked != null) setState(() => _customTimeEnd = picked);
   }
 
+  // ── FIX: Strip the time component so today's date compares correctly ──
+  bool _isPastDate(String? dateStr) {
+    if (dateStr == null) return false;
+    try {
+      final d = DateTime.parse(dateStr);
+      final today = DateTime.now();
+      final todayMidnight = DateTime(today.year, today.month, today.day);
+      final dateMidnight = DateTime(d.year, d.month, d.day);
+      return dateMidnight.isBefore(todayMidnight);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ── FIX: Check whether a slot's start time has already passed today ──
+  bool _isPastSlot(String? dateStr, String? timeStr) {
+    if (dateStr == null || timeStr == null) return false;
+    try {
+      final d = DateTime.parse(dateStr);
+      final today = DateTime.now();
+      // Only relevant for today's date
+      final isToday =
+          d.year == today.year && d.month == today.month && d.day == today.day;
+      if (!isToday) return false;
+
+      // Parse the start time from strings like "9:00 AM - 11:00 AM" or "9:00 AM"
+      final startPart = timeStr.split(' - ').first.trim();
+      final parsed = _parseTimeOfDay(startPart);
+      if (parsed == null) return false;
+
+      final slotDateTime = DateTime(
+        today.year,
+        today.month,
+        today.day,
+        parsed.hour,
+        parsed.minute,
+      );
+      return slotDateTime.isBefore(today);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Parses "9:00 AM" or "11:30 PM" into a TimeOfDay
+  TimeOfDay? _parseTimeOfDay(String raw) {
+    try {
+      final parts = raw.trim().split(' ');
+      if (parts.length < 2) return null;
+      final hm = parts[0].split(':');
+      int hour = int.parse(hm[0]);
+      final minute = int.parse(hm[1]);
+      final period = parts[1].toUpperCase();
+      if (period == 'PM' && hour != 12) hour += 12;
+      if (period == 'AM' && hour == 12) hour = 0;
+      return TimeOfDay(hour: hour, minute: minute);
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final pandit = ModalRoute.of(context)!.settings.arguments as PanditData;
@@ -179,7 +233,7 @@ class _TimeSlotSelectionScreenState
               'assets/panditLogo.png',
               width: 70,
               height: 70,
-              errorBuilder: (_, _, _) => Container(
+              errorBuilder: (_, __, ___) => Container(
                 width: 70,
                 height: 70,
                 color: AppColors.grey500,
@@ -226,16 +280,16 @@ class _TimeSlotSelectionScreenState
                   final availability = res.data?.availability ?? [];
                   final lastPanditDate = _getLastPanditDate(availability);
 
-                  // All dates (available + booked + not_available) show karo
-                  final allDates = availability;
+                  // ── FIX 1: Exclude dates that are strictly in the past ──
+                  final allDates = availability
+                      .where((a) => !_isPastDate(a.date))
+                      .toList();
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ── Legend ──
                       _StatusLegend(),
 
-                      // ── Header ──
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
                         child: Row(
@@ -274,7 +328,7 @@ class _TimeSlotSelectionScreenState
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // ── Left: Date list + Custom button ──
+                            // ── Left: Date list ──
                             SizedBox(
                               width: 120,
                               child: ListView.builder(
@@ -283,10 +337,8 @@ class _TimeSlotSelectionScreenState
                                   right: 8,
                                   bottom: 16,
                                 ),
-                                // +1 for "Custom Date" tile at bottom
                                 itemCount: allDates.length + 1,
                                 itemBuilder: (context, i) {
-                                  // Last item = Custom Date tile
                                   if (i == allDates.length) {
                                     return _CustomDateTile(
                                       isActive: _showCustomPicker,
@@ -369,12 +421,10 @@ class _TimeSlotSelectionScreenState
                                             ),
                                           ),
                                           const SizedBox(height: 5),
-                                          // Status badge
                                           _DateStatusBadge(
                                             status: status,
                                             isSelected: isSelected,
                                           ),
-                                          // Selected slots badge
                                           if (hasSlots && isAvailable) ...[
                                             const SizedBox(height: 4),
                                             Container(
@@ -435,6 +485,8 @@ class _TimeSlotSelectionScreenState
                                       formatDate: _formatDate,
                                       isSelected: _isSlotSelected,
                                       onToggle: _toggleSlot,
+                                      // ── FIX 2: pass slot-past checker ──
+                                      isPastSlot: _isPastSlot,
                                     ),
                             ),
                           ],
@@ -475,7 +527,6 @@ class _TimeSlotSelectionScreenState
                   }
                 });
 
-                // Custom date entry
                 if (_customDate != null && _customTimeStart != null) {
                   final dateStr =
                       "${_customDate!.year}-${_customDate!.month.toString().padLeft(2, '0')}-${_customDate!.day.toString().padLeft(2, '0')}";
@@ -551,7 +602,6 @@ class _DateStatusBadge extends StatelessWidget {
         icon = Icons.event_busy_rounded;
         break;
       default:
-        // not_available or any other
         bg = Colors.red.withOpacity(0.10);
         textColor = Colors.red.shade400;
         label = 'N/A';
@@ -638,7 +688,7 @@ class _LegendDot extends StatelessWidget {
   }
 }
 
-// ── Custom Date Tile (in left list) ────────────────────────────────────────
+// ── Custom Date Tile ────────────────────────────────────────────────────────
 class _CustomDateTile extends StatelessWidget {
   const _CustomDateTile({required this.isActive, required this.onTap});
   final bool isActive;
@@ -732,7 +782,6 @@ class _CustomDateTimePicker extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -762,7 +811,6 @@ class _CustomDateTimePicker extends StatelessWidget {
             ),
             const SizedBox(height: 14),
 
-            // ⚠️ Refund notice card
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -808,7 +856,6 @@ class _CustomDateTimePicker extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Date picker row
             _PickerRow(
               icon: Icons.calendar_today_outlined,
               label: "Select Date",
@@ -822,7 +869,6 @@ class _CustomDateTimePicker extends StatelessWidget {
             ),
             const SizedBox(height: 10),
 
-            // Start time
             _PickerRow(
               icon: Icons.schedule_rounded,
               label: "Start Time",
@@ -833,7 +879,6 @@ class _CustomDateTimePicker extends StatelessWidget {
             ),
             const SizedBox(height: 10),
 
-            // End time
             _PickerRow(
               icon: Icons.schedule_outlined,
               label: "End Time",
@@ -845,7 +890,6 @@ class _CustomDateTimePicker extends StatelessWidget {
               color: const Color(0xFF6366F1),
             ),
 
-            // Minimum date hint
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -934,8 +978,6 @@ class _PickerRow extends StatelessWidget {
           border: Border.all(
             color: value != null
                 ? color.withOpacity(0.6)
-                : enabled
-                ? Colors.grey.shade200
                 : Colors.grey.shade200,
             width: value != null ? 1.5 : 1,
           ),
@@ -1080,12 +1122,14 @@ class _SlotPanel extends StatelessWidget {
     required this.formatDate,
     required this.isSelected,
     required this.onToggle,
+    required this.isPastSlot, // ── FIX 2
   });
 
   final Availability availability;
   final String Function(String) formatDate;
   final bool Function(String, Slot) isSelected;
   final void Function(String, Slot) onToggle;
+  final bool Function(String?, String?) isPastSlot; // ── FIX 2
 
   @override
   Widget build(BuildContext context) {
@@ -1093,9 +1137,14 @@ class _SlotPanel extends StatelessWidget {
     final status = availability.status?.toLowerCase() ?? '';
     final isAvailable = status == 'available';
 
+    // ── FIX 2: also exclude slots whose start time has already passed today ──
     final slots = isAvailable
         ? availability.slots
-              .where((s) => s.status?.toLowerCase() == 'available')
+              .where(
+                (s) =>
+                    s.status?.toLowerCase() == 'available' &&
+                    !isPastSlot(date, s.time),
+              )
               .toList()
         : <Slot>[];
 
@@ -1104,7 +1153,6 @@ class _SlotPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Date label
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
@@ -1132,7 +1180,6 @@ class _SlotPanel extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          // Non-available overlay message
           if (!isAvailable)
             Expanded(
               child: Center(
@@ -1206,11 +1253,9 @@ class _SlotPanel extends StatelessWidget {
                 itemBuilder: (context, i) {
                   final slot = slots[i];
                   final selected = isSelected(date, slot);
-                  final slotStatus = slot.status?.toLowerCase() ?? '';
-                  final slotAvailable = slotStatus == 'available';
 
                   return GestureDetector(
-                    onTap: slotAvailable ? () => onToggle(date, slot) : null,
+                    onTap: () => onToggle(date, slot),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
                       margin: const EdgeInsets.only(bottom: 10),
@@ -1221,9 +1266,7 @@ class _SlotPanel extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: selected
                             ? AppColors.button.withOpacity(0.08)
-                            : slotAvailable
-                            ? Colors.white
-                            : Colors.grey.shade50,
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: selected
@@ -1264,51 +1307,30 @@ class _SlotPanel extends StatelessWidget {
                               ),
                             ),
                           ),
-                          // Slot-level status badge
-                          if (!slotAvailable)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                slotStatus == 'booked' ? 'Booked' : 'N/A',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange.shade700,
-                                ),
-                              ),
-                            )
-                          else
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 180),
-                              width: 22,
-                              height: 22,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: selected
+                                  ? AppColors.button
+                                  : Colors.transparent,
+                              border: Border.all(
                                 color: selected
                                     ? AppColors.button
-                                    : Colors.transparent,
-                                border: Border.all(
-                                  color: selected
-                                      ? AppColors.button
-                                      : Colors.grey.shade300,
-                                  width: 2,
-                                ),
+                                    : Colors.grey.shade300,
+                                width: 2,
                               ),
-                              child: selected
-                                  ? const Icon(
-                                      Icons.check,
-                                      size: 13,
-                                      color: Colors.white,
-                                    )
-                                  : null,
                             ),
+                            child: selected
+                                ? const Icon(
+                                    Icons.check,
+                                    size: 13,
+                                    color: Colors.white,
+                                  )
+                                : null,
+                          ),
                         ],
                       ),
                     ),
@@ -1380,7 +1402,6 @@ class _BottomBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Summary chips
           if (totalSelected > 0) ...[
             SizedBox(
               height: 36,

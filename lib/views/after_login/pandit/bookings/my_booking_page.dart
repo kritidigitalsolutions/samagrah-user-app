@@ -29,7 +29,7 @@ class MyBookingsPage extends ConsumerWidget {
       case "pending":
         return "Pending";
       case "confirmed":
-        return "Confirmed";
+        return "Accepted";
       case "completed":
         return "Completed";
       case "cancelled":
@@ -137,9 +137,7 @@ class MyBookingsPage extends ConsumerWidget {
                           )
                         : ListView.builder(
                             physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
                             itemCount: filteredBookings.length,
                             itemBuilder: (context, index) {
                               final booking = filteredBookings[index];
@@ -203,26 +201,26 @@ class MyBookingsPage extends ConsumerWidget {
             child: SizedBox(
               height: MediaQuery.of(context).size.height * 0.75,
               child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 48, color: AppColors.error),
-                SizedBox(height: 16),
-                Text(
-                  "Failed to load bookings",
-                  style: text16(fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  error.toString(),
-                  style: text12(color: AppColors.grey),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 16),
-                ElevatedButton(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                  SizedBox(height: 16),
+                  Text(
+                    "Failed to load bookings",
+                    style: text16(fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    error.toString(),
+                    style: text12(color: AppColors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 16),
+                  ElevatedButton(
                     onPressed: () => ref.invalidate(panditBookingProvider),
-                  child: Text("Retry"),
-                ),
-              ],
+                    child: Text("Retry"),
+                  ),
+                ],
               ),
             ),
           ),
@@ -258,6 +256,28 @@ class MyBookingsPage extends ConsumerWidget {
   }
 }
 
+String getStatusText(String? status) {
+  switch (status?.toLowerCase()) {
+    case 'confirmed':
+      return 'Request Accepted';
+
+    case 'pending':
+      return 'Request Pending';
+
+    case 'rejected':
+      return 'Request Rejected';
+
+    case 'completed':
+      return 'Completed';
+
+    case 'cancelled':
+      return 'Cancelled';
+
+    default:
+      return status ?? '';
+  }
+}
+
 class BookingCard extends StatelessWidget {
   final String type;
   final String title;
@@ -284,7 +304,7 @@ class BookingCard extends StatelessWidget {
     switch (status) {
       case "Pending":
         return Colors.orange;
-      case "Confirmed":
+      case "Accepted":
         return Colors.blue;
       case "Completed":
         return AppColors.green;

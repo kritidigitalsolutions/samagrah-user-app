@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -44,7 +45,6 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
         _emailController.text = user['email'] ?? '';
         _phoneController.text = user['phone'] ?? '';
         _addressController.text = user['address'] ?? '';
-        profileImageUrl = user['profileImage']; // ✅ important
         userId = user['id'];
         setState(() {});
       }
@@ -65,6 +65,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
   @override
   Widget build(BuildContext context) {
     final updateState = ref.watch(updateProfileProvider);
+    final userAsync = ref.watch(userProvider);
     return Scaffold(
       appBar: CustomAppBar(title: 'Edit Profile'),
       body: SingleChildScrollView(
@@ -77,28 +78,51 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
               Center(
                 child: Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 60,
-                      backgroundColor: Colors.grey[200],
+                    userAsync.when(
+                      data: (user) {
+                        final image = user?['profileImage'];
 
-                      backgroundImage: _imageFile != null
-                          ? FileImage(_imageFile!)
-                          : (profileImageUrl != null &&
-                                profileImageUrl!.isNotEmpty)
-                          ? NetworkImage(getFullImageUrl(profileImageUrl!))
-                          : null,
+                        ImageProvider? imageProvider;
 
-                      child:
-                          (_imageFile == null &&
-                              (profileImageUrl == null ||
-                                  profileImageUrl!.isEmpty))
-                          ? const Icon(
-                              Icons.person,
-                              size: 60,
-                              color: Colors.grey,
-                            )
-                          : null,
+                        if (_imageFile != null) {
+                          imageProvider = FileImage(_imageFile!);
+                        } else if (image != null &&
+                            image.toString().isNotEmpty) {
+                          imageProvider = CachedNetworkImageProvider(
+                            getFullImageUrl(image),
+                          );
+                        }
+
+                        return CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Colors.grey[200],
+                          backgroundImage: imageProvider,
+                          child: imageProvider == null
+                              ? const Icon(
+                                  Icons.person,
+                                  size: 60,
+                                  color: Colors.grey,
+                                )
+                              : null,
+                        );
+                      },
+                      loading: () => const CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.grey,
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                      error: (_, __) => const CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.grey,
+                        child: Icon(Icons.error),
+                      ),
                     ),
+
+                    // Edit button
                     Positioned(
                       bottom: 0,
                       right: 0,
@@ -121,7 +145,6 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 32),
 
               // Name
@@ -144,11 +167,13 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
               const SizedBox(height: 16),
 
               // number
-              NumberTextField(
-                radius: 8,
-                prefixIcon: Icon(Icons.call),
-                controller: _phoneController,
-                hintText: 'Enter your phone number',
+              AbsorbPointer(
+                child: NumberTextField(
+                  radius: 8,
+                  prefixIcon: Icon(Icons.call),
+                  controller: _phoneController,
+                  hintText: 'Enter your phone number',
+                ),
               ),
 
               const SizedBox(height: 16),

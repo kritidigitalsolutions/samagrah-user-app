@@ -30,15 +30,12 @@ class RitualNotifier extends AsyncNotifier<RitualState> {
     final String searchTerm = query.toLowerCase().trim();
 
     if (searchTerm.isEmpty) {
-      // Reset search
       state = AsyncData(current.copyWith(searchResults: []));
       return;
     }
 
-    // Search across all original products
     final List<RitualData> allSource = [...current.rituals];
 
-    // Remove duplicate products (by id)
     final uniqueProducts = <RitualData>{};
     for (var p in allSource) {
       if (p.id != null) uniqueProducts.add(p);
@@ -46,7 +43,6 @@ class RitualNotifier extends AsyncNotifier<RitualState> {
 
     final filteredResults = uniqueProducts.where((p) {
       final title = (p.title ?? '').toLowerCase();
-
       return title.contains(searchTerm);
     }).toList();
 
@@ -65,12 +61,51 @@ final panditProvider = AsyncNotifierProvider<PanditNotifier, PanditState>(
 class PanditNotifier extends AsyncNotifier<PanditState> {
   final _repo = PanditRepo();
 
+  // Tracks whether user has applied a custom location.
+  // null = use LocationStorage (user's GPS city), non-null = custom city
+  String? _customCity;
+  String? _customPincode;
+
   @override
   Future<PanditState> build() async {
+    // First load always uses user's saved GPS location
     final res = await _repo.getPandit();
-    final pandits = res.data;
+    return PanditState(pandit: res.data);
+  }
 
-    return PanditState(pandit: pandits);
+  /// Called when user selects a custom city from the location filter.
+  /// Re-fetches pandits from the API for the given city/pincode.
+  Future<void> fetchByLocation({
+    required String city,
+    String pincode = '',
+  }) async {
+    _customCity = city.trim();
+    _customPincode = pincode.trim();
+
+    state = const AsyncLoading();
+    try {
+      final res = await _repo.getPandit(
+        city: _customCity,
+        pincode: _customPincode,
+      );
+      state = AsyncData(PanditState(pandit: res.data));
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
+  /// Resets back to user's GPS/saved location and re-fetches.
+  Future<void> resetToUserLocation() async {
+    _customCity = null;
+    _customPincode = null;
+
+    state = const AsyncLoading();
+    try {
+      final res = await _repo.getPandit(); // no params → uses LocationStorage
+      state = AsyncData(PanditState(pandit: res.data));
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
   }
 
   void searchPandit(String query) {
@@ -80,17 +115,12 @@ class PanditNotifier extends AsyncNotifier<PanditState> {
     final String searchTerm = query.toLowerCase().trim();
 
     if (searchTerm.isEmpty) {
-      // Reset search
       state = AsyncData(current.copyWith(searchResults: []));
       return;
     }
 
-    // Search across all original products
-    final List<PanditData> allSource = [...current.pandit];
-
-    // Remove duplicate products (by id)
     final uniqueProducts = <PanditData>{};
-    for (var p in allSource) {
+    for (var p in current.pandit) {
       if (p.id != null) uniqueProducts.add(p);
     }
 
@@ -100,7 +130,6 @@ class PanditNotifier extends AsyncNotifier<PanditState> {
       final stateName = (p.address?.state ?? "").toLowerCase();
       final line1 = (p.address?.line1 ?? "").toLowerCase();
       final line2 = (p.address?.line2 ?? "").toLowerCase();
-
       final languages = p.languagesSpoken.map((e) => e.toLowerCase()).join(" ");
       final yearOfExp = p.yearsOfExperience.toString();
       final poojaNames = p.poojaOfferings

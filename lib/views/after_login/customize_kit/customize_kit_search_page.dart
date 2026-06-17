@@ -5,6 +5,7 @@ import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
+import 'package:samagrah/utils/service/helper_methods.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
 
@@ -244,7 +245,9 @@ class _CustomizePoojaKitScreenState
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      kit.kitType!,
+                      kit.kitType == "default"
+                          ? "Customize"
+                          : capitalizeWords(kit.kitType ?? ''),
                       style: text11(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,

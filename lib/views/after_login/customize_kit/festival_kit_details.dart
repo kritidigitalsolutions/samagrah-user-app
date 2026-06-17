@@ -1419,45 +1419,48 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
           ),
 
           // ── Sticky Checkout Bar ───────────────────────────────────
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 10,
-                  offset: const Offset(0, -3),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('Total', style: text12(color: AppColors.grey600)),
-                    Text(
-                      '₹$_localTotal',
-                      style: text18(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      '(${_localItems.length} items)',
-                      style: text11(color: AppColors.grey600),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: AppButton(
-                    title: 'Proceed to Checkout →',
-                    onTap: () => widget.onProceed(_localItems, _localTotal),
+          SafeArea(
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, -3),
                   ),
-                ),
-              ],
+                ],
+              ),
+              child: Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Total', style: text12(color: AppColors.grey600)),
+                      Text(
+                        '₹$_localTotal',
+                        style: text18(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '(${_localItems.length} items)',
+                        style: text11(color: AppColors.grey600),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: AppButton(
+                      title: 'Proceed to Checkout →',
+                      onTap: () => widget.onProceed(_localItems, _localTotal),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+          SizedBox(height: 20),
         ],
       ),
     );

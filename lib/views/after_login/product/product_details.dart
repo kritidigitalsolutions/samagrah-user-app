@@ -223,9 +223,13 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                             children: [
                               Text(
                                 'MRP ₹${product.oldPrice}',
-                                style: text13(color: AppColors.grey).copyWith(
-                                  decoration: TextDecoration.lineThrough,
-                                ),
+                                style:
+                                    text14(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.bold,
+                                    ).copyWith(
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
                               ),
                               const SizedBox(width: 8),
                               Container(
@@ -250,7 +254,7 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                           const SizedBox(height: 4),
                           Text(
                             '₹${product.price}/-',
-                            style: text18(fontWeight: FontWeight.bold),
+                            style: text20(fontWeight: FontWeight.bold),
                           ),
 
                           const SizedBox(height: 8),
@@ -484,58 +488,58 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                   ),
                 ),
 
-                // ── Offer Banner ──────────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-                    child: Stack(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: const Color(0xff5c1f2e),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
-                                    Text(
-                                      'Get ₹50 OFF',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      'Add items worth ₹399 more',
-                                      style: TextStyle(color: Colors.white70),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 70),
-                            ],
-                          ),
-                        ),
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: Image.asset(
-                            'assets/icon/plate.png',
-                            width: 70,
-                            height: 70,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                // // ── Offer Banner ──────────────────────────────────────────
+                // SliverToBoxAdapter(
+                //   child: Padding(
+                //     padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                //     child: Stack(
+                //       children: [
+                //         Container(
+                //           padding: const EdgeInsets.all(14),
+                //           decoration: BoxDecoration(
+                //             color: const Color(0xff5c1f2e),
+                //             borderRadius: BorderRadius.circular(15),
+                //           ),
+                //           child: Row(
+                //             children: [
+                //               Expanded(
+                //                 child: Column(
+                //                   crossAxisAlignment: CrossAxisAlignment.start,
+                //                   children: const [
+                //                     Text(
+                //                       'Get ₹50 OFF',
+                //                       style: TextStyle(
+                //                         color: Colors.white,
+                //                         fontWeight: FontWeight.bold,
+                //                         fontSize: 16,
+                //                       ),
+                //                     ),
+                //                     SizedBox(height: 2),
+                //                     Text(
+                //                       'Add items worth ₹399 more',
+                //                       style: TextStyle(color: Colors.white70),
+                //                     ),
+                //                   ],
+                //                 ),
+                //               ),
+                //               const SizedBox(width: 70),
+                //             ],
+                //           ),
+                //         ),
+                //         Positioned(
+                //           right: 0,
+                //           bottom: 0,
+                //           child: Image.asset(
+                //             'assets/icon/plate.png',
+                //             width: 70,
+                //             height: 70,
+                //             fit: BoxFit.cover,
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
+                // ),
 
                 // ── Similar Items ─────────────────────────────────────────
                 SliverToBoxAdapter(
@@ -551,7 +555,7 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                 // Similar Items — replace karo
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 200, // imageHeight + infoHeight
+                    height: 210, // imageHeight + infoHeight
                     child: productState.when(
                       loading: () =>
                           const Center(child: CircularProgressIndicator()),
@@ -694,9 +698,9 @@ class _DetailRow extends StatelessWidget {
             flex: 2,
             child: Text(
               label,
-              style: text12(
-                fontWeight: FontWeight.w600,
-                color: AppColors.grey700,
+              style: text14(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
             ),
           ),
@@ -705,9 +709,9 @@ class _DetailRow extends StatelessWidget {
             flex: 3,
             child: Text(
               value,
-              style: text12(
+              style: text14(
                 color: hasValue ? AppColors.textPrimary : AppColors.grey300,
-                fontWeight: hasValue ? FontWeight.normal : FontWeight.normal,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),

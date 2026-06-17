@@ -539,7 +539,7 @@ class _LocationPageState extends ConsumerState<LocationPage> {
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
       itemCount: _citySuggestions.length + 1,
 
-      separatorBuilder: (_, __) =>
+      separatorBuilder: (_, _) =>
           Divider(height: 1, color: AppColors.grey900.withAlpha(15)),
       itemBuilder: (context, index) {
         if (index == 0) return useTypedTile;
@@ -646,7 +646,7 @@ class _LocationPageState extends ConsumerState<LocationPage> {
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
             itemCount: _resolvedPlaces.length,
-            separatorBuilder: (_, __) =>
+            separatorBuilder: (_, _) =>
                 Divider(height: 1, color: AppColors.grey900.withAlpha(15)),
             itemBuilder: (context, index) {
               final place = _resolvedPlaces[index];
@@ -748,89 +748,7 @@ class _LocationPageState extends ConsumerState<LocationPage> {
           ],
 
           const SizedBox(height: 28),
-
-          // Divider with label
-          Row(
-            children: [
-              Expanded(child: Divider(color: AppColors.grey900.withAlpha(20))),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  'POPULAR CITIES',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.grey600,
-                    letterSpacing: 1.0,
-                  ),
-                ),
-              ),
-              Expanded(child: Divider(color: AppColors.grey900.withAlpha(20))),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _kPopularCities.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 3.2,
-            ),
-            itemBuilder: (context, index) =>
-                _buildCityChip(_kPopularCities[index], isFromHome),
-          ),
         ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // City chip (popular grid)
-  // ---------------------------------------------------------------------------
-  Widget _buildCityChip(Map<String, String> cityData, bool isFromHome) {
-    return InkWell(
-      onTap: () =>
-          _lookupLocation(isFromHome, overrideQuery: cityData['city']!),
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.grey900.withAlpha(25)),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
-          children: [
-            Icon(Icons.location_on_rounded, color: AppColors.button, size: 16),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    cityData['city']!,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    cityData['state']!,
-                    style: TextStyle(fontSize: 11, color: AppColors.grey600),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -37,22 +37,23 @@ class PanditRepo {
 
   // =========================  Get all pandit ==============================
 
-  Future<PanditResModel> getPandit() async {
+  Future<PanditResModel> getPandit({String? city, String? pincode}) async {
     try {
       final token = await _getToken();
       _api.setToken(token);
-      final city = await LocationStorage.getCity() ?? "Agra";
-      final pincode = await LocationStorage.getPincode() ?? '';
+
+      final finalCity = city ?? await LocationStorage.getCity() ?? "Agra";
+      final finalPincode = pincode ?? await LocationStorage.getPincode() ?? '';
 
       final res = await _api.getApi(
-        "${AppUrls.pandit}?city=$city&pincode=$pincode",
+        "${AppUrls.pandit}?city=$finalCity&pincode=$finalPincode",
       );
+
       return PanditResModel.fromJson(res);
     } catch (e) {
       rethrow;
     }
   }
-
   // =========================  Get availability ==============================
 
   Future<AvailabilityResModel> getAvailability(String panditId) async {

@@ -299,6 +299,8 @@ class _BookRitualViewState extends ConsumerState<BookRetualPage> {
                     return;
                   }
 
+                  ref.invalidate(panditProvider);
+
                   Navigator.pushNamed(
                     context,
                     AppRoutes.bookPandit,

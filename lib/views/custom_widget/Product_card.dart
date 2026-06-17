@@ -249,8 +249,9 @@ class ProductCard extends ConsumerWidget {
                         Flexible(
                           child: Text(
                             'Rs.${product.oldPrice}',
-                            style: text8(
-                              color: AppColors.grey,
+                            style: text10(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.bold,
                             ).copyWith(decoration: TextDecoration.lineThrough),
                             overflow: TextOverflow.ellipsis,
                           ),
