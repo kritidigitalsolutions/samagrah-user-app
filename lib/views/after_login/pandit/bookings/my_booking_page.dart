@@ -109,7 +109,7 @@ class MyBookingsPage extends ConsumerWidget {
                     children: [
                       _buildTab(ref, "All"),
                       _buildTab(ref, "Pending"),
-                      _buildTab(ref, "Confirmed"),
+                      _buildTab(ref, "Accepted"),
                       _buildTab(ref, "Completed"),
                       _buildTab(ref, "Cancelled"),
                     ],

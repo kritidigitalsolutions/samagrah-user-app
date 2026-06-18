@@ -485,7 +485,7 @@ class MyBookingDetails extends ConsumerWidget {
                 if (type == "online" &&
                     booking.bookingStatus?.toLowerCase() == "confirmed")
                   AppOutlineButton(
-                    title: "Join Video Call",
+                    title: "Join Pooja",
                     onTap: () {
                       final url = booking.zoomMeeting?.joinUrl;
                       if (url != null && url.isNotEmpty) {
