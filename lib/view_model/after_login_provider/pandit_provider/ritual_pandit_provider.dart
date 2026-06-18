@@ -8,6 +8,35 @@ import 'package:samagrah/repo/pandit_repo.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/states/pandit_state.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/states/ritual_states.dart';
 
+// Location state — app-level persist rahega
+class PanditLocationState {
+  final String city;
+  final String pincode;
+  final bool isActive;
+
+  const PanditLocationState({
+    this.city = '',
+    this.pincode = '',
+    this.isActive = false,
+  });
+
+  PanditLocationState copyWith({
+    String? city,
+    String? pincode,
+    bool? isActive,
+  }) {
+    return PanditLocationState(
+      city: city ?? this.city,
+      pincode: pincode ?? this.pincode,
+      isActive: isActive ?? this.isActive,
+    );
+  }
+}
+
+final panditLocationProvider = StateProvider<PanditLocationState>(
+  (ref) => const PanditLocationState(),
+);
+
 final ritualProvider = AsyncNotifierProvider<RitualNotifier, RitualState>(
   () => RitualNotifier(),
 );
@@ -61,51 +90,42 @@ final panditProvider = AsyncNotifierProvider<PanditNotifier, PanditState>(
 class PanditNotifier extends AsyncNotifier<PanditState> {
   final _repo = PanditRepo();
 
-  // Tracks whether user has applied a custom location.
-  // null = use LocationStorage (user's GPS city), non-null = custom city
-  String? _customCity;
-  String? _customPincode;
-
   @override
   Future<PanditState> build() async {
-    // First load always uses user's saved GPS location
+    // Agar custom location already set hai to wohi use karo
+    final location = ref.watch(panditLocationProvider);
+
+    if (location.isActive && location.city.isNotEmpty) {
+      final res = await _repo.getPandit(
+        city: location.city,
+        pincode: location.pincode,
+      );
+      return PanditState(pandit: res.data);
+    }
+
+    // Default: GPS city
     final res = await _repo.getPandit();
     return PanditState(pandit: res.data);
   }
 
-  /// Called when user selects a custom city from the location filter.
-  /// Re-fetches pandits from the API for the given city/pincode.
   Future<void> fetchByLocation({
     required String city,
     String pincode = '',
   }) async {
-    _customCity = city.trim();
-    _customPincode = pincode.trim();
-
-    state = const AsyncLoading();
-    try {
-      final res = await _repo.getPandit(
-        city: _customCity,
-        pincode: _customPincode,
-      );
-      state = AsyncData(PanditState(pandit: res.data));
-    } catch (e, st) {
-      state = AsyncError(e, st);
-    }
+    // Provider update karo pehle
+    ref.read(panditLocationProvider.notifier).state = PanditLocationState(
+      city: city.trim(),
+      pincode: pincode.trim(),
+      isActive: true,
+    );
   }
 
   /// Resets back to user's GPS/saved location and re-fetches.
-  Future<void> resetToUserLocation() async {
-    _customCity = null;
-    _customPincode = null;
 
-    state = const AsyncLoading();
-    try {
-      final res = await _repo.getPandit(); // no params → uses LocationStorage
-      state = AsyncData(PanditState(pandit: res.data));
-    } catch (e, st) {
-      state = AsyncError(e, st);
-    }
+  Future<void> resetToUserLocation() async {
+    // Location clear karo
+    ref.read(panditLocationProvider.notifier).state =
+        const PanditLocationState();
   }
 
   void searchPandit(String query) {

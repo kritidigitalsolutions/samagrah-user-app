@@ -1,10 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
+import 'package:samagrah/model/response/product_res/delivered_res_model.dart';
 import 'package:samagrah/repo/payment_repo.dart';
+import 'package:samagrah/repo/product_repo.dart';
 import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/state/payment_state.dart';
+
+final deliveryRepo = Provider((ref) => ProductRepo());
+
+/// Fetches delivery charge data from the API.
+/// Called automatically when PaymentPage mounts.
+final deliveryProvider = FutureProvider<DeliveredResModel>((ref) async {
+  final repo = ref.read(deliveryRepo);
+  return repo.getDeliveredCharge();
+});
+
+/// Threshold below which delivery charges apply (in ₹).
+/// Change this value to update the free-delivery minimum order amount.
+const double kFreeDeliveryThreshold = 500.0;
+
+/// Resolves the delivery charge for the current order.
+///
+/// Logic:
+///  - Fetches [DeliveredResModel] from API.
+///  - If order amount >= [kFreeDeliveryThreshold] → delivery is FREE (₹0).
+///  - Otherwise → uses the first active location's [deliveryCharge] from the API.
+///    Falls back to ₹0 if no active entry is found.
+final resolvedDeliveryChargeProvider =
+    Provider.family<AsyncValue<double>, double>((ref, orderAmount) {
+      final deliveryAsync = ref.watch(deliveryProvider);
+
+      return deliveryAsync.when(
+        data: (model) {
+          // Free delivery for orders >= threshold
+          if (orderAmount >= kFreeDeliveryThreshold) {
+            return const AsyncValue.data(0.0);
+          }
+
+          // Pick first active location's charge
+          final activeDatum = model.data
+              .where((d) => d.status == 'active')
+              .firstOrNull;
+          final charge = activeDatum?.deliveryCharge?.toDouble() ?? 0.0;
+          return AsyncValue.data(charge);
+        },
+        loading: () => const AsyncValue.loading(),
+        error: (e, st) => AsyncValue.error(e, st),
+      );
+    });
+
+// payment provider
+//
+//====================================
 
 final loadingProvider = StateProvider<bool>((ref) => false);
 
@@ -19,6 +69,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
   late Address address;
   String couponCode = "";
   String panditId = "";
+  double deliveryFee = 0.0;
   late List<VerifyItem> items;
   final PaymentRepo _repo = PaymentRepo();
 
@@ -42,6 +93,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
     List<VerifyItem> items,
     String couponCode,
     String panditId,
+    double deliveryFee,
   ) async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -54,12 +106,13 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
       this.items = items;
       this.couponCode = couponCode;
       this.panditId = panditId;
+      this.deliveryFee = deliveryFee;
 
       final user = await AuthLocalstorageService.getUser();
       debugPrint("👤 User: $user");
 
       final createReq = CreateOrderReqModel(
-        deliveryFee: 0,
+        deliveryFee: deliveryFee,
         items: items,
         couponCode: couponCode,
         panditId: panditId,
@@ -179,7 +232,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 
       final verifyReq = VerifyPaymentReqModel(
         paymentMethod: "ONLINE",
-        deliveryFee: 0,
+        deliveryFee: deliveryFee,
         address: address,
         items: items,
         couponCode: couponCode,

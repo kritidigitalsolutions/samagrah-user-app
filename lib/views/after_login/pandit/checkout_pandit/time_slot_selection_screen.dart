@@ -233,7 +233,7 @@ class _TimeSlotSelectionScreenState
               'assets/panditLogo.png',
               width: 70,
               height: 70,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, _, _) => Container(
                 width: 70,
                 height: 70,
                 color: AppColors.grey500,

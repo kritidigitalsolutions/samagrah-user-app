@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:samagrah/model/response/banner_res_model.dart';
+import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
@@ -11,9 +12,11 @@ import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/category_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/pending_review_provider.dart';
 import 'package:samagrah/views/after_login/product/daliy_pooja_essential_page.dart';
 import 'package:samagrah/views/custom_loader.dart/product_loader.dart';
 import 'package:samagrah/views/custom_widget/Product_card.dart';
+import 'package:samagrah/views/custom_widget/pending_review_card.dart';
 import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
 import 'package:samagrah/views/service_pages/location_provider.dart';
 
@@ -211,9 +214,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
 
-              const SizedBox(height: 12),
+              // ── Pending Review Card ──────────────────────────────────
+              Consumer(
+                builder: (context, ref, _) {
+                  final reviewsAsync = ref.watch(pendingReviewProvider);
+                  return reviewsAsync.when(
+                    data: (items) {
+                      if (items.isEmpty) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4, bottom: 4),
+                        child: PendingReviewCard(item: items.first),
+                      );
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, _) => const SizedBox.shrink(),
+                  );
+                },
+              ),
 
-              // ── Dynamic Category Chips ───────────────────────────────
+              // ── Category Chips ───────────────────────────────────────
               categoryAsync.when(
                 loading: () => SizedBox(
                   height: 40,
@@ -261,30 +280,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
 
-              // ── Products ─────────────────────────────────────────────
+              const SizedBox(height: 8),
+
+              // ── Products Area ────────────────────────────────────────
               Expanded(
                 child: productState.when(
                   loading: () => const ProductListingSkeleton(),
                   error: (e, _) =>
                       const Center(child: Text("Something went wrong")),
                   data: (state) {
-                    final products = state.categoryProducts.take(6).toList();
-                    final hasMoreProducts = state.categoryProducts.length > 6;
+                    final isFiltered = state.selectedCategory != 'all';
 
-                    if (products.isEmpty) {
-                      return const Center(child: Text("No Products Found"));
+                    // ── Filtered: flat grid ──────────────────────────
+                    if (isFiltered) {
+                      final products = state.categoryProducts;
+                      if (products.isEmpty) {
+                        return const Center(child: Text("No Products Found"));
+                      }
+                      return RefreshIndicator(
+                        onRefresh: _onRefresh,
+                        child: ListView(
+                          padding: const EdgeInsets.only(bottom: 100),
+                          children: [_buildProductGrid(products, ref)],
+                        ),
+                      );
                     }
 
+                    // ── Default: Sectioned Home ──────────────────────
+                    final hasSections =
+                        state.mostTrending.isNotEmpty ||
+                        state.dailyRituals.isNotEmpty ||
+                        state.popularProducts.isNotEmpty ||
+                        state.poojaEssentials.isNotEmpty;
+
                     return RefreshIndicator(
-                      onRefresh: () async {
-                        ref.invalidate(productProvider);
-                        ref.invalidate(categoryProvider);
-                        await ref.read(productProvider.future);
-                      },
+                      onRefresh: _onRefresh,
                       child: ListView(
-                        padding: const EdgeInsets.only(top: 8),
+                        padding: const EdgeInsets.only(bottom: 100),
                         children: [
-                          // Banners
+                          // ── Banners ──────────────────────────────
                           bannerAsync.when(
                             data: (res) => CarouselSlider(
                               options: CarouselOptions(
@@ -298,83 +332,60 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   .map((b) => poojaOfferBanner(b))
                                   .toList(),
                             ),
-                            loading: () => const Center(
-                              child: CircularProgressIndicator(),
+                            loading: () => const SizedBox(
+                              height: 120,
+                              child: Center(child: CircularProgressIndicator()),
                             ),
-                            error: (e, _) => const Text("Something went wrong"),
+                            error: (e, _) => const SizedBox.shrink(),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
 
-                          // Product grid
-                          // Product grid — replace karo
-                          AnimationLimiter(
-                            key: ValueKey("grid_${products.length}"),
-                            child: LayoutBuilder(
-                              builder: (context, constraints) {
-                                final cardWidth =
-                                    (constraints.maxWidth - 16 - 12) / 3;
-                                final imageHeight = cardWidth;
-                                const infoHeight = 90.0;
-                                final ratio =
-                                    cardWidth / (imageHeight + infoHeight);
+                          if (hasSections) ...[
+                            // ── Most Trending ───────────────────────
+                            if (state.mostTrending.isNotEmpty) ...[
+                              _buildSectionHeader('🔥 Most Trending', context),
+                              _buildHorizontalScroll(state.mostTrending),
+                              const SizedBox(height: 16),
+                            ],
 
-                                return GridView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  padding: const EdgeInsets.all(8),
-                                  gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 3,
-                                        childAspectRatio: ratio, // ← dynamic
-                                        crossAxisSpacing: 6,
-                                        mainAxisSpacing: 6,
-                                      ),
-                                  itemCount: products.length,
-                                  itemBuilder: (context, index) {
-                                    return AnimationConfiguration.staggeredGrid(
-                                      position: index,
-                                      columnCount: 3,
-                                      duration: const Duration(
-                                        milliseconds: 400,
-                                      ),
-                                      child: SlideAnimation(
-                                        horizontalOffset: 50,
-                                        child: FadeInAnimation(
-                                          child: ScaleAnimation(
-                                            scale: 0.9,
-                                            child: ProductCard(
-                                              product: products[index],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                          ),
-                          if (hasMoreProducts)
-                            TextButton(
-                              onPressed: () => Navigator.push(
+                            // ── Daily Rituals ───────────────────────
+                            if (state.dailyRituals.isNotEmpty) ...[
+                              _buildSectionHeader('🪔 Daily Rituals', context),
+                              _buildHorizontalScroll(state.dailyRituals),
+                              const SizedBox(height: 16),
+                            ],
+
+                            // ── Popular ─────────────────────────────
+                            if (state.popularProducts.isNotEmpty) ...[
+                              _buildSectionHeader('⭐ Popular', context),
+                              _buildHorizontalScroll(state.popularProducts),
+                              const SizedBox(height: 16),
+                            ],
+
+                            // ── Pooja Essentials (grid) ─────────────
+                            if (state.poojaEssentials.isNotEmpty) ...[
+                              _buildSectionHeader(
+                                '🛕 Pooja Essentials',
                                 context,
-                                MaterialPageRoute(
-                                  builder: (_) => const TypeOfCategoryPage(
-                                    title: 'Buy Item for Pooja',
-                                    categoryType: 'allItems',
-                                  ),
-                                ),
                               ),
-                              child: Text(
-                                "View More",
-                                style: text13(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.warningDark,
-                                ),
+                              _buildProductGrid(
+                                state.poojaEssentials.take(6).toList(),
+                                ref,
                               ),
+                              if (state.poojaEssentials.length > 6)
+                                _buildViewMore(context),
+                              const SizedBox(height: 16),
+                            ],
+                          ] else ...[
+                            // ── Fallback: All Products grid ──────────
+                            _buildSectionHeader('All Products', context),
+                            _buildProductGrid(
+                              state.allProducts.take(6).toList(),
+                              ref,
                             ),
-
-                          const SizedBox(height: 100),
+                            if (state.allProducts.length > 6)
+                              _buildViewMore(context),
+                          ],
                         ],
                       ),
                     );
@@ -389,6 +400,131 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  // ── Refresh ────────────────────────────────────────────────────────────────
+  Future<void> _onRefresh() async {
+    ref.invalidate(productProvider);
+    ref.invalidate(categoryProvider);
+    ref.invalidate(pendingReviewProvider);
+    await ref.read(productProvider.future);
+  }
+
+  // ── Section Header ─────────────────────────────────────────────────────────
+  Widget _buildSectionHeader(String title, BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(title, style: text15(fontWeight: FontWeight.bold)),
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const TypeOfCategoryPage(
+                  title: 'Buy Item for Pooja',
+                  categoryType: 'allItems',
+                ),
+              ),
+            ),
+            child: Text(
+              'See All',
+              style: text12(
+                color: AppColors.button,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Horizontal Scroll Row ──────────────────────────────────────────────────
+  Widget _buildHorizontalScroll(List<Product> products) {
+    return SizedBox(
+      height: 220,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        itemCount: products.length,
+        itemBuilder: (context, index) => SizedBox(
+          width: 140,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ProductCard(product: products[index]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── 3-col Animated Grid ────────────────────────────────────────────────────
+  Widget _buildProductGrid(List<Product> products, WidgetRef ref) {
+    return AnimationLimiter(
+      key: ValueKey("grid_${products.length}_${products.hashCode}"),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final cardWidth = (constraints.maxWidth - 16 - 12) / 3;
+          final imageHeight = cardWidth;
+          const infoHeight = 90.0;
+          final ratio = cardWidth / (imageHeight + infoHeight);
+
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(8),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: ratio,
+              crossAxisSpacing: 6,
+              mainAxisSpacing: 6,
+            ),
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              return AnimationConfiguration.staggeredGrid(
+                position: index,
+                columnCount: 3,
+                duration: const Duration(milliseconds: 400),
+                child: SlideAnimation(
+                  horizontalOffset: 50,
+                  child: FadeInAnimation(
+                    child: ScaleAnimation(
+                      scale: 0.9,
+                      child: ProductCard(product: products[index]),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  // ── View More Button ───────────────────────────────────────────────────────
+  Widget _buildViewMore(BuildContext context) {
+    return TextButton(
+      onPressed: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const TypeOfCategoryPage(
+            title: 'Buy Item for Pooja',
+            categoryType: 'allItems',
+          ),
+        ),
+      ),
+      child: Text(
+        "View More",
+        style: text13(
+          fontWeight: FontWeight.w600,
+          color: AppColors.warningDark,
+        ),
+      ),
+    );
+  }
+
+  // ── Feature Icon (Wallet / Notification) ──────────────────────────────────
   Widget _buildFeature(
     String image,
     Color color,
@@ -411,6 +547,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  // ── Category Chip ──────────────────────────────────────────────────────────
   Widget _buildChip({
     required String label,
     required String categoryId,
@@ -458,6 +595,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  // ── Banner Widget ──────────────────────────────────────────────────────────
   Widget poojaOfferBanner(BannerData banner) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),

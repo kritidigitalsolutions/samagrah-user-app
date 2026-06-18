@@ -12,17 +12,16 @@ import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_
 import 'package:samagrah/views/after_login/pandit/checkout_pandit/service_selection_screen.dart';
 
 // ─────────────────────────────────────────────
-// Filter State Model
+// Filter State — ONLY client-side filters
+// Location ab alag handle hogi
 // ─────────────────────────────────────────────
-
 class PanditFilterState {
-  final String? serviceType; // 'home' | 'online' | 'temple' | null
+  final String? serviceType;
   final String? language;
   final int? minExperience;
   final double? minRating;
   final DateTime? date;
   final TimeOfDay? time;
-  final String? city;
 
   const PanditFilterState({
     this.serviceType,
@@ -31,7 +30,6 @@ class PanditFilterState {
     this.minRating,
     this.date,
     this.time,
-    this.city,
   });
 
   bool get hasAnyFilter =>
@@ -40,8 +38,7 @@ class PanditFilterState {
       minExperience != null ||
       minRating != null ||
       date != null ||
-      time != null ||
-      (city != null && city!.trim().isNotEmpty);
+      time != null;
 
   PanditFilterState copyWith({
     Object? serviceType = _sentinel,
@@ -50,7 +47,6 @@ class PanditFilterState {
     Object? minRating = _sentinel,
     Object? date = _sentinel,
     Object? time = _sentinel,
-    Object? city = _sentinel,
   }) {
     return PanditFilterState(
       serviceType: serviceType == _sentinel
@@ -63,20 +59,17 @@ class PanditFilterState {
       minRating: minRating == _sentinel ? this.minRating : minRating as double?,
       date: date == _sentinel ? this.date : date as DateTime?,
       time: time == _sentinel ? this.time : time as TimeOfDay?,
-      city: city == _sentinel ? this.city : city as String?,
     );
   }
 }
 
 const _sentinel = Object();
 
-// Quick filter config
 class _QuickFilter {
   final String label;
   final IconData icon;
   final String type;
   final String dec;
-
   const _QuickFilter(this.label, this.icon, this.type, this.dec);
 }
 
@@ -104,7 +97,6 @@ const _quickFilters = [
 // ─────────────────────────────────────────────
 // BookPanditPage
 // ─────────────────────────────────────────────
-
 class BookPanditPage extends ConsumerStatefulWidget {
   const BookPanditPage({super.key});
 
@@ -116,7 +108,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   PanditFilterState _filters = const PanditFilterState();
   final TextEditingController _searchController = TextEditingController();
 
-  // ── Helpers ──
+  // ── Location state is managed by Riverpod (panditLocationProvider) ──
 
   String _formatDate(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
@@ -145,9 +137,9 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
     super.dispose();
   }
 
+  // ── Client-side filters only (no location) ──
   List<PanditData> _applyFilters(List<PanditData> source) {
     return source.where((p) {
-      // Service type
       if (_filters.serviceType != null) {
         final st = p.serviceTypes;
         bool matches = false;
@@ -156,34 +148,216 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
         if (_filters.serviceType == 'temple') matches = st?.atTemple == true;
         if (!matches) return false;
       }
-      // Language
       if (_filters.language != null) {
         final hasLang = p.languagesSpoken.any(
           (l) => l.toLowerCase().contains(_filters.language!.toLowerCase()),
         );
         if (!hasLang) return false;
       }
-      // Experience
       if (_filters.minExperience != null &&
           (p.yearsOfExperience ?? 0) < _filters.minExperience!) {
         return false;
       }
-      // Rating
       if (_filters.minRating != null &&
           (p.ratingAverage ?? 0) < _filters.minRating!) {
         return false;
-      }
-      // City
-      if (_filters.city != null && _filters.city!.trim().isNotEmpty) {
-        final cityQuery = _filters.city!.trim().toLowerCase();
-        final panditCity = (p.address?.city ?? '').toLowerCase();
-        if (!panditCity.contains(cityQuery)) return false;
       }
       return true;
     }).toList();
   }
 
-  // ── Advanced Filter Bottom Sheet ──
+  // ── Location Search Bottom Sheet ──────────────────────────────────────────
+  void _openLocationSheet() {
+    final locationState = ref.read(panditLocationProvider);
+    final cityController = TextEditingController(text: locationState.city);
+    final pincodeController = TextEditingController(text: locationState.pincode);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetCtx).viewInsets.bottom,
+          ),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Drag handle
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: AppColors.grey300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+
+                Row(
+                  children: [
+                    Text(
+                      'Search by Location',
+                      style: text18(fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: () => Navigator.pop(sheetCtx),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 4),
+                Text(
+                  'Find pandits in any city across India',
+                  style: text13(color: AppColors.grey500),
+                ),
+                const SizedBox(height: 20),
+
+                // City input
+                Text(
+                  'City',
+                  style: text13(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.grey700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _locationTextField(
+                  controller: cityController,
+                  hint: 'e.g. Delhi, Varanasi, Mumbai...',
+                  icon: Icons.location_city_outlined,
+                ),
+
+                const SizedBox(height: 14),
+
+                // Pincode input
+                Text(
+                  'Pincode (optional)',
+                  style: text13(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.grey700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _locationTextField(
+                  controller: pincodeController,
+                  hint: 'e.g. 110001',
+                  icon: Icons.pin_drop_outlined,
+                  keyboardType: TextInputType.number,
+                ),
+
+                const SizedBox(height: 24),
+
+                Row(
+                  children: [
+                    // Reset to GPS location
+                    if (locationState.isActive)
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: AppColors.grey300),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          icon: Icon(
+                            Icons.my_location_rounded,
+                            size: 16,
+                            color: AppColors.grey600,
+                          ),
+                          label: Text(
+                            'Reset to GPS',
+                            style: text13(color: AppColors.grey600),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(sheetCtx);
+                            ref
+                                .read(panditProvider.notifier)
+                                .resetToUserLocation();
+                          },
+                        ),
+                      ),
+                    if (locationState.isActive) const SizedBox(width: 10),
+
+                    Expanded(
+                      flex: 2,
+                      child: AppButton(
+                        title: 'Search Pandits',
+                        onTap: () {
+                          final city = cityController.text.trim();
+                          final pincode = pincodeController.text.trim();
+
+                          if (city.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please enter a city name'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          Navigator.pop(sheetCtx);
+                          ref
+                              .read(panditProvider.notifier)
+                              .fetchByLocation(city: city, pincode: pincode);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _locationTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.grey300),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        style: text14(),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: text13(color: AppColors.grey400),
+          prefixIcon: Icon(icon, size: 20, color: AppColors.grey500),
+          border: InputBorder.none,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 12,
+            horizontal: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Advanced Filter Sheet (no location) ──────────────────────────────────
   void _openFilterSheet() {
     showModalBottomSheet(
       context: context,
@@ -191,7 +365,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
       backgroundColor: Colors.transparent,
       builder: (sheetCtx) {
         PanditFilterState draft = _filters;
-        final cityController = TextEditingController(text: _filters.city ?? '');
 
         return StatefulBuilder(
           builder: (ctx, setSheet) {
@@ -213,7 +386,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Drag handle
                   Center(
                     child: Container(
                       width: 40,
@@ -225,21 +397,17 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                       ),
                     ),
                   ),
-
-                  // Header
                   Row(
                     children: [
                       Text(
-                        'Advanced Filters',
+                        'Filters',
                         style: text18(fontWeight: FontWeight.bold),
                       ),
                       const Spacer(),
                       if (draft.hasAnyFilter)
                         TextButton(
-                          onPressed: () {
-                            cityController.clear();
-                            setSheet(() => draft = const PanditFilterState());
-                          },
+                          onPressed: () =>
+                              setSheet(() => draft = const PanditFilterState()),
                           child: Text(
                             'Clear All',
                             style: text13(color: AppColors.error),
@@ -251,9 +419,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 4),
-
                   Flexible(
                     child: SingleChildScrollView(
                       child: Column(
@@ -285,7 +451,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                               ],
                             ],
                           ),
-
                           const SizedBox(height: 20),
 
                           // ── Date & Time ──
@@ -293,7 +458,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                           const SizedBox(height: 10),
                           Row(
                             children: [
-                              // Date picker
                               Expanded(
                                 child: GestureDetector(
                                   onTap: () async {
@@ -338,7 +502,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              // Time picker
                               Expanded(
                                 child: GestureDetector(
                                   onTap: () async {
@@ -381,97 +544,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                               ),
                             ],
                           ),
-
-                          const SizedBox(height: 20),
-
-                          // ── Location ──
-                          Row(
-                            children: [
-                              _sheetSectionLabel('Location / City'),
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.button.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  'Out-station supported',
-                                  style: text10(
-                                    color: AppColors.button,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Search pandits in any city — not just your current location',
-                            style: text12(color: AppColors.grey500),
-                          ),
-                          const SizedBox(height: 10),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: (draft.city?.trim().isNotEmpty ?? false)
-                                    ? AppColors.button
-                                    : AppColors.grey300,
-                                width: (draft.city?.trim().isNotEmpty ?? false)
-                                    ? 1.5
-                                    : 1,
-                              ),
-                            ),
-                            child: TextField(
-                              controller: cityController,
-                              style: text14(),
-                              onChanged: (val) => setSheet(
-                                () => draft = draft.copyWith(city: val),
-                              ),
-                              decoration: InputDecoration(
-                                hintText: 'e.g. Delhi, Varanasi, Mumbai...',
-                                hintStyle: text13(color: AppColors.grey400),
-                                prefixIcon: Icon(
-                                  Icons.location_on_outlined,
-                                  size: 20,
-                                  color:
-                                      (draft.city?.trim().isNotEmpty ?? false)
-                                      ? AppColors.button
-                                      : AppColors.grey500,
-                                ),
-                                suffixIcon:
-                                    cityController.text.trim().isNotEmpty
-                                    ? GestureDetector(
-                                        onTap: () {
-                                          cityController.clear();
-                                          setSheet(
-                                            () => draft = draft.copyWith(
-                                              city: null,
-                                            ),
-                                          );
-                                        },
-                                        child: Icon(
-                                          Icons.close_rounded,
-                                          size: 18,
-                                          color: AppColors.grey500,
-                                        ),
-                                      )
-                                    : null,
-                                border: InputBorder.none,
-                                isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                  horizontal: 12,
-                                ),
-                              ),
-                            ),
-                          ),
-
                           const SizedBox(height: 20),
 
                           // ── Language ──
@@ -480,28 +552,29 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
-                            children: [
-                              for (final lang in [
-                                'Hindi',
-                                'English',
-                                'Sanskrit',
-                                'Bengali',
-                                'Tamil',
-                              ])
-                                _sheetChip(
-                                  label: lang,
-                                  selected: draft.language == lang,
-                                  onTap: () => setSheet(() {
-                                    draft = draft.copyWith(
-                                      language: draft.language == lang
-                                          ? null
-                                          : lang,
-                                    );
-                                  }),
-                                ),
-                            ],
+                            children:
+                                [
+                                      'Hindi',
+                                      'English',
+                                      'Sanskrit',
+                                      'Bengali',
+                                      'Tamil',
+                                    ]
+                                    .map(
+                                      (lang) => _sheetChip(
+                                        label: lang,
+                                        selected: draft.language == lang,
+                                        onTap: () => setSheet(() {
+                                          draft = draft.copyWith(
+                                            language: draft.language == lang
+                                                ? null
+                                                : lang,
+                                          );
+                                        }),
+                                      ),
+                                    )
+                                    .toList(),
                           ),
-
                           const SizedBox(height: 20),
 
                           // ── Minimum Rating ──
@@ -565,7 +638,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                               ],
                             ],
                           ),
-
                           const SizedBox(height: 20),
 
                           // ── Experience ──
@@ -623,15 +695,12 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                               }),
                             ),
                           ),
-
                           const SizedBox(height: 8),
                         ],
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
                   SafeArea(
                     child: AppButton(
                       title: 'Apply Filters',
@@ -650,7 +719,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
     );
   }
 
-  // ── Date/Time picker box widget ──
   Widget _dateTimePickerBox({
     required IconData icon,
     required String label,
@@ -704,6 +772,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
 
   @override
   Widget build(BuildContext context) {
+    final locationState = ref.watch(panditLocationProvider);
     ref.listen(panditProvider, (previous, next) {
       next.whenData((_) {
         if (_searchController.text.isNotEmpty) {
@@ -713,6 +782,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
         }
       });
     });
+
     final panditAsync = ref.watch(panditProvider);
 
     return Scaffold(
@@ -727,14 +797,12 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
               'assets/panditLogo.png',
               width: 70,
               height: 70,
-              errorBuilder: (context, exception, stackTrace) {
-                return Container(
-                  width: 70,
-                  height: 70,
-                  color: AppColors.grey500,
-                  child: const Icon(Icons.image),
-                );
-              },
+              errorBuilder: (_, _, _) => Container(
+                width: 70,
+                height: 70,
+                color: AppColors.grey500,
+                child: const Icon(Icons.image),
+              ),
             ),
           ),
         ],
@@ -742,14 +810,13 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // ══════════════════════════════════
-            // Search + Filter icon bar
-            // ══════════════════════════════════
+            // ── Search + Filter + Location bar ──────────────────────
             Container(
               color: AppColors.headerCard,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
               child: Row(
                 children: [
+                  // Search field
                   Expanded(
                     child: Container(
                       height: 42,
@@ -772,7 +839,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                             .searchPandit(value),
                         style: text14(),
                         decoration: InputDecoration(
-                          hintText: 'Search by name, city, language...',
+                          hintText: 'Search by name, language...',
                           hintStyle: text13(color: AppColors.grey500),
                           prefixIcon: Icon(
                             Icons.search_rounded,
@@ -805,9 +872,42 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
 
-                  // Advanced filter button
+                  // ── Location button ──────────────────────────────
+                  GestureDetector(
+                    onTap: _openLocationSheet,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: locationState.isActive
+                            ? Colors.green.shade600
+                            : AppColors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.black.withOpacity(0.06),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        locationState.isActive
+                            ? Icons.location_on_rounded
+                            : Icons.location_searching_rounded,
+                        size: 20,
+                        color: locationState.isActive
+                            ? Colors.white
+                            : AppColors.grey700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // ── Filters button ───────────────────────────────
                   GestureDetector(
                     onTap: _openFilterSheet,
                     child: AnimatedContainer(
@@ -858,9 +958,47 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
               ),
             ),
 
-            // ══════════════════════════════════
-            // Quick filter chips row
-            // ══════════════════════════════════
+            // ── Active location tag ──────────────────────────────────
+            if (locationState.isActive)
+              Container(
+                color: Colors.green.shade50,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.location_on_rounded,
+                      size: 14,
+                      color: Colors.green.shade700,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Showing pandits in ${locationState.city}'
+                        '${locationState.pincode.isNotEmpty ? ' - ${locationState.pincode}' : ''}',
+                        style: text12(
+                          color: Colors.green.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        ref.read(panditProvider.notifier).resetToUserLocation();
+                      },
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 16,
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // ── Quick filter chips ───────────────────────────────────
             Container(
               color: AppColors.headerCard,
               padding: const EdgeInsets.only(left: 12, right: 12, bottom: 10),
@@ -868,7 +1006,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    // "All" chip
                     _quickChip(
                       label: 'All',
                       icon: Icons.apps_rounded,
@@ -878,10 +1015,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                         ref.invalidate(selectedServiceProvider);
                       },
                     ),
-
                     const SizedBox(width: 8),
-
-                    // Service type quick chips
                     for (final qf in _quickFilters) ...[
                       _quickChip(
                         label: qf.label,
@@ -895,7 +1029,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                             );
                           });
                           if (isDeselecting) {
-                            // FIX: clear selectedServiceProvider when chip is removed
                             ref.invalidate(selectedServiceProvider);
                           } else {
                             ref
@@ -911,8 +1044,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                       ),
                       const SizedBox(width: 8),
                     ],
-
-                    // Rating quick chip
                     _quickChip(
                       label: '4★ & above',
                       icon: Icons.star_rounded,
@@ -923,10 +1054,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                         );
                       }),
                     ),
-
                     const SizedBox(width: 8),
-
-                    // Experience quick chip
                     _quickChip(
                       label: '5+ yrs exp',
                       icon: Icons.workspace_premium_outlined,
@@ -937,26 +1065,12 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                         );
                       }),
                     ),
-
-                    const SizedBox(width: 8),
-
-                    // Location quick chip
-                    _quickChip(
-                      label: 'Out-station',
-                      icon: Icons.location_on_outlined,
-                      selected:
-                          _filters.city != null &&
-                          _filters.city!.trim().isNotEmpty,
-                      onTap: _openFilterSheet, // opens sheet to city section
-                    ),
                   ],
                 ),
               ),
             ),
 
-            // ══════════════════════════════════
-            // Active filter tags
-            // ══════════════════════════════════
+            // ── Active filter tags (client-side only) ────────────────
             if (_filters.hasAnyFilter)
               Container(
                 color: AppColors.white,
@@ -983,14 +1097,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                 '🕐 ${_formatTime(_filters.time!)}',
                                 onRemove: () => setState(() {
                                   _filters = _filters.copyWith(time: null);
-                                }),
-                              ),
-                            if (_filters.city != null &&
-                                _filters.city!.trim().isNotEmpty)
-                              _activeTag(
-                                '📍 ${_filters.city!.trim()}',
-                                onRemove: () => setState(() {
-                                  _filters = _filters.copyWith(city: null);
                                 }),
                               ),
                             if (_filters.language != null)
@@ -1036,9 +1142,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                 ),
               ),
 
-            // ══════════════════════════════════
-            // Pandit Grid
-            // ══════════════════════════════════
+            // ── Pandit Grid ──────────────────────────────────────────
             Expanded(
               child: panditAsync.when(
                 loading: () => RefreshIndicator(
@@ -1101,19 +1205,34 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Try adjusting your filters',
+                                locationState.isActive
+                                    ? 'No pandits found in ${locationState.city}'
+                                    : 'Try adjusting your filters',
                                 style: text13(color: AppColors.grey500),
                               ),
                               const SizedBox(height: 16),
-                              TextButton(
-                                onPressed: () => setState(
-                                  () => _filters = const PanditFilterState(),
+                              if (locationState.isActive)
+                                TextButton(
+                                  onPressed: () {
+                                    ref
+                                        .read(panditProvider.notifier)
+                                        .resetToUserLocation();
+                                  },
+                                  child: Text(
+                                    'Reset Location',
+                                    style: text13(color: AppColors.button),
+                                  ),
+                                )
+                              else
+                                TextButton(
+                                  onPressed: () => setState(
+                                    () => _filters = const PanditFilterState(),
+                                  ),
+                                  child: Text(
+                                    'Clear filters',
+                                    style: text13(color: AppColors.button),
+                                  ),
                                 ),
-                                child: Text(
-                                  'Clear filters',
-                                  style: text13(color: AppColors.button),
-                                ),
-                              ),
                             ],
                           ),
                         ),
@@ -1157,9 +1276,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                               ),
                           ],
                         ),
-
                         const SizedBox(height: 12),
-
                         GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -1174,9 +1291,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                           itemBuilder: (context, index) =>
                               _buildPanditCard(pandits[index]),
                         ),
-
                         const SizedBox(height: 12),
-
                         TextButton(
                           onPressed: () {},
                           child: Text(
@@ -1199,7 +1314,8 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
     );
   }
 
-  // ── Quick chip ──
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
   Widget _quickChip({
     required String label,
     required IconData icon,
@@ -1216,7 +1332,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: selected ? AppColors.button : AppColors.grey300,
-            width: 1,
           ),
           boxShadow: selected
               ? [
@@ -1250,7 +1365,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
     );
   }
 
-  // ── Active tag ──
   Widget _activeTag(String label, {required VoidCallback onRemove}) {
     return Container(
       margin: const EdgeInsets.only(right: 6),
@@ -1276,8 +1390,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
       ),
     );
   }
-
-  // ── Sheet helpers ──
 
   Widget _sheetSectionLabel(String label) =>
       Text(label, style: text14(fontWeight: FontWeight.w600));
@@ -1359,7 +1471,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
     );
   }
 
-  // ── Pandit Card ──
   Widget _buildPanditCard(PanditData pandit) {
     return Container(
       decoration: BoxDecoration(

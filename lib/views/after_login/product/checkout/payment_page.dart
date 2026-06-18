@@ -28,7 +28,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
   num walletBalance = 0.0;
 
   final double codCharges = 0.00;
-  final double shippingCharges = 0.00;
 
   final TextEditingController _couponController = TextEditingController();
 
@@ -38,13 +37,10 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     ref.read(paymentProvider.notifier).init();
   }
 
-  // Safe Snackbar Helper
   void _showSafeSnackbar(String message, SnackBarType type) {
     if (!mounted) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        AppSnackbar.show(context, message: message, type: type);
-      }
+      if (mounted) AppSnackbar.show(context, message: message, type: type);
     });
   }
 
@@ -53,29 +49,22 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     final walletAsync = ref.watch(walletProvider);
     final couponState = ref.watch(couponProvider);
 
-    // ── Payment success / error listener ─────────────────────────────────────
+    // ── Listeners ────────────────────────────────────────────────────────────
     ref.listen<PaymentState>(paymentProvider, (previous, next) {
       if (!mounted) return;
-
       if (next.error?.isNotEmpty == true) {
         _showSafeSnackbar(next.error!, SnackBarType.error);
       }
-
       if (next.isSuccess) {
         _showSafeSnackbar("Payment Successful 🎉", SnackBarType.success);
-
-        // Increased delay to make sure navigation works
         Future.delayed(const Duration(milliseconds: 600), () {
-          if (mounted) {
-            Navigator.pushNamed(context, AppRoutes.successPage);
-          }
+          if (mounted) Navigator.pushNamed(context, AppRoutes.successPage);
         });
       }
     });
 
     ref.listen<CouponState>(couponProvider, (previous, next) {
       if (!mounted) return;
-
       if (next.isApplySuccess && !(previous?.isApplySuccess ?? false)) {
         _showSafeSnackbar(
           "Coupon applied! You saved ₹${next.discountAmount.toStringAsFixed(0)} 🎉",
@@ -83,12 +72,12 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
         );
         FocusScope.of(context).unfocus();
       }
-
       if (next.applyError?.isNotEmpty == true &&
           next.applyError != previous?.applyError) {
         _showSafeSnackbar(next.applyError!, SnackBarType.error);
       }
     });
+
     final address = ref.watch(storeAddressProvider);
     final panditId = ref.watch(panditIdProvider);
     final items = ref.watch(bookingItemProvider);
@@ -97,6 +86,16 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     final effectiveTotal = couponState.isCouponApplied
         ? couponState.finalAmount
         : totalAmount;
+
+    // ── Resolve delivery charge based on effective total ───────────────────
+    final deliveryChargeAsync = ref.watch(
+      resolvedDeliveryChargeProvider(effectiveTotal.toDouble()),
+    );
+
+    final resolvedDeliveryCharge = deliveryChargeAsync.maybeWhen(
+      data: (v) => v,
+      orElse: () => 0.0,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -110,11 +109,23 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildPriceBreakdown(totalAmount, couponState),
+                    // ── Delivery Charge Info Banner ───────────────────────
+                    _buildDeliveryChargeBanner(
+                      effectiveTotal.toDouble(),
+                      deliveryChargeAsync,
+                    ),
+                    const SizedBox(height: 16),
+
+                    _buildPriceBreakdown(
+                      totalAmount,
+                      couponState,
+                      resolvedDeliveryCharge,
+                    ),
                     const SizedBox(height: 20),
 
                     _buildCouponSection(totalAmount, couponState),
                     const SizedBox(height: 20),
+
                     Text(
                       "Payment Methods",
                       style: text16(fontWeight: FontWeight.w600),
@@ -136,7 +147,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     _buildCODOption(),
                     if (selectedPaymentMethod == 'cod') ...[
                       const SizedBox(height: 12),
-                      _buildCODChargesInfo(),
+                      _buildCODChargesInfo(resolvedDeliveryCharge),
                     ],
                     const SizedBox(height: 8),
                   ],
@@ -149,10 +160,54 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
               items,
               couponState,
               panditId,
+              resolvedDeliveryCharge,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // DELIVERY CHARGE BANNER
+  // ──────────────────────────────────────────────────────────────────────────
+
+  /// Shows a contextual banner:
+  ///  - Loading  → shimmer
+  ///  - Error    → error chip
+  ///  - FREE     → green "Free Delivery" badge
+  ///  - Charged  → amber "Add ₹X more for free delivery" nudge
+  Widget _buildDeliveryChargeBanner(
+    double orderAmount,
+    AsyncValue<double> chargeAsync,
+  ) {
+    return chargeAsync.when(
+      loading: () => const _ShimmerBox(height: 52),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (charge) {
+        final isFree = charge == 0.0;
+        final remaining = kFreeDeliveryThreshold - orderAmount;
+
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: isFree
+              ? _DeliveryBadge(
+                  key: const ValueKey('free'),
+                  icon: Icons.local_shipping_outlined,
+                  iconColor: AppColors.green,
+                  backgroundColor: AppColors.green,
+                  label: "Free Delivery on this order 🎉",
+                )
+              : _DeliveryBadge(
+                  key: const ValueKey('charged'),
+                  icon: Icons.info_outline,
+                  iconColor: AppColors.warning,
+                  backgroundColor: AppColors.warning,
+                  label:
+                      "Add ₹${remaining.toStringAsFixed(0)} more for FREE delivery  •  Delivery: ₹${charge.toStringAsFixed(0)}",
+                ),
+        );
+      },
     );
   }
 
@@ -343,12 +398,10 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     );
   }
 
-  /// Horizontally scrollable offer chips — uses new CouponData fields
   Widget _buildAvailableOffers(num totalAmount, CouponState couponState) {
     if (couponState.isLoading) return const _ShimmerBox(height: 90);
     if (couponState.coupon.isEmpty) return const SizedBox.shrink();
 
-    // Filter: active + not expired
     final now = DateTime.now();
     final validOffers = couponState.coupon.where((c) {
       final active = c.isActive ?? false;
@@ -381,16 +434,12 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     );
   }
 
-  /// Chip card for each offer — tapping fills the code field and auto-applies
   Widget _buildOfferChip(CouponData coupon, num totalAmount) {
     final eligible = totalAmount >= (coupon.minOrderAmount ?? 0);
-
-    // Discount label
     final discountLabel = (coupon.discountType ?? '').toLowerCase() == 'percent'
         ? '${(coupon.discountValue ?? 0).toInt()}% OFF'
         : '₹${(coupon.discountValue ?? 0).toInt()} OFF';
 
-    // Expiry
     int? daysLeft;
     if (coupon.expiresAt != null) {
       final diff = coupon.expiresAt!.difference(DateTime.now()).inDays;
@@ -398,11 +447,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     }
 
     return GestureDetector(
-      onTap: eligible
-          ? () {
-              _couponController.text = coupon.code ?? '';
-            }
-          : null,
+      onTap: eligible ? () => _couponController.text = coupon.code ?? '' : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: 220,
@@ -428,7 +473,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -449,7 +493,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     ),
                   ),
                 ),
-
                 if (daysLeft != null)
                   Text(
                     daysLeft == 0 ? "Expired" : "$daysLeft days left",
@@ -462,10 +505,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                   ),
               ],
             ),
-
             const SizedBox(height: 8),
-
-            // Coupon Code
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
@@ -487,7 +527,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 5),
             if ((coupon.title ?? '').isNotEmpty)
               Text(
@@ -499,8 +538,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-
-            // Description
             if ((coupon.description ?? '').isNotEmpty)
               Text(
                 coupon.description ?? '',
@@ -508,7 +545,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-
             const SizedBox(height: 2),
             if ((coupon.usageLimit ?? 0) > 0)
               _buildCouponInfoRow(
@@ -521,7 +557,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     );
   }
 
-  // Helper Widget
   Widget _buildCouponInfoRow({required String title, required String value}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
@@ -612,17 +647,21 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // PRICE BREAKDOWN
+  // PRICE BREAKDOWN  (now accepts resolvedDeliveryCharge)
   // ──────────────────────────────────────────────────────────────────────────
 
-  Widget _buildPriceBreakdown(num totalAmount, CouponState couponState) {
+  Widget _buildPriceBreakdown(
+    num totalAmount,
+    CouponState couponState,
+    double deliveryCharge,
+  ) {
     final isCOD = selectedPaymentMethod == 'cod';
     final baseAmount = couponState.isCouponApplied
         ? couponState.finalAmount
         : totalAmount;
     final grandTotal = isCOD
-        ? baseAmount + codCharges + shippingCharges
-        : baseAmount;
+        ? baseAmount + codCharges + deliveryCharge
+        : baseAmount + deliveryCharge;
 
     return Container(
       width: double.infinity,
@@ -683,9 +722,45 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
             ),
           ],
 
+          // Delivery charge row
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.local_shipping_outlined,
+                    size: 14,
+                    color: AppColors.grey700,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    "Delivery Charges",
+                    style: text13(color: AppColors.grey700),
+                  ),
+                ],
+              ),
+              deliveryCharge == 0.0
+                  ? Row(
+                      children: [
+                        Text(
+                          "FREE",
+                          style: text13(
+                            color: AppColors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Text(
+                      "₹${deliveryCharge.toStringAsFixed(2)}",
+                      style: text14(fontWeight: FontWeight.w600),
+                    ),
+            ],
+          ),
+
           if (isCOD) ...[
-            const SizedBox(height: 8),
-            _buildPriceRow("Delivery Charges", "₹$shippingCharges", false),
             const SizedBox(height: 8),
             _buildPriceRow("COD Charges", "₹$codCharges", false),
           ],
@@ -697,47 +772,45 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
             true,
           ),
 
-          if (selectedPaymentMethod != 'cod') ...[
-            const SizedBox(height: 12),
-            Builder(
-              builder: (_) {
-                final savedAmount = couponState.isCouponApplied
-                    ? (codCharges + shippingCharges) +
-                          couponState.discountAmount.toDouble()
-                    : (codCharges + shippingCharges).toDouble();
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.green.withAlpha(30),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.check_circle,
-                        color: AppColors.green,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          "You're saving ₹${savedAmount.toStringAsFixed(2)} on this order",
-                          style: text12(
-                            color: AppColors.green,
-                            fontWeight: FontWeight.w600,
-                          ),
+          const SizedBox(height: 12),
+          Builder(
+            builder: (_) {
+              final savedAmount = couponState.isCouponApplied
+                  ? couponState.discountAmount.toDouble()
+                  : 0.0;
+              if (savedAmount <= 0) return const SizedBox.shrink();
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.green.withAlpha(30),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      color: AppColors.green,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        "You're saving ₹${savedAmount.toStringAsFixed(2)} on this order",
+                        style: text12(
+                          color: AppColors.green,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -1038,7 +1111,9 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    "Extra ₹${(codCharges + shippingCharges).toStringAsFixed(0)} charges apply",
+                    codCharges > 0
+                        ? "Extra ₹${codCharges.toStringAsFixed(0)} COD charges apply"
+                        : "No extra charges",
                     style: text11(color: AppColors.grey600),
                   ),
                 ],
@@ -1052,7 +1127,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     );
   }
 
-  Widget _buildCODChargesInfo() {
+  Widget _buildCODChargesInfo(double deliveryCharge) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -1078,7 +1153,11 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "Delivery charges (₹$shippingCharges) and COD handling fee (₹$codCharges) will be added to your total.",
+                  deliveryCharge > 0
+                      ? "Delivery charges (₹${deliveryCharge.toStringAsFixed(0)}) and COD handling fee (₹${codCharges.toStringAsFixed(0)}) will be added."
+                      : codCharges > 0
+                      ? "COD handling fee (₹${codCharges.toStringAsFixed(0)}) will be added to your total."
+                      : "No additional charges for this order.",
                   style: text11(color: AppColors.grey700),
                 ),
               ],
@@ -1099,14 +1178,14 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     List<VerifyItem> items,
     CouponState couponState,
     String panditId,
+    double deliveryCharge,
   ) {
-    print("pandit id $panditId");
     final paymentState = ref.watch(paymentProvider);
     final loading = ref.watch(loadingProvider);
 
     final finalAmount = selectedPaymentMethod == 'cod'
-        ? effectiveTotal + codCharges + shippingCharges
-        : effectiveTotal;
+        ? effectiveTotal + codCharges + deliveryCharge
+        : effectiveTotal + deliveryCharge;
 
     String buttonText = "Pay ₹${finalAmount.toStringAsFixed(0)}";
     Color buttonColor = AppColors.green;
@@ -1162,17 +1241,49 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                   if (selectedPaymentMethod == 'cod') {
                     ref.read(loadingProvider.notifier).state = true;
                     final repo = PaymentRepo();
-                    final verifyReq = VerifyPaymentReqModel(
-                      paymentMethod: "COD",
-                      deliveryFee: codCharges,
-                      address: address,
+
+                    final createReq = CreateOrderReqModel(
+                      deliveryFee: deliveryCharge,
                       items: items,
                       couponCode: couponState.appliedCode,
                       panditId: panditId,
                     );
+
+                    final orderRes = await repo.productCreateOrder(createReq);
+
+                    if (orderRes.data == null) {
+                      ref.read(loadingProvider.notifier).state = false;
+                      AppSnackbar.show(
+                        context,
+                        message: "Failed to create order",
+                        type: SnackBarType.error,
+                      );
+                      return;
+                    }
+
+                    final orderId = orderRes.data?.razorpayOrder?.id;
+                    if (orderId == null || orderId.isEmpty) {
+                      ref.read(loadingProvider.notifier).state = false;
+                      AppSnackbar.show(
+                        context,
+                        message: "Invalid Order ID",
+                        type: SnackBarType.error,
+                      );
+                      return;
+                    }
+
+                    final verifyReq = VerifyPaymentReqModel(
+                      paymentMethod: "COD",
+                      deliveryFee: deliveryCharge,
+                      address: address,
+                      items: items,
+                      couponCode: couponState.appliedCode,
+                      panditId: panditId,
+                      razorpayOrderId: orderId,
+                    );
                     final success = await repo.productVerifyPayment(verifyReq);
                     ref.read(loadingProvider.notifier).state = false;
-                    if (success) {
+                    if (success && mounted) {
                       Navigator.pushNamed(context, AppRoutes.successPage);
                     }
                   } else if (selectedPaymentMethod == 'wallet') {
@@ -1181,7 +1292,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                       final repo = PaymentRepo();
                       final verifyReq = VerifyPaymentReqModel(
                         paymentMethod: "WALLET",
-                        deliveryFee: codCharges,
+                        deliveryFee: deliveryCharge,
                         walletAmount: walletBalance,
                         address: address,
                         items: items,
@@ -1192,7 +1303,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                         verifyReq,
                       );
                       ref.read(loadingProvider.notifier).state = false;
-                      if (success) {
+                      if (success && mounted) {
                         Navigator.pushNamed(context, AppRoutes.successPage);
                       }
                     } else {
@@ -1210,10 +1321,59 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                           items,
                           couponState.appliedCode ?? '',
                           panditId,
+                          deliveryCharge,
                         );
                   }
                 },
         ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// DELIVERY BADGE  (reusable)
+// ──────────────────────────────────────────────────────────────────────────
+
+class _DeliveryBadge extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final Color backgroundColor;
+  final String label;
+
+  const _DeliveryBadge({
+    super.key,
+    required this.icon,
+    required this.iconColor,
+    required this.backgroundColor,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: backgroundColor.withAlpha(25),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: backgroundColor.withAlpha(80)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: iconColor, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: iconColor,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1255,7 +1415,7 @@ class _ErrorText extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Center(
-        child: Text(message, style: text13(color: AppColors.error)),
+        child: Text(message, style: TextStyle(color: AppColors.error)),
       ),
     );
   }

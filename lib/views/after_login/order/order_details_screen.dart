@@ -1,14 +1,21 @@
-// lib/view/after_login/orders/order_details_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:samagrah/model/response/product_booked_res/product_booked_res_modle.dart';
+
 import 'package:samagrah/res/app_colors.dart';
+
 import 'package:samagrah/routes/app_routes.dart';
+
 import 'package:samagrah/utils/components.dart';
+
 import 'package:samagrah/utils/custom_button.dart';
+
 import 'package:samagrah/utils/textstyle.dart';
+
 import 'package:samagrah/view_model/after_login_provider/order_provider/order_provider.dart';
+
+import 'package:samagrah/views/after_login/order/my_order_screen.dart';
 
 class OrderDetailsPage extends ConsumerWidget {
   final String? orderId;
@@ -58,21 +65,30 @@ class OrderDetailsContent extends ConsumerWidget {
 
   const OrderDetailsContent({super.key, required this.order});
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
   bool _isKit() {
     if (order.items.isEmpty) return false;
     return (order.items.first.productType ?? '').toLowerCase() != 'item';
   }
 
-  List<ProductDisplayItem> _getDisplayItems() {
-    List<ProductDisplayItem> displayItems = [];
+  bool get _isDelivered =>
+      (order.orderStatus ?? '').toLowerCase() == 'delivered';
 
-    for (var orderItem in order.items) {
+  bool get _isCancelled =>
+      (order.tracking?.isCancelled ?? false) ||
+      (order.orderStatus ?? '').toLowerCase() == 'cancelled';
+
+  bool get _isOnlinePaid =>
+      (order.paymentMethod ?? '').toUpperCase() == 'ONLINE';
+
+  List<ProductDisplayItem> _getDisplayItems() {
+    final displayItems = <ProductDisplayItem>[];
+
+    for (final orderItem in order.items) {
       if (orderItem.product?.items != null &&
           orderItem.product!.items.isNotEmpty) {
-        // Kit → expand kit items
-        for (var kitItem in orderItem.product!.items) {
+        for (final kitItem in orderItem.product!.items) {
           displayItems.add(
             ProductDisplayItem(
               name: kitItem.product?.title ?? 'Unknown',
@@ -84,7 +100,6 @@ class OrderDetailsContent extends ConsumerWidget {
           );
         }
       } else {
-        // Single product
         displayItems.add(
           ProductDisplayItem(
             name:
@@ -99,7 +114,6 @@ class OrderDetailsContent extends ConsumerWidget {
         );
       }
     }
-
     return displayItems;
   }
 
@@ -118,7 +132,7 @@ class OrderDetailsContent extends ConsumerWidget {
     );
   }
 
-  // ── Header Builders ───────────────────────────────────────────────────────
+  // ── Header Builders ────────────────────────────────────────────────────────
 
   Widget _buildKitHeader() {
     final kitProduct = order.items.first.product;
@@ -136,7 +150,6 @@ class OrderDetailsContent extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // "KIT" badge
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
@@ -270,7 +283,7 @@ class OrderDetailsContent extends ConsumerWidget {
     );
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
+  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -283,7 +296,6 @@ class OrderDetailsContent extends ConsumerWidget {
     final statusText = OrderUtils.getStatusText(
       order.tracking?.currentStatus ?? order.orderStatus,
     );
-    final isDelivered = (order.orderStatus ?? '').toLowerCase() == 'delivered';
 
     return SafeArea(
       child: Card(
@@ -298,7 +310,7 @@ class OrderDetailsContent extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Header ──────────────────────────────────────────────────
+                // ── Status header ──────────────────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -311,6 +323,46 @@ class OrderDetailsContent extends ConsumerWidget {
                 ),
                 const SizedBox(height: 20),
 
+                // ── Refund Information (cancelled + online paid) ──────────
+                if (_isCancelled && _isOnlinePaid) ...[
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.amber.shade300),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.account_balance_wallet_outlined,
+                              color: Colors.amber.shade800,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              "Refund Information",
+                              style: text14(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.amber.shade900,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          "Your refund of ${OrderUtils.formatCurrency(order.totalAmount)} will be credited to your wallet within 5–7 business days.",
+                          style: text12(color: Colors.amber.shade900),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
                 // ── Main product / Kit header ─────────────────────────────
                 isKit ? _buildKitHeader() : _buildItemHeader(displayItems),
                 const SizedBox(height: 8),
@@ -322,7 +374,7 @@ class OrderDetailsContent extends ConsumerWidget {
 
                 _divider(),
 
-                // ── Items Ordered ────────────────────────────────────────────
+                // ── Items Ordered ──────────────────────────────────────────
                 Text(
                   isKit ? 'Kit Contains' : 'Items Ordered',
                   style: text16(
@@ -364,8 +416,7 @@ class OrderDetailsContent extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        // Rate button (delivered) OR price
-                        if (isDelivered)
+                        if (_isDelivered)
                           GestureDetector(
                             onTap: () => _showRatingSheet(context, ref, item),
                             child: Container(
@@ -407,7 +458,7 @@ class OrderDetailsContent extends ConsumerWidget {
 
                 _divider(),
 
-                // ── Order Information ────────────────────────────────────────
+                // ── Order Information ─────────────────────────────────────
                 Text(
                   'Order Information',
                   style: text16(
@@ -416,7 +467,7 @@ class OrderDetailsContent extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildInfoRow('Order ID:', (order.razorpayOrderId)),
+                _buildInfoRow('Order ID:', order.razorpayOrderId),
                 _buildInfoRow(
                   'Order Date:',
                   OrderUtils.formatDateShort(order.createdAt),
@@ -433,7 +484,7 @@ class OrderDetailsContent extends ConsumerWidget {
 
                 _divider(),
 
-                // ── Order Summary ────────────────────────────────────────────
+                // ── Order Summary ─────────────────────────────────────────
                 Text(
                   'Order Summary',
                   style: text16(
@@ -471,7 +522,7 @@ class OrderDetailsContent extends ConsumerWidget {
 
                 _divider(),
 
-                // ── Delivery Address ─────────────────────────────────────────
+                // ── Delivery Address ──────────────────────────────────────
                 Text(
                   'Delivery Address',
                   style: text16(
@@ -505,7 +556,7 @@ class OrderDetailsContent extends ConsumerWidget {
                   ),
                 const SizedBox(height: 32),
 
-                // ── Track Order button ───────────────────────────────────────
+                // ── Track Order button (active orders only) ───────────────
                 if (order.tracking != null &&
                     order.tracking!.currentStatus != 'delivered' &&
                     !(order.tracking!.isCancelled ?? false))
@@ -521,8 +572,58 @@ class OrderDetailsContent extends ConsumerWidget {
                     ),
                   ),
 
-                // ── Rate Your Order button (delivered only) ──────────────────
-                if (isDelivered) ...[
+                // ── Cancel Order (active, not cancelled) ─────────────────
+                if (!_isDelivered && !_isCancelled) ...[
+                  const SizedBox(height: 12),
+                  Center(
+                    child: AppOutlineButton(
+                      height: 44,
+                      radius: 20,
+                      title: "Cancel Order",
+                      onTap: () =>
+                          showCancelOrderBottomSheet(context, ref, order),
+                    ),
+                  ),
+                ],
+
+                // ── Refund Issue (cancelled + online paid) ───────────────
+                if (_isCancelled && _isOnlinePaid) ...[
+                  const SizedBox(height: 12),
+                  Center(
+                    child: AppOutlineButton(
+                      height: 44,
+                      radius: 20,
+                      title: "Refund Issue",
+                      onTap: () => showComplainBottomSheet(
+                        context,
+                        ref,
+                        order,
+                        complaintType: ComplaintType.refund,
+                      ),
+                    ),
+                  ),
+                ],
+
+                // ── Complain (delivered) ─────────────────────────────────
+                if (_isDelivered) ...[
+                  const SizedBox(height: 12),
+                  Center(
+                    child: AppOutlineButton(
+                      height: 44,
+                      radius: 20,
+                      title: "Complain",
+                      onTap: () => showComplainBottomSheet(
+                        context,
+                        ref,
+                        order,
+                        complaintType: ComplaintType.product,
+                      ),
+                    ),
+                  ),
+                ],
+
+                // ── Rate Your Order (delivered) ──────────────────────────
+                if (_isDelivered) ...[
                   const SizedBox(height: 12),
                   Center(
                     child: OutlinedButton.icon(
@@ -667,11 +768,8 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
 
     if (success) {
       debugPrint('✅ Rating submitted successfully');
-
       ref.read(selectedRatingProvider.notifier).state = 0;
-
       Navigator.pop(context);
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Thank you for your rating! 🙏'),
@@ -754,7 +852,6 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
                 return GestureDetector(
                   onTap: () {
                     debugPrint('⭐ User selected star: $starValue');
-
                     ref.read(selectedRatingProvider.notifier).state = starValue;
                   },
                   child: AnimatedSwitcher(
@@ -858,6 +955,7 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
     );
   }
 }
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -932,7 +1030,6 @@ class _InvoiceButton extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                     child: Stack(
                       children: [
-                        // Progress fill
                         AnimatedFractionallySizedBox(
                           duration: const Duration(milliseconds: 150),
                           widthFactor: invoiceState.progress,
@@ -940,7 +1037,6 @@ class _InvoiceButton extends ConsumerWidget {
                             color: AppColors.button.withOpacity(0.15),
                           ),
                         ),
-                        // Text + spinner
                         Center(
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -1014,7 +1110,7 @@ class ProductDisplayItem {
   final String emoji;
   final num quantity;
   final num price;
-  final String productId; // needed for rating submission
+  final String productId;
 
   ProductDisplayItem({
     required this.name,

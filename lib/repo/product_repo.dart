@@ -6,6 +6,7 @@ import 'package:samagrah/model/response/product_booked_res/review_res_model.dart
 import 'package:samagrah/model/response/product_res/brands_res_model.dart';
 import 'package:samagrah/model/response/product_res/cart_res_model.dart';
 import 'package:samagrah/model/response/product_res/category_res_model.dart';
+import 'package:samagrah/model/response/product_res/delivered_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_details_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_urls.dart';
@@ -160,6 +161,20 @@ class ProductRepo {
       final res = await _api.getApi(uri);
 
       return ReviewResModel.fromJson(res);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // delivered charge
+
+  Future<DeliveredResModel> getDeliveredCharge() async {
+    try {
+      final token = await _getToken();
+      _api.setToken(token);
+
+      final res = await _api.getApi(AppUrls.getDelivery);
+      return DeliveredResModel.fromJson(res);
     } catch (e) {
       rethrow;
     }

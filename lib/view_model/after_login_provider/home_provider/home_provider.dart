@@ -23,6 +23,12 @@ class ProductNotifier extends AsyncNotifier<ProductState> {
       categoryProducts: products,
       customizeKitItems: products,
       categoryKitProducts: products,
+      mostTrending: products.where((p) => p.isRecommended == true).toList(),
+      dailyRituals: products.where((p) => p.isEveryDayRitual == true).toList(),
+      popularProducts: products.where((p) => p.isMostUsed == true).toList(),
+      poojaEssentials: products
+          .where((p) => p.isMostPoojaEssentials == true)
+          .toList(),
     );
   }
 

@@ -1,5 +1,5 @@
 class CreateOrderReqModel {
-  final int deliveryFee;
+  final double deliveryFee;
   final List<VerifyItem> items;
   final String? couponCode;
   final String? offerId;

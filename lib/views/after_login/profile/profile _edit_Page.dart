@@ -115,7 +115,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       ),
-                      error: (_, __) => const CircleAvatar(
+                      error: (_, _) => const CircleAvatar(
                         radius: 60,
                         backgroundColor: Colors.grey,
                         child: Icon(Icons.error),
