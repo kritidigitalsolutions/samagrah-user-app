@@ -7,9 +7,7 @@ class AboutusResModel {
   factory AboutusResModel.fromJson(Map<String, dynamic> json) {
     return AboutusResModel(
       success: json["success"],
-      aboutUs: json["aboutUs"] == null
-          ? null
-          : AboutUs.fromJson(json["aboutUs"]),
+      aboutUs: json["legal"] == null ? null : AboutUs.fromJson(json["legal"]),
     );
   }
 }

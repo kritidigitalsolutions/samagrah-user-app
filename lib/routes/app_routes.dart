@@ -49,6 +49,7 @@ class AppRoutes {
   static const favProduct = "/favProduct";
   static const accoundDelete = "/accoundDelete";
   static const aboutUs = "/aboutUs";
+  static const refund = "/refund";
   static const helpAndSupport = "/helpAndSupport";
 
   //==============================================

@@ -27,12 +27,13 @@ import 'package:samagrah/views/after_login/product/checkout/payment_page.dart';
 import 'package:samagrah/views/after_login/product/checkout/success_page.dart';
 import 'package:samagrah/views/after_login/product/my_cart_page.dart';
 import 'package:samagrah/views/after_login/product/product_details.dart';
-import 'package:samagrah/views/after_login/profile/about_us_page.dart';
+import 'package:samagrah/views/after_login/profile/policy/about_us_page.dart';
 import 'package:samagrah/views/after_login/profile/delete_account_page.dart';
 import 'package:samagrah/views/after_login/profile/help_support_page.dart';
 import 'package:samagrah/views/after_login/profile/my_coupon_page.dart';
 import 'package:samagrah/views/after_login/profile/my_fav_products.dart';
 import 'package:samagrah/views/after_login/profile/my_profile_Page.dart';
+import 'package:samagrah/views/after_login/profile/policy/refund_page.dart';
 import 'package:samagrah/views/after_login/profile/profile%20_edit_Page.dart';
 import 'package:samagrah/views/after_login/profile/saved_address_page.dart';
 import 'package:samagrah/views/after_login/search_product_page.dart';
@@ -70,6 +71,7 @@ class AppPages {
     AppRoutes.favProduct: (context) => const MyFavProducts(),
     AppRoutes.accoundDelete: (context) => const DeleteAccountScreen(),
     AppRoutes.aboutUs: (context) => const AboutUsPage(),
+    AppRoutes.refund: (context) => const RefundPage(),
     AppRoutes.helpAndSupport: (context) => const HelpPage(),
 
     AppRoutes.bookPandit: (context) => const BookPanditPage(),

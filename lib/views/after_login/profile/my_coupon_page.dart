@@ -485,9 +485,12 @@ class _CopyCodeButtonState extends State<_CopyCodeButton> {
                     ),
             ),
             const SizedBox(width: 4),
-            Text(
-              _copied ? 'Copied!' : 'Tap to copy',
-              style: text11(color: _copied ? Colors.green : AppColors.button),
+            Expanded(
+              child: Text(
+                _copied ? 'Copied!' : 'Tap to copy',
+                overflow: TextOverflow.ellipsis,
+                style: text11(color: _copied ? Colors.green : AppColors.button),
+              ),
             ),
           ],
         ),

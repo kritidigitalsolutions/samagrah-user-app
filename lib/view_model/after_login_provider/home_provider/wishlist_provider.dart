@@ -26,10 +26,16 @@ class WishlistNotifier extends StateNotifier<WishlistState> {
 
       final res = await _repo.getWishlist();
 
-      state = state.copyWith(
-        items: res.data, // ✅ full data store
-        isLoading: false,
-      );
+      // ✅ sirf valid items rakho — product null/id empty wale hata do
+      final validItems = res.data
+          .where(
+            (item) =>
+                item.product != null &&
+                (item.product!.id ?? '').trim().isNotEmpty,
+          )
+          .toList();
+
+      state = state.copyWith(items: validItems, isLoading: false);
     } catch (e) {
       print("❌ Wishlist load failed: $e");
       state = state.copyWith(isLoading: false);
@@ -38,47 +44,26 @@ class WishlistNotifier extends StateNotifier<WishlistState> {
 
   // ❤️ Toggle Wishlist
   Future<void> toggle(String productId) async {
+    if (productId.trim().isEmpty) return; // ❗ safety guard
     if (_isToggling) return;
     _isToggling = true;
 
     final exists = state.items.any((item) => item.product?.id == productId);
 
-    List<Datum> updated = [...state.items];
-
+    // ── Remove: optimistic UI theek hai (fast feel) ──────────────────
     if (exists) {
-      updated.removeWhere((e) => e.product?.id == productId);
-    } else {
-      // 🔥 optimistic add (dummy item)
-      updated.add(
-        Datum(
-          id: '',
-          user: '',
-          product: CartProduct(
-            id: productId,
-            title: '',
-            slug: '',
-            tags: [],
-            category: null,
-            pricing: null,
-            media: null,
-            ratings: null,
-            stock: null,
-            flags: null,
-          ),
-          quantity: 1,
-          priceAtAdd: 0,
-        ),
-      );
+      final updated = [...state.items]
+        ..removeWhere((e) => e.product?.id == productId);
+      state = state.copyWith(items: updated);
     }
-
-    state = state.copyWith(items: updated);
+    // ── Add: optimistic dummy mat dalo, seedha API call karke fresh list lao ──
 
     try {
       await _repo.toggleWishlist(productId);
-      loadWishlist();
+      await loadWishlist(); // ✅ hamesha real data se sync
     } catch (e) {
       print("⚠️ Toggle failed: $e");
-      await loadWishlist(); // 🔥 rollback safe
+      await loadWishlist(); // rollback safe
     } finally {
       _isToggling = false;
     }
@@ -86,6 +71,7 @@ class WishlistNotifier extends StateNotifier<WishlistState> {
 }
 
 final isWishlistedProvider = Provider.family<bool, String>((ref, productId) {
+  if (productId.trim().isEmpty) return false; // ❗ empty id kabhi match na ho
   return ref.watch(
     wishlistProvider.select(
       (state) => state.items.any((item) => item.product?.id == productId),

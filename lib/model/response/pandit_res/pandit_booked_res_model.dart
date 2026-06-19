@@ -64,7 +64,7 @@ class Datum {
   final DatumAddress? address;
   final Temple? temple;
   final TempleSnapshot? templeSnapshot;
-  final int? dakshinaAmount;
+  final num? dakshinaAmount;
   final dynamic recommendedKit;
   final String? bookingStatus;
   final String? notes;
@@ -250,8 +250,8 @@ class Pandit {
   final String? phone;
   final String? fullName;
   final String? profileImage;
-  final double? ratingAverage;
-  final int? yearsOfExperience;
+  final num? ratingAverage;
+  final num? yearsOfExperience;
   final List<String> languagesSpoken;
   final List<PoojaOffering> poojaOfferings;
 
@@ -366,7 +366,7 @@ class RitualRef {
   final String? title;
   final String? description;
   final String? image;
-  final int? durationHours;
+  final num? durationHours;
   final String? status;
 
   factory RitualRef.fromJson(Map<String, dynamic> json) {

@@ -12,7 +12,6 @@ import 'package:samagrah/view_model/after_login_provider/order_provider/complain
 import 'package:samagrah/view_model/after_login_provider/order_provider/order_provider.dart';
 import 'package:samagrah/views/custom_loader.dart/order_card_loader.dart';
 import 'package:samagrah/views/custom_widget/empty_data_widget.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Type of complaint the user is raising
 enum ComplaintType {

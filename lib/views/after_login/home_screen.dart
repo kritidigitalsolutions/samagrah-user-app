@@ -1,5 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:samagrah/model/response/banner_res_model.dart';
@@ -324,9 +325,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               options: CarouselOptions(
                                 height: 120,
                                 autoPlay: true,
+
                                 enlargeCenterPage: true,
                                 viewportFraction: 1,
-                                autoPlayInterval: const Duration(seconds: 3),
+                                autoPlayInterval: const Duration(seconds: 6),
                               ),
                               items: res.data
                                   .map((b) => poojaOfferBanner(b))
@@ -595,102 +597,155 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ── Banner Widget ──────────────────────────────────────────────────────────
+  // ── Banner Widget (with key offer/coupon details) ───────────────────────────
+  // ── Banner Widget (compact, same fixed size, no overflow) ───────────────────
   Widget poojaOfferBanner(BannerData banner) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6A1B1A), Color(0xFFB71C1C)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Image.asset(
-              'assets/icon/mala.png',
-              fit: BoxFit.fitWidth,
-              height: 28,
+    final coupon = banner.coupon;
+    final offer = banner.offer;
+
+    // ── Discount text ────────────────────────────────────────────────────
+    String discountText = '';
+    if (coupon != null) {
+      discountText = coupon.discountType == 'percent'
+          ? "${coupon.discountValue}% OFF"
+          : "₹${coupon.discountValue} OFF";
+    } else if (offer != null) {
+      discountText = offer.discountType == 'percent'
+          ? "${offer.value}% OFF"
+          : "₹${offer.value} OFF";
+    } else if ((banner.priceOff ?? '').isNotEmpty) {
+      discountText = "${banner.priceOff} OFF";
+    }
+
+    // ── Saari important info ek hi single-line string me combine karo ─────
+    final infoParts = <String>[];
+    final minOrder = coupon?.minOrderAmount ?? offer?.minOrderAmount;
+    final maxBenefit = coupon?.maxDiscount ?? offer?.maxBenefit;
+    final expiresAt = coupon?.expiresAt ?? offer?.expiresAt;
+
+    if (coupon?.code != null && coupon!.code!.isNotEmpty) {
+      infoParts.add("Code: ${coupon.code}");
+    } else if (offer?.title != null && offer!.title!.isNotEmpty) {
+      infoParts.add(offer.title!);
+    }
+    if (minOrder != null) infoParts.add("Min ₹$minOrder");
+    if (maxBenefit != null) infoParts.add("Upto ₹$maxBenefit");
+    if (expiresAt != null) {
+      infoParts.add("Valid till ${expiresAt.day}/${expiresAt.month}");
+    }
+
+    final infoLine = infoParts.join("  •  ");
+
+    return GestureDetector(
+      onTap: () {
+        final code = coupon?.code;
+        if (code != null && code.isNotEmpty) {
+          Clipboard.setData(ClipboardData(text: code));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Coupon code '$code' copied!"),
+              duration: const Duration(seconds: 2),
+              backgroundColor: AppColors.button,
             ),
+          );
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF6A1B1A), Color(0xFFB71C1C)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 30, 16, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: RichText(
-                    text: TextSpan(
-                      style: TextStyle(color: AppColors.white),
-                      children: [
-                        TextSpan(
-                          text: "${banner.title}\n",
-                          style: text15(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w600,
-                          ).copyWith(height: 1.5),
-                        ),
-                        TextSpan(
-                          text: "${banner.subTitle}.",
-                          style: text12(
-                            color: AppColors.white.withAlpha(150),
-                            fontWeight: FontWeight.w400,
-                          ).copyWith(height: 1.5),
-                        ),
-                        TextSpan(
-                          text: ' perfect Pooja ',
-                          style: text13(
-                            color: AppColors.warning,
-                            fontWeight: FontWeight.bold,
-                          ).copyWith(height: 1.2),
-                        ),
-                        const TextSpan(text: '🪔'),
-                      ],
-                    ),
-                  ),
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CustomCachedImage(
-                      imageUrl: banner.image ?? '',
-                      height: 40,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    RichText(
-                      text: TextSpan(
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Image.asset(
+                'assets/icon/mala.png',
+                fit: BoxFit.fitWidth,
+                height: 24,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 28, 16, 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const NeverScrollableScrollPhysics(),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          TextSpan(
-                            text: '🎉 Get ',
-                            style: text12(color: AppColors.white),
-                          ),
-                          TextSpan(
-                            text: banner.priceOff,
+                          Text(
+                            banner.title ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: text14(
-                              color: AppColors.warning,
-                              fontWeight: FontWeight.bold,
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          TextSpan(
-                            text: ' OFF 🎉',
-                            style: text12(color: AppColors.white),
+                          const SizedBox(height: 2),
+                          Text(
+                            banner.subTitle ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: text11(
+                              color: AppColors.white.withAlpha(170),
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
+                          if (discountText.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              "🎉 $discountText",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text14(
+                                color: AppColors.warning,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                          if (infoLine.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              infoLine,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text10(
+                                color: AppColors.white.withAlpha(210),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(width: 10),
+                  if ((banner.image ?? '').isNotEmpty)
+                    CustomCachedImage(
+                      imageUrl: banner.image!,
+                      height: 44,
+                      width: 44,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

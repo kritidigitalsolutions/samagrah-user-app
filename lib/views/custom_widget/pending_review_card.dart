@@ -230,6 +230,7 @@ class PendingReviewCard extends ConsumerWidget {
       builder: (_) => RatingBottomSheet(
         orderId: item.sourceId,
         title: item.isPanditBooking ? 'Rate this Pooja' : 'Rate this Product',
+        isPanditBooking: item.isPanditBooking, // 🔥 yeh line add karo
         item: ProductDisplayItem(
           name: item.title,
           emoji: item.image,

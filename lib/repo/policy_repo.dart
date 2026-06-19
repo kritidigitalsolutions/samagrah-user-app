@@ -40,6 +40,15 @@ class PolicyRepo {
     }
   }
 
+  Future<PolicyResModel> getRefund() async {
+    try {
+      final res = await _api.getApi(AppUrls.refund);
+      return PolicyResModel.fromJson(res);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // delete account
 
   Future<void> deleteAccount(String reason) async {

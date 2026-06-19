@@ -52,10 +52,10 @@ class PanditData {
   final String? fullName;
   final String? profileImage;
   final String? bio;
-  final double? ratingAverage;
-  final int? ratingCount;
+  final num? ratingAverage;
+  final num? ratingCount;
   final bool? isPhoneVerified;
-  final int? yearsOfExperience;
+  final num? yearsOfExperience;
   final String? templeAssociated;
   final List<String> languagesSpoken;
   final bool? isProfileComplete;
@@ -171,7 +171,7 @@ class PoojaOffering {
   final String? name;
   final String? description;
   final bool? isSelected;
-  final int? durationHours;
+  final num? durationHours;
   final bool? travelForSpecialPooja;
   final bool? standardSamagri;
   final bool? customSamagri;
@@ -190,16 +190,17 @@ class PoojaOffering {
       customSamagriItems: json["customSamagriItems"] == null
           ? []
           : List<CustomSamagriItem>.from(
-        json["customSamagriItems"].map(
-              (x) => CustomSamagriItem.fromJson(x),
-        ),
-      ),
+              json["customSamagriItems"].map(
+                (x) => CustomSamagriItem.fromJson(x),
+              ),
+            ),
       customSamagriNotes: json["customSamagriNotes"] == null
           ? []
           : List<String>.from(json["customSamagriNotes"].map((x) => x)),
     );
   }
 }
+
 class CustomSamagriItem {
   CustomSamagriItem({
     required this.itemName,
@@ -307,7 +308,7 @@ class ServiceDistance {
   ServiceDistance({required this.selected, required this.customKm});
 
   final String? selected;
-  final int? customKm;
+  final num? customKm;
 
   factory ServiceDistance.fromJson(Map<String, dynamic> json) {
     return ServiceDistance(

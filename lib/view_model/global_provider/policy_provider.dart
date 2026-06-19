@@ -19,3 +19,8 @@ final aboutUsProvider = FutureProvider<AboutusResModel>((ref) async {
   final repo = ref.read(policyRepoProvider);
   return repo.getAboutUs();
 });
+
+final refundProvider = FutureProvider<PolicyResModel>((ref) async {
+  final repo = ref.read(policyRepoProvider);
+  return repo.getRefund();
+});

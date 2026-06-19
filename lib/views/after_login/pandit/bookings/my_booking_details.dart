@@ -39,21 +39,24 @@ class MyBookingDetails extends ConsumerWidget {
     return times.join(" — ");
   }
 
-  /// Returns the single PoojaOffering that matches the booked ritual name.
-  /// Falls back to the first offering if no exact match is found.
+  /// Returns the single PoojaOffering that EXACTLY matches the booked ritual
+  /// name. Returns null if there's no exact match — we must never show kit
+  /// data for an unrelated pooja.
   PoojaOffering? _getMatchingOffering(
     List<PoojaOffering> offerings,
     String? ritualName,
   ) {
     if (offerings.isEmpty) return null;
-    if (ritualName == null || ritualName.isEmpty) return offerings.first;
+    if (ritualName == null || ritualName.isEmpty) return null;
 
-    return offerings.firstWhere(
-      (o) =>
-          (o.name ?? '').trim().toLowerCase() ==
-          ritualName.trim().toLowerCase(),
-      orElse: () => offerings.first,
-    );
+    final normalizedRitual = ritualName.trim().toLowerCase();
+
+    for (final offering in offerings) {
+      if ((offering.name ?? '').trim().toLowerCase() == normalizedRitual) {
+        return offering;
+      }
+    }
+    return null; // ✅ no fallback to a random offering anymore
   }
 
   @override
@@ -91,7 +94,7 @@ class MyBookingDetails extends ConsumerWidget {
     final List<DateAndTimeElement>? dateAndTime =
         booking.dateAndTime?.dateAndTime;
 
-    // ── Find ONLY the offering that matches the booked ritual ──
+    // ── Find ONLY the offering that exactly matches the booked ritual ──
     final PoojaOffering? matchingOffering = _getMatchingOffering(
       pandit?.poojaOfferings ?? [],
       ritual?.name,
@@ -381,7 +384,8 @@ class MyBookingDetails extends ConsumerWidget {
               ),
 
               // ── RECOMMENDED KIT SECTION ──
-              // Only shown when there is a matching offering for the booked ritual.
+              // Only shown when there is an EXACT matching offering for the
+              // booked ritual. No fallback — agar match nahi to kuch nahi.
               if (matchingOffering != null) ...[
                 const SizedBox(height: 15),
                 Text(
@@ -607,13 +611,10 @@ class MyBookingDetails extends ConsumerWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // _PoojaKitSection
 //
-// Decides WHAT to render based on the offering's kit flags:
-//
-//   customSamagri == true  →  show pandit's custom samagri items (existing _PoojaCard)
-//   customSamagri == false AND booking.recommendedKit != null
-//                          →  show "Samagran Kit" special card
-//   customSamagri == false AND booking.recommendedKit == null
-//                          →  show disabled/blurred "Samagran Kit" radio option
+// Client-required flow (3 cases ONLY):
+//   1) customSamagri == true        → show pandit's custom kit items
+//   2) booking.recommendedKit != null → show the special/recommended kit
+//   3) neither                      → show Standard Kit radio, blurred + disabled
 // ─────────────────────────────────────────────────────────────────────────────
 class _PoojaKitSection extends StatelessWidget {
   const _PoojaKitSection({
@@ -633,17 +634,17 @@ class _PoojaKitSection extends StatelessWidget {
     final bool hasCustomSamagri = offering.customSamagri == true;
     final bool hasRecommendedKit = booking.recommendedKit != null;
 
-    // 1️⃣  Custom samagri from pandit → render the full card
+    // 1️⃣  Customize kit selected by pandit → show items added by him
     if (hasCustomSamagri) {
       return _PoojaCard(pooja: offering, panditId: panditId, ref: ref);
     }
 
-    // 2️⃣  Special / standard Samagran Kit available
+    // 2️⃣  Special / recommended Samagran Kit available → show it
     if (hasRecommendedKit) {
       return _SamagranKitCard(kit: booking.recommendedKit!, enabled: true);
     }
 
-    // 3️⃣  No kit available → show disabled Samagran Kit option
+    // 3️⃣  Nothing available → Standard Kit radio, blurred + disabled
     return _SamagranKitCard(kit: null, enabled: false);
   }
 }
@@ -745,7 +746,7 @@ class _SamagranKitCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Samagran Kit',
+                      'Standard Kit',
                       style: text14(
                         fontWeight: FontWeight.w700,
                         color: enabled
@@ -908,7 +909,7 @@ class _PoojaCard extends StatelessWidget {
             ),
           ],
 
-          // Samagri kit link → renamed label to "Samagran Kit"
+          // Samagri kit link → "Samagran Kit" (pandit's custom items)
           if (pooja.customSamagriItems.isNotEmpty) ...[
             const SizedBox(height: 12),
             GestureDetector(
@@ -967,7 +968,7 @@ class _PoojaCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Samagran Kit', // ← renamed from "Recommended Samagran kit"
+                            'Samagran Kit',
                             style: text15(
                               fontWeight: FontWeight.w700,
                               color: const Color(0xFFB8860B),

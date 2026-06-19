@@ -14,6 +14,7 @@ import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 
 import 'package:samagrah/view_model/after_login_provider/order_provider/order_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/pandit_review_provider.dart';
 
 import 'package:samagrah/views/after_login/order/my_order_screen.dart';
 
@@ -706,12 +707,14 @@ class RatingBottomSheet extends ConsumerStatefulWidget {
   final String orderId;
   final ProductDisplayItem item;
   final String title;
+  final bool isPanditBooking;
   final Future<void> Function()? onSubmitted;
 
   const RatingBottomSheet({
     super.key,
     required this.orderId,
     required this.item,
+    this.isPanditBooking = false,
     this.title = 'Rate this Product',
     this.onSubmitted,
   });
@@ -748,42 +751,42 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
 
   Future<void> _submit() async {
     final selectedRating = ref.read(selectedRatingProvider);
+    if (selectedRating == 0) return;
 
-    debugPrint('⭐ SUBMIT CLICKED -> selected rating: $selectedRating');
+    bool success;
 
-    if (selectedRating == 0) {
-      debugPrint('❌ No rating selected');
-      return;
+    if (widget.isPanditBooking) {
+      // ── Pandit booking review (alag API) ──────────────────────────
+      success = await ref
+          .read(panditReviewProvider.notifier)
+          .submit(
+            bookingId: widget.orderId, // yahan orderId = booking.id
+            rating: selectedRating,
+            comment: _reviewController.text.trim(),
+          );
+    } else {
+      // ── Product/order review (existing API) ───────────────────────
+      success = await ref
+          .read(ratingOrderProvider.notifier)
+          .postRating(
+            widget.item.productId,
+            selectedRating,
+            _reviewController.text.trim(),
+          );
     }
-
-    final notifier = ref.read(ratingOrderProvider.notifier);
-
-    debugPrint(
-      '🚀 Sending API request -> productId: ${widget.item.productId}, rating: $selectedRating, review: ${_reviewController.text.trim()}',
-    );
-
-    final success = await notifier.postRating(
-      widget.item.productId,
-      selectedRating,
-      _reviewController.text.trim(),
-    );
 
     if (!mounted) return;
 
     if (success) {
-      debugPrint('✅ Rating submitted successfully');
       ref.read(selectedRatingProvider.notifier).state = 0;
-      await widget.onSubmitted?.call();
-      if (!mounted) return;
       Navigator.pop(context);
+      widget.onSubmitted?.call();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Thank you for your rating! 🙏'),
           backgroundColor: Colors.green,
         ),
       );
-    } else {
-      debugPrint('❌ Rating submission failed');
     }
   }
 

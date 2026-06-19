@@ -138,4 +138,26 @@ class PanditRepo {
       return false;
     }
   }
+
+  Future<dynamic> submitReview({
+    required String bookingId,
+    required int rating,
+    required String comment,
+  }) async {
+    try {
+      final token = await _getToken();
+      _api.setToken(token);
+
+      final res = await _api.postApi(
+        AppUrls.panditBookingReview(
+          bookingId,
+        ), // '/api/pandit-bookings/$bookingId/review'
+        {"rating": rating, "comment": comment},
+      );
+      return res;
+    } catch (e) {
+      print("❌ submitReview error: $e");
+      rethrow;
+    }
+  }
 }

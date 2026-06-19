@@ -12,7 +12,7 @@ import 'package:samagrah/view_model/after_login_provider/home_provider/cart_prov
 import 'package:samagrah/view_model/after_login_provider/order_provider/order_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/booking_provider.dart';
 import 'package:samagrah/view_model/before_login_provider/auth_provider.dart';
-import 'package:samagrah/views/after_login/profile/policy_page.dart';
+import 'package:samagrah/views/after_login/profile/policy/policy_page.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -132,6 +132,10 @@ class ProfilePage extends ConsumerWidget {
                       ),
                     ),
                   );
+                }),
+
+                _MenuItem("assets/profile/refund.png", 'Refund Policy', () {
+                  Navigator.pushNamed(context, AppRoutes.refund);
                 }),
                 _MenuItem("assets/profile/delete.png", 'Delete Account', () {
                   Navigator.pushNamed(context, AppRoutes.accoundDelete);

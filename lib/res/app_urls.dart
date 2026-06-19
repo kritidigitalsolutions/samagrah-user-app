@@ -66,12 +66,15 @@ class AppUrls {
   static const String slotPanditBooking = "$baseUrl/booking-price/price";
   static const String temple = "$baseUrl/temples";
   static const String panditHistory = "$baseUrl/pandit-bookings/my";
+  static String panditBookingReview(String bookingId) =>
+      '$baseUrl/pandit-bookings/$bookingId/review';
 
   //========================== Policy api =================================
 
   static const String term = "$baseUrl/legal/term";
   static const String privacy = "$baseUrl/legal/privacy";
   static const String aboutUs = "$baseUrl/legal/aboutus";
+  static const String refund = "$baseUrl/legal/refund";
 
   //========================== profile edit api =================================
 
