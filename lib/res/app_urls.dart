@@ -92,12 +92,6 @@ class AppUrls {
 
   static const String couponApply = "$baseUrl/user/coupons/apply";
 
-  // // video call
-
-  // static const String video = '$baseUrl/user/video';
-  // static const String videoToken = '$baseUrl/user/video/token';
-  // static const String videoStart = '$baseUrl/user/video/start';
-
   // notification
 
   static const String fcmToken = "$baseUrl/user/fcm-token";
@@ -106,4 +100,9 @@ class AppUrls {
       '$baseUrl/user/notifications/$id/read';
   static String notificationDelete(String id) =>
       '$baseUrl/user/notifications/$id';
+
+  // ================== Complaints ===============================
+
+  static const String complaints = '$baseUrl/user/complaints';
+  static const String supportSettings = '$baseUrl/user/support-settings';
 }

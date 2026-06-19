@@ -101,6 +101,9 @@ class ProfilePage extends ConsumerWidget {
               _buildSectionTitle(''),
               const SizedBox(height: 15),
               _buildMenuCard([
+                _MenuItem("assets/profile/support.png", 'Help & Support', () {
+                  Navigator.pushNamed(context, AppRoutes.helpAndSupport);
+                }),
                 _MenuItem("assets/profile/loc.png", 'Saved Address', () {
                   Navigator.pushNamed(context, AppRoutes.savedAddress);
                 }),

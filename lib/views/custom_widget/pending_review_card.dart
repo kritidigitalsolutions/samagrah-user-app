@@ -52,14 +52,18 @@ class PendingReviewCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Your order was delivered!',
+                        item.isPanditBooking
+                            ? 'Your pooja was completed!'
+                            : 'Your order was delivered!',
                         style: text13(
                           color: const Color(0xFF854F0B),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
-                        'Tell us how it was',
+                        item.isPanditBooking
+                            ? 'Rate your experience'
+                            : 'Tell us how it was',
                         style: text11(color: const Color(0xFFBA7517)),
                       ),
                     ],
@@ -69,7 +73,7 @@ class PendingReviewCard extends ConsumerWidget {
                 GestureDetector(
                   onTap: () async {
                     final dismiss = ref.read(dismissReviewProvider);
-                    await dismiss(item.orderId, ref);
+                    await dismiss(item.reviewKey, ref);
                   },
                   child: Icon(Icons.close, size: 18, color: AppColors.grey600),
                 ),
@@ -129,7 +133,7 @@ class PendingReviewCard extends ConsumerWidget {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
-                        child: CustomCachedImage(imageUrl: item.productImage),
+                        child: CustomCachedImage(imageUrl: item.image),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -138,8 +142,14 @@ class PendingReviewCard extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item.productName,
+                            item.title,
                             style: text14(fontWeight: FontWeight.w500),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            item.subtitle,
+                            style: text11(color: AppColors.grey600),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -186,7 +196,7 @@ class PendingReviewCard extends ConsumerWidget {
                       child: GestureDetector(
                         onTap: () async {
                           final dismiss = ref.read(dismissReviewProvider);
-                          await dismiss(item.orderId, ref);
+                          await dismiss(item.reviewKey, ref);
                         },
                         child: Container(
                           height: 36,
@@ -217,23 +227,22 @@ class PendingReviewCard extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => ProviderScope(
-        child: RatingBottomSheet(
-          orderId: item.orderId,
-          item: ProductDisplayItem(
-            name: item.productName,
-            emoji: item.productImage,
-            quantity: item.quantity,
-            price: 0,
-            productId: item.productId,
-          ),
+      builder: (_) => RatingBottomSheet(
+        orderId: item.sourceId,
+        title: item.isPanditBooking ? 'Rate this Pooja' : 'Rate this Product',
+        item: ProductDisplayItem(
+          name: item.title,
+          emoji: item.image,
+          quantity: item.quantity,
+          price: 0,
+          productId: item.reviewTargetId,
         ),
+        onSubmitted: () async {
+          final dismiss = ref.read(dismissReviewProvider);
+          await dismiss(item.reviewKey, ref);
+        },
       ),
-    ).then((_) async {
-      // After rating submitted, dismiss the card
-      final dismiss = ref.read(dismissReviewProvider);
-      await dismiss(item.orderId, ref);
-    });
+    );
   }
 }
 
@@ -289,21 +298,23 @@ class _QuickStarRowState extends ConsumerState<_QuickStarRow> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => ProviderScope(
-        child: RatingBottomSheet(
-          orderId: widget.item.orderId,
-          item: ProductDisplayItem(
-            name: widget.item.productName,
-            emoji: widget.item.productImage,
-            quantity: widget.item.quantity,
-            price: 0,
-            productId: widget.item.productId,
-          ),
+      builder: (_) => RatingBottomSheet(
+        orderId: widget.item.sourceId,
+        title: widget.item.isPanditBooking
+            ? 'Rate this Pooja'
+            : 'Rate this Product',
+        item: ProductDisplayItem(
+          name: widget.item.title,
+          emoji: widget.item.image,
+          quantity: widget.item.quantity,
+          price: 0,
+          productId: widget.item.reviewTargetId,
         ),
+        onSubmitted: () async {
+          final dismiss = ref.read(dismissReviewProvider);
+          await dismiss(widget.item.reviewKey, ref);
+        },
       ),
-    ).then((_) async {
-      final dismiss = ref.read(dismissReviewProvider);
-      await dismiss(widget.item.orderId, ref);
-    });
+    );
   }
 }

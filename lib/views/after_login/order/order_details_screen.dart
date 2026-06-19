@@ -598,7 +598,7 @@ class OrderDetailsContent extends ConsumerWidget {
                         context,
                         ref,
                         order,
-                        complaintType: ComplaintType.refund,
+                        //complaintType: ComplaintType.refund,
                       ),
                     ),
                   ),
@@ -616,7 +616,7 @@ class OrderDetailsContent extends ConsumerWidget {
                         context,
                         ref,
                         order,
-                        complaintType: ComplaintType.product,
+                        // complaintType: ComplaintType.product,
                       ),
                     ),
                   ),
@@ -705,11 +705,15 @@ class OrderDetailsContent extends ConsumerWidget {
 class RatingBottomSheet extends ConsumerStatefulWidget {
   final String orderId;
   final ProductDisplayItem item;
+  final String title;
+  final Future<void> Function()? onSubmitted;
 
   const RatingBottomSheet({
     super.key,
     required this.orderId,
     required this.item,
+    this.title = 'Rate this Product',
+    this.onSubmitted,
   });
 
   @override
@@ -769,6 +773,8 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
     if (success) {
       debugPrint('✅ Rating submitted successfully');
       ref.read(selectedRatingProvider.notifier).state = 0;
+      await widget.onSubmitted?.call();
+      if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -815,10 +821,7 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
             ),
             const SizedBox(height: 20),
 
-            Text(
-              'Rate this Product',
-              style: text18(fontWeight: FontWeight.bold),
-            ),
+            Text(widget.title, style: text18(fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
 
             Text(

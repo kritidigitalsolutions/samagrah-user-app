@@ -8,6 +8,7 @@ import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/view_model/after_login_provider/order_provider/complaint_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/order_provider/order_provider.dart';
 import 'package:samagrah/views/custom_loader.dart/order_card_loader.dart';
 import 'package:samagrah/views/custom_widget/empty_data_widget.dart';
@@ -526,7 +527,7 @@ void showCancelOrderBottomSheet(
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.white,
+    backgroundColor: AppColors.white,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -819,14 +820,26 @@ void showComplainBottomSheet(
 
             setSheetState(() => isSubmitting = true);
 
-            // TODO: Replace with real API call:
-            // final success = await ref.read(complaintProvider.notifier)
-            //     .submit(orderId: orderId, type: complaintType,
-            //             reason: selectedReason, detail: detailController.text);
-            await Future.delayed(const Duration(seconds: 1));
+            final success = await ref
+                .read(complaintSubmitProvider.notifier)
+                .submit(
+                  orderId: order.id ?? '',
+                  issue: selectedReason!,
+                  details: detailController.text.trim(),
+                );
 
             if (!ctx.mounted) return;
             setSheetState(() => isSubmitting = false);
+
+            if (!success) {
+              ScaffoldMessenger.of(ctx).showSnackBar(
+                const SnackBar(
+                  content: Text("Failed to raise complaint. Try again."),
+                ),
+              );
+              return;
+            }
+
             Navigator.pop(sheetCtx);
 
             showDialog(
@@ -984,127 +997,28 @@ void showComplainBottomSheet(
                 ),
                 const SizedBox(height: 12),
 
-                Row(
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          final text = complaintType == ComplaintType.refund
-                              ? "Hi Samagrah Support, I have a refund issue with my cancelled Order ID: $orderId."
-                              : "Hi Samagrah Support, I have an issue with my Order ID: $orderId (Delivered).";
-                          final url =
-                              "https://wa.me/919999999999?text=${Uri.encodeComponent(text)}";
-                          launchUrl(
-                            Uri.parse(url),
-                            mode: LaunchMode.externalApplication,
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.green.shade300),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.chat_bubble_outline_rounded,
-                                color: Colors.green.shade700,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "WhatsApp",
-                                style: TextStyle(
-                                  color: Colors.green.shade800,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                const SizedBox(height: 16),
+                Center(
+                  child: TextButton.icon(
+                    onPressed: () {
+                      Navigator.pop(sheetCtx); // bottomsheet close karo
+                      Navigator.pushNamed(context, AppRoutes.helpAndSupport);
+                    },
+                    icon: Icon(
+                      Icons.help_outline_rounded,
+                      color: AppColors.button,
+                      size: 18,
+                    ),
+                    label: Text(
+                      "Need More Help?",
+                      style: text13(
+                        color: AppColors.button,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => launchUrl(Uri.parse("tel:+919999999999")),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.blue.shade300),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.phone_outlined,
-                                color: Colors.blue.shade700,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "Call Support",
-                                style: TextStyle(
-                                  color: Colors.blue.shade800,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                InkWell(
-                  onTap: () {
-                    final subject = complaintType == ComplaintType.refund
-                        ? "Refund Issue for Order: $orderId"
-                        : "Complaint for Order: $orderId";
-                    final body = complaintType == ComplaintType.refund
-                        ? "Hello Samagrah Support,\n\nI have a refund issue with my cancelled order: $orderId.\n\nIssue: "
-                        : "Hello Samagrah Support,\n\nI want to report an issue with my order: $orderId.\n\nIssue: ";
-                    final url =
-                        "mailto:support@samagrah.com?subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}";
-                    launchUrl(Uri.parse(url));
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.email_outlined,
-                          color: AppColors.grey700,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "Email Support (support@samagrah.com)",
-                          style: TextStyle(
-                            color: AppColors.grey800,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 40),
+                SizedBox(height: 20),
               ],
             ),
           );
