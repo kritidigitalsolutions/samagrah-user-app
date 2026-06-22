@@ -45,8 +45,6 @@ class PendingReviewCard extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                const Text('🎉', style: TextStyle(fontSize: 18)),
-                const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,7 +67,7 @@ class PendingReviewCard extends ConsumerWidget {
                     ],
                   ),
                 ),
-                // Dismiss button
+                // Dismiss button (Maybe Later — saves to SharedPrefs only)
                 GestureDetector(
                   onTap: () async {
                     final dismiss = ref.read(dismissReviewProvider);
@@ -109,13 +107,6 @@ class PendingReviewCard extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: 5),
-                      // Text(
-                      //   'Delivered · ${item.deliveredAt}',
-                      //   style: text11(
-                      //     color: const Color(0xFF3B6D11),
-                      //     fontWeight: FontWeight.w500,
-                      //   ),
-                      // ),
                     ],
                   ),
                 ),
@@ -153,10 +144,6 @@ class PendingReviewCard extends ConsumerWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          // Text(
-                          //   '${item.razorpayOrderId} · Qty: ${item.quantity}',
-                          //   style: text11(color: AppColors.grey600),
-                          // ),
                           const SizedBox(height: 6),
                           // Inline star row
                           _QuickStarRow(item: item),
@@ -195,6 +182,7 @@ class PendingReviewCard extends ConsumerWidget {
                     Expanded(
                       child: GestureDetector(
                         onTap: () async {
+                          // "Maybe Later" — save to SharedPrefs so it hides this session
                           final dismiss = ref.read(dismissReviewProvider);
                           await dismiss(item.reviewKey, ref);
                         },
@@ -230,7 +218,7 @@ class PendingReviewCard extends ConsumerWidget {
       builder: (_) => RatingBottomSheet(
         orderId: item.sourceId,
         title: item.isPanditBooking ? 'Rate this Pooja' : 'Rate this Product',
-        isPanditBooking: item.isPanditBooking, // 🔥 yeh line add karo
+        isPanditBooking: item.isPanditBooking,
         item: ProductDisplayItem(
           name: item.title,
           emoji: item.image,
@@ -239,8 +227,12 @@ class PendingReviewCard extends ConsumerWidget {
           productId: item.reviewTargetId,
         ),
         onSubmitted: () async {
-          final dismiss = ref.read(dismissReviewProvider);
-          await dismiss(item.reviewKey, ref);
+          // ✅ Rating submit hone ke baad:
+          // Server pe isUserReview=true ho jayega
+          // Hum sirf providers invalidate karte hain (SharedPrefs mein save NAHI karte)
+          // Taaki logout ke baad server data se decide ho, SharedPrefs se nahi
+          final afterRating = ref.read(afterRatingSubmittedProvider);
+          await afterRating(ref);
         },
       ),
     );
@@ -269,7 +261,6 @@ class _QuickStarRowState extends ConsumerState<_QuickStarRow> {
         return GestureDetector(
           onTap: () {
             setState(() => _selected = val);
-            // slight delay then open full rating sheet
             Future.delayed(const Duration(milliseconds: 200), () {
               if (!mounted) return;
               _openRatingWithStar(context, val);
@@ -293,7 +284,6 @@ class _QuickStarRowState extends ConsumerState<_QuickStarRow> {
   }
 
   void _openRatingWithStar(BuildContext context, int preselected) {
-    // Pre-select the rating then open sheet
     ref.read(selectedRatingProvider.notifier).state = preselected;
     showModalBottomSheet(
       context: context,
@@ -304,6 +294,7 @@ class _QuickStarRowState extends ConsumerState<_QuickStarRow> {
         title: widget.item.isPanditBooking
             ? 'Rate this Pooja'
             : 'Rate this Product',
+        isPanditBooking: widget.item.isPanditBooking,
         item: ProductDisplayItem(
           name: widget.item.title,
           emoji: widget.item.image,
@@ -312,8 +303,9 @@ class _QuickStarRowState extends ConsumerState<_QuickStarRow> {
           productId: widget.item.reviewTargetId,
         ),
         onSubmitted: () async {
-          final dismiss = ref.read(dismissReviewProvider);
-          await dismiss(widget.item.reviewKey, ref);
+          // ✅ Same as above — server isUserReview=true handle karega
+          final afterRating = ref.read(afterRatingSubmittedProvider);
+          await afterRating(ref);
         },
       ),
     );

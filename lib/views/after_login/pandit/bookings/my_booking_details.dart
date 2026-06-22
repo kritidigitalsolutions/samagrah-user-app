@@ -651,11 +651,7 @@ class _PoojaKitSection extends StatelessWidget {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // _SamagranKitCard
-//
-// Renders an active or disabled "Samagran Kit" radio-style tile.
-// `kit` mirrors Datum.recommendedKit which is typed as `dynamic` in the model
-// (currently always null from the API — wire up your RecommendedKit type here
-// once the backend sends it).
+
 // ─────────────────────────────────────────────────────────────────────────────
 class _SamagranKitCard extends StatelessWidget {
   const _SamagranKitCard({required this.kit, required this.enabled});

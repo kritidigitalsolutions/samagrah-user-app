@@ -1290,6 +1290,36 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     if (walletBalance >= effectiveTotal) {
                       ref.read(loadingProvider.notifier).state = true;
                       final repo = PaymentRepo();
+                      final createReq = CreateOrderReqModel(
+                        deliveryFee: deliveryCharge,
+                        items: items,
+                        couponCode: couponState.appliedCode,
+                        panditId: panditId,
+                      );
+
+                      final orderRes = await repo.productCreateOrder(createReq);
+
+                      if (orderRes.data == null) {
+                        ref.read(loadingProvider.notifier).state = false;
+                        AppSnackbar.show(
+                          context,
+                          message: "Failed to create order",
+                          type: SnackBarType.error,
+                        );
+                        return;
+                      }
+
+                      final orderId = orderRes.data?.razorpayOrder?.id;
+                      if (orderId == null || orderId.isEmpty) {
+                        ref.read(loadingProvider.notifier).state = false;
+                        AppSnackbar.show(
+                          context,
+                          message: "Invalid Order ID",
+                          type: SnackBarType.error,
+                        );
+                        return;
+                      }
+
                       final verifyReq = VerifyPaymentReqModel(
                         paymentMethod: "WALLET",
                         deliveryFee: deliveryCharge,
@@ -1298,6 +1328,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                         items: items,
                         couponCode: couponState.appliedCode,
                         panditId: panditId,
+                        razorpayOrderId: orderId,
                       );
                       final success = await repo.productVerifyPayment(
                         verifyReq,

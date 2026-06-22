@@ -42,6 +42,7 @@ class Datum {
     required this.recommendedKit,
     required this.bookingStatus,
     required this.notes,
+    required this.isUserReview,
     required this.createdAt,
     required this.updatedAt,
     required this.v,
@@ -68,6 +69,7 @@ class Datum {
   final dynamic recommendedKit;
   final String? bookingStatus;
   final String? notes;
+  final bool? isUserReview;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final int? v;
@@ -108,6 +110,7 @@ class Datum {
       recommendedKit: json["recommendedKit"],
       bookingStatus: json["bookingStatus"],
       notes: json["notes"],
+      isUserReview: json["isUserReview"],
       createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
       updatedAt: DateTime.tryParse(json["updatedAt"] ?? ""),
       v: json["__v"],

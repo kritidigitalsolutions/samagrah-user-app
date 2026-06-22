@@ -222,12 +222,14 @@ class OrderItem {
     required this.product,
     required this.quantity,
     required this.price,
+    required this.isUserReview,
     required this.id,
   });
 
   final String? productType;
   final PurpleProduct? product;
   final num? quantity;
+  final bool? isUserReview;
   final num? price;
   final String? id;
 
@@ -238,6 +240,7 @@ class OrderItem {
           ? null
           : PurpleProduct.fromJson(json["product"]),
       quantity: json["quantity"],
+      isUserReview: json["isUserReview"],
       price: json["price"],
       id: json["_id"],
     );

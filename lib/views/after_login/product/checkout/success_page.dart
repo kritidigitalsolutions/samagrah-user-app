@@ -115,6 +115,7 @@ class _SuccessPageState extends ConsumerState<SuccessPage>
                       radius: 8,
                       title: "My Order",
                       onTap: () {
+                        ref.invalidate(orderProvider);
                         Navigator.pushNamed(context, AppRoutes.myOrder);
                       },
                     ),

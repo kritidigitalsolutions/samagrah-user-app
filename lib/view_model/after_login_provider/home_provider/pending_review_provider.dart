@@ -50,58 +50,66 @@ final pendingReviewProvider = FutureProvider<List<PendingReviewItem>>((
 
   final List<PendingReviewItem> result = [];
 
+  // ─── Orders ───────────────────────────────────────────────────────────────
   for (final order in orders) {
     final status = (order.tracking?.currentStatus ?? order.orderStatus ?? '')
         .toLowerCase();
+
     if (status != 'delivered') continue;
 
-    final isKit =
-        order.items.isNotEmpty &&
-        (order.items.first.product?.items.isNotEmpty ?? false);
+    for (final item in order.items) {
+      // ✅ isUserReview item-level pe check karo (Order model mein nahi, OrderItem mein hai)
+      final alreadyReviewed = item.isUserReview ?? false;
+      if (alreadyReviewed) continue;
 
-    if (isKit) {
-      final kitProduct = order.items.first.product;
-      final reviewKey = _reviewKey('order', order.id, kitProduct?.id);
+      final product = item.product;
+
+      // ✅ Kit detection: product ke andar items list non-empty ho
+      final isKit = product?.items.isNotEmpty ?? false;
+
+      // ✅ Image fix:
+      // Kit case  → product.image (direct String field) ya product.media.image list
+      // Normal    → product.media.image list
+      final String image;
+      if (isKit) {
+        // PurpleProduct mein `image` ek direct String? field hai kit ke liye
+        image = product?.image?.isNotEmpty == true
+            ? product!.image!
+            : (product?.media?.image.firstOrNull ?? '');
+      } else {
+        image = product?.media?.image.firstOrNull ?? '';
+      }
+
+      final reviewKey = _reviewKey('order', order.id, product?.id);
       if (_isDismissed(dismissed, reviewKey, order.id)) continue;
+
       result.add(
         PendingReviewItem(
           reviewKey: reviewKey,
           sourceId: order.id ?? '',
           razorpayOrderId: order.razorpayOrderId ?? '',
-          reviewTargetId: kitProduct?.id ?? '',
-          title: kitProduct?.name ?? kitProduct?.title ?? 'Kit',
+          reviewTargetId: product?.id ?? '',
+          title: product?.name ?? product?.title ?? (isKit ? 'Kit' : 'Product'),
           subtitle: 'Your order was delivered!',
-          image: kitProduct?.media?.image.firstOrNull ?? '',
+          image: image,
           deliveredAt: _formatDate(order.updatedAt ?? order.createdAt),
-          quantity: order.items.first.quantity ?? 1,
-          isKit: true,
+          quantity: item.quantity ?? 1,
+          isKit: isKit,
         ),
       );
-    } else {
-      for (final item in order.items) {
-        final product = item.product;
-        final reviewKey = _reviewKey('order', order.id, product?.id);
-        if (_isDismissed(dismissed, reviewKey, order.id)) continue;
-        result.add(
-          PendingReviewItem(
-            reviewKey: reviewKey,
-            sourceId: order.id ?? '',
-            razorpayOrderId: order.razorpayOrderId ?? '',
-            reviewTargetId: product?.id ?? '',
-            title: product?.title ?? product?.name ?? 'Product',
-            subtitle: 'Your order was delivered!',
-            image: product?.media?.image.firstOrNull ?? '',
-            deliveredAt: _formatDate(order.updatedAt ?? order.createdAt),
-            quantity: item.quantity ?? 1,
-          ),
-        );
-      }
     }
   }
 
+  // ─── Pandit Bookings ──────────────────────────────────────────────────────
   for (final booking in panditBookings.data) {
     final status = (booking.bookingStatus ?? '').toLowerCase();
+
+    // ✅ Only show if completed AND user hasn't reviewed yet
     if (status != 'completed') continue;
+
+    // isUserReview == true means already reviewed → skip
+    final alreadyReviewed = booking.isUserReview ?? false;
+    if (alreadyReviewed) continue;
 
     final pandit = booking.pandit;
     final reviewKey = _reviewKey('pandit', booking.id, pandit?.id);
@@ -130,6 +138,9 @@ final pendingReviewProvider = FutureProvider<List<PendingReviewItem>>((
 });
 
 // ─── Dismiss action ──────────────────────────────────────────────────────────
+// Sirf local dismiss (Maybe Later / X button ke liye)
+// Rating submit hone ke baad server se isUserReview=true aa jayega
+// isliye sirf invalidate karo, SharedPrefs mein save karna optional hai
 final dismissReviewProvider =
     Provider<Future<void> Function(String reviewKey, WidgetRef ref)>(
       (ref) => (reviewKey, ref) async {
@@ -143,8 +154,22 @@ final dismissReviewProvider =
       },
     );
 
+// ─── After rating submitted: invalidate only (server will return isUserReview=true) ──
+// Call this from onSubmitted callback instead of dismissReviewProvider
+// so that after logout+login, server data is the source of truth
+final afterRatingSubmittedProvider =
+    Provider<Future<void> Function(WidgetRef ref)>(
+      (ref) => (ref) async {
+        // Don't save to SharedPrefs — server's isUserReview=true will handle it
+        // Just refresh the provider so card disappears immediately
+        ref.invalidate(pendingReviewProvider);
+        // Also invalidate order & booking providers so fresh data is fetched
+        ref.invalidate(orderProvider);
+        ref.invalidate(panditBookingProvider);
+      },
+    );
+
 String _formatDate(DateTime? dt) {
-  // String? ki jagah DateTime?
   if (dt == null) return '';
   try {
     final local = dt.toLocal();
