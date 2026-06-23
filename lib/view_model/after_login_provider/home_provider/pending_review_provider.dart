@@ -53,32 +53,26 @@ final pendingReviewProvider = FutureProvider<List<PendingReviewItem>>((
   // ─── Orders ───────────────────────────────────────────────────────────────
   for (final order in orders) {
     final status = (order.tracking?.currentStatus ?? order.orderStatus ?? '')
+        .trim()
         .toLowerCase();
 
     if (status != 'delivered') continue;
 
     for (final item in order.items) {
-      // ✅ isUserReview item-level pe check karo (Order model mein nahi, OrderItem mein hai)
+      // ✅ FestivalKit skip karo
+      final productType = (item.productType ?? '').toLowerCase();
+      if (productType == 'festivalkit') continue;
+
       final alreadyReviewed = item.isUserReview ?? false;
       if (alreadyReviewed) continue;
 
       final product = item.product;
+      if (product?.id == null) continue;
 
-      // ✅ Kit detection: product ke andar items list non-empty ho
       final isKit = product?.items.isNotEmpty ?? false;
+      if (isKit) continue; // extra safety
 
-      // ✅ Image fix:
-      // Kit case  → product.image (direct String field) ya product.media.image list
-      // Normal    → product.media.image list
-      final String image;
-      if (isKit) {
-        // PurpleProduct mein `image` ek direct String? field hai kit ke liye
-        image = product?.image?.isNotEmpty == true
-            ? product!.image!
-            : (product?.media?.image.firstOrNull ?? '');
-      } else {
-        image = product?.media?.image.firstOrNull ?? '';
-      }
+      final image = product?.media?.image.firstOrNull ?? '';
 
       final reviewKey = _reviewKey('order', order.id, product?.id);
       if (_isDismissed(dismissed, reviewKey, order.id)) continue;
@@ -89,12 +83,12 @@ final pendingReviewProvider = FutureProvider<List<PendingReviewItem>>((
           sourceId: order.id ?? '',
           razorpayOrderId: order.razorpayOrderId ?? '',
           reviewTargetId: product?.id ?? '',
-          title: product?.name ?? product?.title ?? (isKit ? 'Kit' : 'Product'),
+          title: product?.name ?? product?.title ?? 'Product',
           subtitle: 'Your order was delivered!',
           image: image,
           deliveredAt: _formatDate(order.updatedAt ?? order.createdAt),
           quantity: item.quantity ?? 1,
-          isKit: isKit,
+          isKit: false,
         ),
       );
     }

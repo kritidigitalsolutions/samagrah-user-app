@@ -117,7 +117,7 @@ class CustomCachedImage extends StatelessWidget {
             height: height,
             width: width,
             color: Colors.grey.shade200,
-            child: const Icon(Icons.image_not_supported, size: 40),
+            child: const Icon(Icons.person, size: 40),
           );
     } else {
       image = CachedNetworkImage(
@@ -143,7 +143,7 @@ class CustomCachedImage extends StatelessWidget {
             errorWidget ??
             Container(
               color: Colors.grey.shade200,
-              child: const Icon(Icons.broken_image, size: 40),
+              child: const Icon(Icons.person, size: 40),
             ),
       );
     }

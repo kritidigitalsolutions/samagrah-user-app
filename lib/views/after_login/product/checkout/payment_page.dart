@@ -81,21 +81,23 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     final address = ref.watch(storeAddressProvider);
     final panditId = ref.watch(panditIdProvider);
     final items = ref.watch(bookingItemProvider);
-    final totalAmount = ref.watch(totalPriceProvider);
+    final totalAmount = ref.watch(totalPriceProvider); // 200 — items only
 
-    final effectiveTotal = couponState.isCouponApplied
-        ? couponState.finalAmount
-        : totalAmount;
-
-    // ── Resolve delivery charge based on effective total ───────────────────
+    // ✅ Delivery HAMESHA raw items pe — coupon ke baad nahi
     final deliveryChargeAsync = ref.watch(
-      resolvedDeliveryChargeProvider(effectiveTotal.toDouble()),
+      resolvedDeliveryChargeProvider(totalAmount.toDouble()),
     );
 
     final resolvedDeliveryCharge = deliveryChargeAsync.maybeWhen(
       data: (v) => v,
       orElse: () => 0.0,
     );
+
+    // ✅ Grand total ek jagah calculate
+    final grandTotal = couponState.isCouponApplied
+        ? couponState
+              .finalAmount // server: (200+40) - 24 = 216
+        : totalAmount + resolvedDeliveryCharge; // 200 + 40 = 240
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -111,7 +113,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                   children: [
                     // ── Delivery Charge Info Banner ───────────────────────
                     _buildDeliveryChargeBanner(
-                      effectiveTotal.toDouble(),
+                      totalAmount.toDouble(),
                       deliveryChargeAsync,
                     ),
                     const SizedBox(height: 16),
@@ -123,7 +125,11 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    _buildCouponSection(totalAmount, couponState),
+                    _buildCouponSection(
+                      totalAmount,
+                      couponState,
+                      resolvedDeliveryCharge,
+                    ),
                     const SizedBox(height: 20),
 
                     Text(
@@ -135,7 +141,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                       data: (data) {
                         final amount = data.data?.wallet?.balance;
                         walletBalance = amount ?? 0.0;
-                        return _buildWalletOption(effectiveTotal);
+                        return _buildWalletOption(grandTotal);
                       },
                       loading: () => const _ShimmerBox(height: 140),
                       error: (_, _) =>
@@ -155,7 +161,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
               ),
             ),
             _buildBottomCTA(
-              effectiveTotal,
+              grandTotal,
               address,
               items,
               couponState,
@@ -215,7 +221,11 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
   // COUPON SECTION
   // ──────────────────────────────────────────────────────────────────────────
 
-  Widget _buildCouponSection(num totalAmount, CouponState couponState) {
+  Widget _buildCouponSection(
+    num totalAmount,
+    CouponState couponState,
+    double deliveryCharge,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -223,7 +233,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
         const SizedBox(height: 12),
         couponState.isCouponApplied
             ? _buildAppliedCouponBanner(couponState)
-            : _buildCouponInputCard(totalAmount, couponState),
+            : _buildCouponInputCard(totalAmount, couponState, deliveryCharge),
         if (!couponState.isCouponApplied) ...[
           const SizedBox(height: 12),
           _buildAvailableOffers(totalAmount, couponState),
@@ -232,7 +242,11 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     );
   }
 
-  Widget _buildCouponInputCard(num totalAmount, CouponState couponState) {
+  Widget _buildCouponInputCard(
+    num totalAmount,
+    CouponState couponState,
+    double deliveryCharge,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -300,7 +314,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                 child: ElevatedButton(
                   onPressed: couponState.isApplying
                       ? null
-                      : () => _applyManualCoupon(totalAmount),
+                      : () => _applyManualCoupon(totalAmount, deliveryCharge),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.button,
                     shape: RoundedRectangleBorder(
@@ -570,7 +584,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     );
   }
 
-  void _applyManualCoupon(num totalAmount) {
+  void _applyManualCoupon(num totalAmount, double deliveryCharge) {
     final code = _couponController.text.trim();
     if (code.isEmpty) {
       AppSnackbar.show(
@@ -580,9 +594,22 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       );
       return;
     }
+
+    // ✅ Delivery loaded hai ya nahi check karo
+    if (deliveryCharge == 0.0) {
+      // Provider still loading ho sakta hai — raw totalAmount use karo fallback
+      // Ya user ko wait karo
+    }
+
+    final grandTotal = totalAmount + deliveryCharge;
+    debugPrint('Applying coupon on grand total: $grandTotal');
+
     ref
         .read(couponProvider.notifier)
-        .applyCoupon(code: code, amount: totalAmount);
+        .applyCoupon(
+          code: code,
+          amount: grandTotal, // ✅ 240
+        );
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -656,12 +683,9 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     double deliveryCharge,
   ) {
     final isCOD = selectedPaymentMethod == 'cod';
-    final baseAmount = couponState.isCouponApplied
-        ? couponState.finalAmount
-        : totalAmount;
-    final grandTotal = isCOD
-        ? baseAmount + codCharges + deliveryCharge
-        : baseAmount + deliveryCharge;
+    final grandTotal = couponState.isCouponApplied
+        ? couponState.finalAmount + (isCOD ? codCharges : 0)
+        : totalAmount + deliveryCharge + (isCOD ? codCharges : 0);
 
     return Container(
       width: double.infinity,
@@ -1183,9 +1207,10 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     final paymentState = ref.watch(paymentProvider);
     final loading = ref.watch(loadingProvider);
 
-    final finalAmount = selectedPaymentMethod == 'cod'
-        ? effectiveTotal + codCharges + deliveryCharge
-        : effectiveTotal + deliveryCharge;
+    final finalAmount = couponState.isCouponApplied
+        ? couponState.finalAmount +
+              (selectedPaymentMethod == 'cod' ? codCharges : 0)
+        : effectiveTotal + (selectedPaymentMethod == 'cod' ? codCharges : 0);
 
     String buttonText = "Pay ₹${finalAmount.toStringAsFixed(0)}";
     Color buttonColor = AppColors.green;

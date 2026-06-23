@@ -43,11 +43,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       next.whenOrNull(
         data: (data) {
           final register = data.registerModel;
-
           if (register == null) return;
-          if (data.verifyModel != null) {
-            return; // ← bail out if OTP verify triggered this
-          }
+          if (data.verifyModel != null) return;
 
           final isNewUser = register.isNewUser;
 
@@ -59,20 +56,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             );
             Navigator.pushNamed(context, AppRoutes.otp);
           } else {
-            AppSnackbar.show(
-              context,
-              message:
-                  "This number is already registered. Please login or try another number",
-              type: SnackBarType.error,
-            );
+            // ✅ Server ka exact message use karo
+            final msg = register.message?.isNotEmpty == true
+                ? register.message!
+                : "This number is already registered. Please login.";
+            AppSnackbar.show(context, message: msg, type: SnackBarType.error);
           }
         },
         error: (e, _) {
-          AppSnackbar.show(
-            context,
-            message: e.toString(),
-            type: SnackBarType.error,
-          );
+          String message = "Something went wrong";
+
+          if (e.toString().contains("message")) {
+            final match = RegExp(
+              r'message:\s*([^,}]+)',
+            ).firstMatch(e.toString());
+            if (match != null) {
+              message = match.group(1)?.trim() ?? message;
+            }
+          }
+
+          AppSnackbar.show(context, message: message, type: SnackBarType.error);
         },
       );
     });

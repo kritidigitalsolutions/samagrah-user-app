@@ -12,6 +12,7 @@ import 'package:samagrah/view_model/after_login_provider/home_provider/cart_prov
 import 'package:samagrah/view_model/after_login_provider/order_provider/order_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/booking_provider.dart';
 import 'package:samagrah/view_model/before_login_provider/auth_provider.dart';
+import 'package:samagrah/view_model/before_login_provider/profile_provider.dart';
 import 'package:samagrah/views/after_login/profile/policy/policy_page.dart';
 
 class ProfilePage extends ConsumerWidget {
@@ -211,6 +212,7 @@ class ProfilePage extends ConsumerWidget {
                             await AuthLocalstorageService.clear();
                             ref.read(authProvider.notifier).reset();
                             ref.invalidate(userProvider);
+                            ref.invalidate(profileImageProvider);
                             ref.invalidate(panditBookingProvider);
                             ref.invalidate(orderProvider);
                             Navigator.pushReplacementNamed(

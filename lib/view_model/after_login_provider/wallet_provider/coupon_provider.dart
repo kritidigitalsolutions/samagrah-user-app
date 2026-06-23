@@ -15,8 +15,9 @@ class CouponState {
 
   final bool isApplying;
   final String? appliedCode;
-  final num discountAmount;
-  final num finalAmount;
+  final num discountAmount; // server se aaya exact discount (item pe)
+  final num originalAmount; // coupon apply karte waqt ka cart total
+  final num finalAmount; // originalAmount - discountAmount
   final String? applyError;
   final bool isApplySuccess;
 
@@ -27,6 +28,7 @@ class CouponState {
     this.isApplying = false,
     this.appliedCode,
     this.discountAmount = 0,
+    this.originalAmount = 0,
     this.finalAmount = 0,
     this.applyError,
     this.isApplySuccess = false,
@@ -41,6 +43,7 @@ class CouponState {
     bool? isApplying,
     String? appliedCode,
     num? discountAmount,
+    num? originalAmount,
     num? finalAmount,
     String? applyError,
     bool? isApplySuccess,
@@ -53,6 +56,7 @@ class CouponState {
     isApplying: isApplying ?? this.isApplying,
     appliedCode: clearApplied ? null : (appliedCode ?? this.appliedCode),
     discountAmount: clearApplied ? 0 : (discountAmount ?? this.discountAmount),
+    originalAmount: clearApplied ? 0 : (originalAmount ?? this.originalAmount),
     finalAmount: clearApplied ? 0 : (finalAmount ?? this.finalAmount),
     applyError: clearApplyError ? null : (applyError ?? this.applyError),
     isApplySuccess: isApplySuccess ?? this.isApplySuccess,
@@ -84,7 +88,7 @@ class CouponNotifier extends StateNotifier<CouponState> {
 
   Future<void> applyCoupon({
     required String code,
-    required num amount, // original cart total passed from payment page
+    required num amount, // original cart total (items only, no delivery)
   }) async {
     if (code.trim().isEmpty) {
       state = state.copyWith(applyError: "Please enter a coupon code");
@@ -104,18 +108,22 @@ class CouponNotifier extends StateNotifier<CouponState> {
       );
 
       if (res.success && res.data != null) {
-        final discount = res.data!.discountAmount; // e.g. 200.01
+        // ✅ Server ka exact discount use karo — manual calculation nahi
+        final discount = res.data!.discountAmount;
         final appliedCode = res.data!.couponCode.isNotEmpty
             ? res.data!.couponCode
             : code.trim().toUpperCase();
-        // finalAmount = original amount − discount (server doesn't send it)
-        final finalAmt = (amount - discount).clamp(0.0, double.infinity);
+
+        // ✅ finalAmount = items total - discount only
+        // Delivery charge alag se add hogi payment page pe
+        final finalAmt = (amount - discount).clamp(0, double.infinity);
 
         state = state.copyWith(
           isApplying: false,
           appliedCode: appliedCode,
-          discountAmount: discount,
-          finalAmount: finalAmt,
+          discountAmount: discount, // server ka value: 20
+          originalAmount: amount, // cart total: 200
+          finalAmount: finalAmt, // 200 - 20 = 180
           isApplySuccess: true,
         );
       } else {

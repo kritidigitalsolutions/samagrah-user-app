@@ -31,23 +31,34 @@ class AuthRepository {
     return FormData.fromMap(map);
   }
 
+  // auth_repo.dart
+
   Future<UserRegisterResponseModel> register(UserRequestModel model) async {
     try {
       final formData = await _buildFormData(model);
-
       final res = await api.postApi(AppUrls.registerUser, formData);
-
       return UserRegisterResponseModel.fromJson(res);
+    } on DioException catch (e) {
+      // ✅ 400 response ka data parse karo
+      if (e.response?.statusCode == 400 && e.response?.data != null) {
+        return UserRegisterResponseModel.fromJson(e.response!.data);
+      }
+      rethrow;
     } catch (e) {
       rethrow;
     }
   }
 
-  // 📱 SEND OTP
   Future<UserRegisterResponseModel> login(String mobile) async {
     try {
       final res = await api.postApi(AppUrls.login, {"phone": mobile});
       return UserRegisterResponseModel.fromJson(res);
+    } on DioException catch (e) {
+      // ✅ Same fix for login
+      if (e.response?.statusCode == 400 && e.response?.data != null) {
+        return UserRegisterResponseModel.fromJson(e.response!.data);
+      }
+      rethrow;
     } catch (e) {
       rethrow;
     }
