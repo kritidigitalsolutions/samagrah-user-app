@@ -12,14 +12,16 @@ class AppUrls {
 
   // ======================= Kit===================================
 
-  static const String festivalKit = "$baseUrl/user/kits";
-  static const String userKit = "$baseUrl/user-kits";
+  // static const String festivalKit = "$baseUrl/user/kits";
+  // static const String userKit = "$baseUrl/user-kits";
   // static const String getMyKit = "$baseUrl/user-kits/my-kits";
   static const String defaultKit = "$baseUrl/kits";
 
   // ======================= product===================================
 
   static const String category = "$baseUrl/category";
+
+  static const String subCategories = "$baseUrl/sub-categories";
 
   static const String brands = "$baseUrl/brands";
 

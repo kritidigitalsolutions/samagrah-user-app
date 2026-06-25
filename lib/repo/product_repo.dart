@@ -9,6 +9,7 @@ import 'package:samagrah/model/response/product_res/category_res_model.dart';
 import 'package:samagrah/model/response/product_res/delivered_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_details_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
+import 'package:samagrah/model/response/product_res/sub_category_res_model.dart';
 import 'package:samagrah/res/app_urls.dart';
 import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
 import 'package:samagrah/utils/localStogare_service/location_storage.dart';
@@ -52,6 +53,15 @@ class ProductRepo {
   }
 
   // 📦 Get all products
+  Future<SubCategoryResModel> getSubCategories() async {
+    try {
+      final res = await _api.getApi(AppUrls.subCategories);
+      return SubCategoryResModel.fromJson(res);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<ProductResModel> getProducts() async {
     try {
       final token = await _getToken();

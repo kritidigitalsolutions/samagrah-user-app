@@ -224,7 +224,10 @@ class ProductCard extends ConsumerWidget {
                       product.details!.unit!.isNotEmpty)
                     Text(
                       product.details!.unit!,
-                      style: text8(color: AppColors.grey),
+                      style: text10(
+                        color: AppColors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -234,7 +237,7 @@ class ProductCard extends ConsumerWidget {
                   // Current price
                   Text(
                     'Rs. ${product.price}',
-                    style: text12(
+                    style: text13(
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
                     ),
@@ -249,7 +252,7 @@ class ProductCard extends ConsumerWidget {
                         Flexible(
                           child: Text(
                             'Rs.${product.oldPrice}',
-                            style: text10(
+                            style: text11(
                               color: AppColors.textSecondary,
                               fontWeight: FontWeight.bold,
                             ).copyWith(decoration: TextDecoration.lineThrough),
@@ -260,7 +263,7 @@ class ProductCard extends ConsumerWidget {
                         Flexible(
                           child: Text(
                             '${product.discountPercent}% off',
-                            style: text8(
+                            style: text10(
                               color: Colors.green.shade700,
                               fontWeight: FontWeight.w600,
                             ),
@@ -278,8 +281,8 @@ class ProductCard extends ConsumerWidget {
                     capitalizeWords(product.title ?? ''),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: text10(
-                      fontWeight: FontWeight.w500,
+                    style: text11(
+                      fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),

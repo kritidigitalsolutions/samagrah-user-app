@@ -444,7 +444,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   // ── Horizontal Scroll Row ──────────────────────────────────────────────────
   Widget _buildHorizontalScroll(List<Product> products) {
     return SizedBox(
-      height: 220,
+      height: 228,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -468,7 +468,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         builder: (context, constraints) {
           final cardWidth = (constraints.maxWidth - 16 - 12) / 3;
           final imageHeight = cardWidth;
-          const infoHeight = 90.0;
+          const infoHeight = 105.0;
           final ratio = cardWidth / (imageHeight + infoHeight);
 
           return GridView.builder(

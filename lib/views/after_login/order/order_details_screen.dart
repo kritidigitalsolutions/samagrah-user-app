@@ -594,12 +594,12 @@ class OrderDetailsContent extends ConsumerWidget {
                     child: AppOutlineButton(
                       height: 44,
                       radius: 20,
-                      title: "Refund Issue",
+                      title: "Report issues",
                       onTap: () => showComplainBottomSheet(
                         context,
                         ref,
                         order,
-                        //complaintType: ComplaintType.refund,
+                        complaintType: ComplaintType.refund,
                       ),
                     ),
                   ),
@@ -612,12 +612,12 @@ class OrderDetailsContent extends ConsumerWidget {
                     child: AppOutlineButton(
                       height: 44,
                       radius: 20,
-                      title: "Complain",
+                      title: "Report issues",
                       onTap: () => showComplainBottomSheet(
                         context,
                         ref,
                         order,
-                        // complaintType: ComplaintType.product,
+                        complaintType: ComplaintType.product,
                       ),
                     ),
                   ),

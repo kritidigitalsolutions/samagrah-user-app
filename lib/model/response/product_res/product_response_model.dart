@@ -66,6 +66,7 @@ class Product {
     required this.thumbnail,
     required this.images,
     required this.categoryId,
+    required this.subCategoryId,
     required this.category,
     required this.brandId,
     required this.brand,
@@ -91,6 +92,7 @@ class Product {
   final String? thumbnail;
   final List<String> images;
   final CategoryId? categoryId;
+  final SubCategoryId? subCategoryId;
   final Category? category;
   final BrandId? brandId;
   final Brand? brand;
@@ -128,6 +130,9 @@ class Product {
       category: json["category"] == null
           ? null
           : Category.fromJson(json["category"]),
+      subCategoryId: json["subCategoryId"] == null
+          ? null
+          : SubCategoryId.fromJson(json["subCategoryId"]),
       brandId: json["brandId"] == null
           ? null
           : BrandId.fromJson(json["brandId"]),
@@ -144,6 +149,24 @@ class Product {
       isMostUsed: json["isMostUsed"],
       isEveryDayRitual: json["isEveryDayRitual"],
       isRitualItems: json["isRitualItems"],
+    );
+  }
+}
+
+class SubCategoryId {
+  final String? id;
+  final String? name;
+  final String? status;
+  final String? code;
+
+  SubCategoryId({this.id, this.name, this.status, this.code});
+
+  factory SubCategoryId.fromJson(Map<String, dynamic> json) {
+    return SubCategoryId(
+      id: json["_id"],
+      name: json["name"],
+      status: json["status"],
+      code: json["code"],
     );
   }
 }

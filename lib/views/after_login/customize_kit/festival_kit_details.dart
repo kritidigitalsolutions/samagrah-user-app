@@ -1129,7 +1129,13 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
     );
   }
 
-  void _deleteItem(int index) => setState(() => _localItems.removeAt(index));
+  void _deleteItem(int index) {
+    final productId = _localItems[index].product?.id;
+    if (productId != null && productId.isNotEmpty) {
+      ref.read(customizeKitCartProvider.notifier).removeProduct(productId);
+    }
+    setState(() => _localItems.removeAt(index));
+  }
 
   void _addProduct(Product product) {
     final dp = _toDefaultProduct(product);

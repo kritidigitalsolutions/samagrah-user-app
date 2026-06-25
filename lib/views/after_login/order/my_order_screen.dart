@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/main.dart';
+import 'package:samagrah/model/response/complaint_res_model.dart';
 import 'package:samagrah/model/response/product_booked_res/product_booked_res_modle.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/res/app_image.dart';
@@ -20,6 +21,16 @@ enum ComplaintType {
 
   /// Cancelled online order – refund not received / wrong amount / delayed
   refund,
+}
+
+bool _isComplaintForOrder(Complaint complaint, Order order) {
+  final complaintOrderId = complaint.orderId.trim();
+  final orderIds = {
+    order.id,
+    order.razorpayOrderId,
+  }.whereType<String>().map((id) => id.trim()).where((id) => id.isNotEmpty);
+
+  return orderIds.contains(complaintOrderId);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -53,6 +64,7 @@ class MyOrdersPage extends ConsumerWidget {
                 return RefreshIndicator(
                   onRefresh: () async {
                     ref.invalidate(orderProvider);
+                    ref.invalidate(complaintListProvider);
                   },
                   child: ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
@@ -208,6 +220,20 @@ class OrderCard extends ConsumerWidget {
     final statusText = OrderUtils.getStatusText(
       order.tracking?.currentStatus ?? order.orderStatus,
     );
+    final hasReportedIssue = ref.watch(complaintListProvider).maybeWhen(
+      data: (complaints) => complaints.any(
+        (complaint) => _isComplaintForOrder(complaint, order),
+      ),
+      orElse: () => false,
+    );
+
+    void showAlreadyReportedMessage() {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Issue already reported for this order"),
+        ),
+      );
+    }
 
     return GestureDetector(
       onTap: onTap,
@@ -451,13 +477,17 @@ class OrderCard extends ConsumerWidget {
                           child: AppOutlineButton(
                             height: 38,
                             radius: 15,
-                            title: "Complain",
-                            onTap: () => showComplainBottomSheet(
-                              context,
-                              ref,
-                              order,
-                              complaintType: ComplaintType.product,
-                            ),
+                            title: hasReportedIssue
+                                ? "Issue Reported"
+                                : "Report issues",
+                            onTap: hasReportedIssue
+                                ? showAlreadyReportedMessage
+                                : () => showComplainBottomSheet(
+                                    context,
+                                    ref,
+                                    order,
+                                    complaintType: ComplaintType.product,
+                                  ),
                           ),
                         ),
                       ]
@@ -468,13 +498,17 @@ class OrderCard extends ConsumerWidget {
                           child: AppOutlineButton(
                             height: 38,
                             radius: 15,
-                            title: "Refund Issue",
-                            onTap: () => showComplainBottomSheet(
-                              context,
-                              ref,
-                              order,
-                              complaintType: ComplaintType.refund,
-                            ),
+                            title: hasReportedIssue
+                                ? "Issue Reported"
+                                : "Report issues",
+                            onTap: hasReportedIssue
+                                ? showAlreadyReportedMessage
+                                : () => showComplainBottomSheet(
+                                    context,
+                                    ref,
+                                    order,
+                                    complaintType: ComplaintType.refund,
+                                  ),
                           ),
                         ),
                       ]
@@ -693,6 +727,7 @@ void showCancelOrderBottomSheet(
                           }
                         },
                 ),
+                SizedBox(height: 30),
               ],
             ),
           );
@@ -766,16 +801,34 @@ void _showRefundSuccessDialog(BuildContext context, Order order) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Complaint Bottom Sheet
+// Report Issue Bottom Sheet
 // ─────────────────────────────────────────────────────────────────────────────
 
-void showComplainBottomSheet(
+Future<void> showComplainBottomSheet(
   BuildContext context,
   WidgetRef ref,
   Order order, {
   ComplaintType complaintType = ComplaintType.product,
-}) {
+}) async {
   final orderId = order.razorpayOrderId ?? order.id ?? '';
+
+  try {
+    final complaints = await ref.read(complaintRepoProvider).getComplaints();
+    final alreadyReported = complaints.any(
+      (complaint) => _isComplaintForOrder(complaint, order),
+    );
+
+    if (alreadyReported) {
+      ref.invalidate(complaintListProvider);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Issue already reported for this order"),
+        ),
+      );
+      return;
+    }
+  } catch (_) {}
 
   // Different reason list based on complaint type
   final reasons = complaintType == ComplaintType.refund
@@ -833,12 +886,13 @@ void showComplainBottomSheet(
             if (!success) {
               ScaffoldMessenger.of(ctx).showSnackBar(
                 const SnackBar(
-                  content: Text("Failed to raise complaint. Try again."),
+                  content: Text("Failed to report issue. Try again."),
                 ),
               );
               return;
             }
 
+            ref.invalidate(complaintListProvider);
             Navigator.pop(sheetCtx);
 
             showDialog(
@@ -851,17 +905,19 @@ void showComplainBottomSheet(
                   children: [
                     Icon(Icons.check_circle, color: Colors.green.shade600),
                     const SizedBox(width: 8),
-                    Text(
-                      complaintType == ComplaintType.refund
-                          ? "Refund Issue Reported"
-                          : "Complaint Raised",
+                    Expanded(
+                      child: Text(
+                        complaintType == ComplaintType.refund
+                            ? "Refund Issue Reported"
+                            : "Issue Reported",
+                      ),
                     ),
                   ],
                 ),
                 content: Text(
                   complaintType == ComplaintType.refund
                       ? "Your refund issue for Order ID $orderId has been registered. Our support team will look into it and get back to you shortly."
-                      : "Your complaint for Order ID $orderId has been registered successfully. Our support team will get in touch with you shortly.",
+                      : "Your issue for Order ID $orderId has been registered successfully. Our support team will get in touch with you shortly.",
                 ),
                 actions: [
                   TextButton(
@@ -900,9 +956,7 @@ void showComplainBottomSheet(
                 const SizedBox(height: 20),
 
                 Text(
-                  complaintType == ComplaintType.refund
-                      ? "Refund Issue"
-                      : "Complaint / Refund Request",
+                  "Report issues",
                   style: text18(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 6),
@@ -916,8 +970,8 @@ void showComplainBottomSheet(
                 const SizedBox(height: 4),
                 Text(
                   complaintType == ComplaintType.refund
-                      ? "Note: Your order was cancelled. If you have any issue with the refund, please raise a complaint below."
-                      : "Note: Refunds are not applicable for delivered orders. You can raise a complaint or replacement query below.",
+                      ? "Note: Your order was cancelled. If you have any issue with the refund, please report it below."
+                      : "Note: Refunds are not applicable for delivered orders. You can report an issue or replacement query below.",
                   style: text12(color: AppColors.error),
                 ),
                 const SizedBox(height: 16),
@@ -983,7 +1037,7 @@ void showComplainBottomSheet(
                 const SizedBox(height: 20),
 
                 AppButton(
-                  title: isSubmitting ? "Submitting..." : "Submit Complaint",
+                  title: isSubmitting ? "Submitting..." : "Submit Report",
                   onTap: isSubmitting ? null : submitComplaint,
                 ),
 

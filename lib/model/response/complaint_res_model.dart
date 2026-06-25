@@ -26,7 +26,9 @@ class Complaint {
     final order = json['order'];
     return Complaint(
       id: json['_id'] ?? '',
-      orderId: order is Map ? (order['_id'] ?? '') : (order ?? ''),
+      orderId: order is Map
+          ? (order['_id']?.toString() ?? '')
+          : (order?.toString() ?? ''),
       issue: json['issue'] ?? '',
       details: json['details'] ?? '',
       status: json['status'] ?? 'Pending',

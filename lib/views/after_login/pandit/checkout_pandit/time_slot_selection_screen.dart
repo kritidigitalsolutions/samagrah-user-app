@@ -10,6 +10,7 @@ import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/pandit_details_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
 
 class TimeSlotSelectionScreen extends ConsumerStatefulWidget {
   const TimeSlotSelectionScreen({super.key});
@@ -217,10 +218,45 @@ class _TimeSlotSelectionScreenState
     }
   }
 
+  String _normalizePoojaName(String? value) {
+    return (value ?? '').trim().toLowerCase().replaceAll(
+      RegExp(r'\s+'),
+      ' ',
+    );
+  }
+
+  int _poojaDurationHours(PanditData pandit) {
+    final ritual = ref.read(selectedRitualProvider);
+    final ritualNames = {
+      _normalizePoojaName(ritual?.name),
+      _normalizePoojaName(ritual?.title),
+    }..remove('');
+
+    PoojaOffering? matchedOffering;
+    for (final offering in pandit.poojaOfferings) {
+      if (ritualNames.contains(_normalizePoojaName(offering.name))) {
+        matchedOffering = offering;
+        break;
+      }
+    }
+
+    for (final offering in pandit.poojaOfferings) {
+      if (matchedOffering == null && offering.isSelected == true) {
+        matchedOffering = offering;
+        break;
+      }
+    }
+
+    final duration = matchedOffering?.durationHours ?? ritual?.durationHours;
+    if (duration == null || duration <= 0) return 1;
+    return duration.ceil();
+  }
+
   @override
   Widget build(BuildContext context) {
     final pandit = ModalRoute.of(context)!.settings.arguments as PanditData;
     final availAsync = ref.watch(panditAvailabilityProvider(pandit.id ?? ''));
+    final poojaDurationHours = _poojaDurationHours(pandit);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -487,6 +523,7 @@ class _TimeSlotSelectionScreenState
                                       onToggle: _toggleSlot,
                                       // ── FIX 2: pass slot-past checker ──
                                       isPastSlot: _isPastSlot,
+                                      poojaDurationHours: poojaDurationHours,
                                     ),
                             ),
                           ],
@@ -1123,6 +1160,7 @@ class _SlotPanel extends StatelessWidget {
     required this.isSelected,
     required this.onToggle,
     required this.isPastSlot, // ── FIX 2
+    required this.poojaDurationHours,
   });
 
   final Availability availability;
@@ -1130,6 +1168,104 @@ class _SlotPanel extends StatelessWidget {
   final bool Function(String, Slot) isSelected;
   final void Function(String, Slot) onToggle;
   final bool Function(String?, String?) isPastSlot; // ── FIX 2
+  final int poojaDurationHours;
+
+  TimeOfDay? _parseTimeOfDay(String raw) {
+    try {
+      final parts = raw.trim().split(' ');
+      if (parts.length < 2) return null;
+      final hm = parts[0].split(':');
+      int hour = int.parse(hm[0]);
+      final minute = int.parse(hm[1]);
+      final period = parts[1].toUpperCase();
+      if (period == 'PM' && hour != 12) hour += 12;
+      if (period == 'AM' && hour == 12) hour = 0;
+      return TimeOfDay(hour: hour, minute: minute);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  int _toMinutes(TimeOfDay time) => time.hour * 60 + time.minute;
+
+  String _formatMinutes(int minutes) {
+    final safeMinutes = minutes % (24 * 60);
+    final hour24 = safeMinutes ~/ 60;
+    final minute = safeMinutes % 60;
+    final period = hour24 >= 12 ? 'PM' : 'AM';
+    final hour12 = hour24 % 12 == 0 ? 12 : hour24 % 12;
+    return '$hour12:${minute.toString().padLeft(2, '0')} $period';
+  }
+
+  ({int start, int end})? _slotRange(Slot slot) {
+    final time = slot.time;
+    if (time == null || time.trim().isEmpty) return null;
+
+    final parts = time.split(' - ');
+    final start = _parseTimeOfDay(parts.first.trim());
+    if (start == null) return null;
+
+    final startMinutes = _toMinutes(start);
+    if (parts.length < 2) {
+      return (start: startMinutes, end: startMinutes + 60);
+    }
+
+    final end = _parseTimeOfDay(parts[1].trim());
+    if (end == null) return null;
+
+    var endMinutes = _toMinutes(end);
+    if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+    return (start: startMinutes, end: endMinutes);
+  }
+
+  List<Slot> _buildDurationSlots(String date, List<Slot> sourceSlots) {
+    final requiredMinutes = poojaDurationHours.clamp(1, 24) * 60;
+    final ranges = sourceSlots
+        .where(
+          (s) =>
+              s.status?.toLowerCase() == 'available' &&
+              !isPastSlot(date, s.time),
+        )
+        .map((slot) {
+          final range = _slotRange(slot);
+          if (range == null) return null;
+          return (slot: slot, start: range.start, end: range.end);
+        })
+        .whereType<({Slot slot, int start, int end})>()
+        .toList()
+      ..sort((a, b) => a.start.compareTo(b.start));
+
+    final result = <Slot>[];
+    final seen = <String>{};
+
+    for (final startRange in ranges) {
+      final targetEnd = startRange.start + requiredMinutes;
+      var cursor = startRange.start;
+
+      while (cursor < targetEnd) {
+        ({Slot slot, int start, int end})? nextRange;
+        for (final range in ranges) {
+          if (range.start <= cursor && range.end > cursor) {
+            nextRange = range;
+            break;
+          }
+        }
+
+        if (nextRange == null) break;
+        cursor = nextRange.end;
+      }
+
+      if (cursor >= targetEnd) {
+        final time =
+            '${_formatMinutes(startRange.start)} - ${_formatMinutes(targetEnd)}';
+        if (seen.add(time)) {
+          result.add(Slot(time: time, status: 'available'));
+        }
+      }
+    }
+
+    return result;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1139,13 +1275,7 @@ class _SlotPanel extends StatelessWidget {
 
     // ── FIX 2: also exclude slots whose start time has already passed today ──
     final slots = isAvailable
-        ? availability.slots
-              .where(
-                (s) =>
-                    s.status?.toLowerCase() == 'available' &&
-                    !isPastSlot(date, s.time),
-              )
-              .toList()
+        ? _buildDurationSlots(date, availability.slots)
         : <Slot>[];
 
     return Padding(

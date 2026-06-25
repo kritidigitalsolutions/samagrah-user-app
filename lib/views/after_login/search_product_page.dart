@@ -164,7 +164,7 @@ class _SearchProductPageState extends ConsumerState<SearchProductPage> {
                                 final cardWidth =
                                     (constraints.maxWidth - 16 - 12) / 3;
                                 final imageHeight = cardWidth;
-                                const infoHeight = 90.0;
+                                const infoHeight = 100.0;
                                 final ratio =
                                     cardWidth / (imageHeight + infoHeight);
 

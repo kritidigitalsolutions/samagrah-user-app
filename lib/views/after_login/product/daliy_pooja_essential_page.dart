@@ -1,16 +1,16 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:samagrah/model/response/product_res/brands_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
+import 'package:samagrah/model/response/product_res/sub_category_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/service/helper_methods.dart';
 import 'package:samagrah/utils/textstyle.dart';
-import 'package:samagrah/view_model/after_login_provider/home_provider/brands_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/sub_category_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/wishlist_provider.dart';
 import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -32,7 +32,7 @@ class TypeOfCategoryPage extends ConsumerStatefulWidget {
 class _TypeOfCategoryPageState extends ConsumerState<TypeOfCategoryPage> {
   final leftController = ScrollController();
   final rightController = ScrollController();
-  String? selectedBrandId;
+  String? selectedSubCategoryId;
 
   @override
   void dispose() {
@@ -44,7 +44,7 @@ class _TypeOfCategoryPageState extends ConsumerState<TypeOfCategoryPage> {
   @override
   Widget build(BuildContext context) {
     final productState = ref.watch(productProvider);
-    final brandAsync = ref.watch(brandProvider);
+    final subCategoryAsync = ref.watch(subCategoryProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -77,21 +77,36 @@ class _TypeOfCategoryPageState extends ConsumerState<TypeOfCategoryPage> {
                     )
                     .toList();
 
-          return brandAsync.when(
+          return subCategoryAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => _buildLayout(sourceProducts, []),
-            data: (brands) => _buildLayout(sourceProducts, brands),
+            data: (subCategories) =>
+                _buildLayout(sourceProducts, subCategories),
           );
         },
       ),
     );
   }
 
-  Widget _buildLayout(List<Product> sourceProducts, List<BrandsData> brands) {
-    final filteredProducts = selectedBrandId == null
+  Widget _buildLayout(
+    List<Product> sourceProducts,
+    List<SubCategoryData> subCategories,
+  ) {
+    final visibleSubCategories = _visibleSubCategories(
+      sourceProducts,
+      subCategories,
+    );
+    final selectedExists =
+        selectedSubCategoryId == null ||
+        visibleSubCategories.any((item) => item.id == selectedSubCategoryId);
+    if (!selectedExists) {
+      selectedSubCategoryId = null;
+    }
+
+    final filteredProducts = selectedSubCategoryId == null
         ? sourceProducts
         : sourceProducts
-              .where((p) => (p.brandId?.id ?? '') == selectedBrandId)
+              .where((p) => (p.subCategoryId?.id ?? '') == selectedSubCategoryId)
               .toList();
 
     return SafeArea(
@@ -100,7 +115,7 @@ class _TypeOfCategoryPageState extends ConsumerState<TypeOfCategoryPage> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildBrandList(brands),
+              _buildSubCategoryList(visibleSubCategories),
               Container(
                 width: 1,
                 color: AppColors.grey200,
@@ -115,7 +130,27 @@ class _TypeOfCategoryPageState extends ConsumerState<TypeOfCategoryPage> {
     );
   }
 
-  Widget _buildBrandList(List<BrandsData> brands) {
+  List<SubCategoryData> _visibleSubCategories(
+    List<Product> sourceProducts,
+    List<SubCategoryData> subCategories,
+  ) {
+    final productSubCategoryIds = sourceProducts
+        .map((p) => p.subCategoryId?.id ?? '')
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
+    return subCategories.where((subCategory) {
+      final isActive = (subCategory.status ?? '').toLowerCase() == 'active';
+      final belongsToSelectedCategory =
+          widget.categoryType == 'allItems' ||
+          (subCategory.categoryId?.id ?? '') == widget.categoryType;
+      final hasProducts = productSubCategoryIds.contains(subCategory.id ?? '');
+
+      return isActive && belongsToSelectedCategory && hasProducts;
+    }).toList();
+  }
+
+  Widget _buildSubCategoryList(List<SubCategoryData> subCategories) {
     return SizedBox(
       width: 80,
       child: Scrollbar(
@@ -126,20 +161,22 @@ class _TypeOfCategoryPageState extends ConsumerState<TypeOfCategoryPage> {
         child: ListView.builder(
           controller: leftController,
           physics: const BouncingScrollPhysics(),
-          itemCount: brands.isEmpty ? 1 : brands.length + 1,
+          itemCount: subCategories.length + 1,
           padding: const EdgeInsets.only(top: 8),
           itemBuilder: (context, index) {
             final isAll = index == 0;
-            final brand = isAll ? null : brands[index - 1];
+            final subCategory = isAll ? null : subCategories[index - 1];
+            final image = subCategory?.image ?? '';
             final isSelected = isAll
-                ? selectedBrandId == null
-                : selectedBrandId == brand?.id;
+                ? selectedSubCategoryId == null
+                : selectedSubCategoryId == subCategory?.id;
 
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
               child: GestureDetector(
-                onTap: () =>
-                    setState(() => selectedBrandId = isAll ? null : brand?.id),
+                onTap: () => setState(
+                  () => selectedSubCategoryId = isAll ? null : subCategory?.id,
+                ),
                 child: Container(
                   decoration: BoxDecoration(
                     border: isSelected
@@ -161,16 +198,18 @@ class _TypeOfCategoryPageState extends ConsumerState<TypeOfCategoryPage> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: isAll || brand?.image == null
+                          child: isAll || image.isEmpty
                               ? Icon(
-                                  Icons.all_inclusive,
+                                  isAll
+                                      ? Icons.all_inclusive
+                                      : Icons.category_outlined,
                                   size: 22,
                                   color: isSelected
                                       ? AppColors.button
                                       : AppColors.grey500,
                                 )
                               : CustomCachedImage(
-                                  imageUrl: brand!.image!,
+                                  imageUrl: image,
                                   fit: BoxFit.cover,
                                   width: 50,
                                   height: 50,
@@ -179,7 +218,7 @@ class _TypeOfCategoryPageState extends ConsumerState<TypeOfCategoryPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        isAll ? 'All' : (brand?.name ?? ''),
+                        isAll ? 'All' : (subCategory?.name ?? ''),
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,

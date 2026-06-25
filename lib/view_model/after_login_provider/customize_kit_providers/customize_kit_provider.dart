@@ -163,6 +163,12 @@ class CustomizeKitCartNotifier extends StateNotifier<Map<String, int>> {
     }
   }
 
+  void removeProduct(String productId) {
+    final newState = Map<String, int>.from(state);
+    newState.remove(productId);
+    state = newState;
+  }
+
   // Clear all items (optional)
   void clearCart() {
     state = {};
