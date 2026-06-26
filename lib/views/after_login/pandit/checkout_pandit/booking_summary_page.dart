@@ -565,6 +565,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                     style: TextStyle(fontSize: 10, color: Colors.grey),
                   ),
                 ),
+                SizedBox(height: 30),
               ],
             ),
           ),

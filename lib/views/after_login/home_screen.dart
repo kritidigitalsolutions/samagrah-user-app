@@ -601,6 +601,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   // ── Banner Widget (compact, same fixed size, no overflow) ───────────────────
   Widget poojaOfferBanner(BannerData banner) {
     final coupon = banner.coupon;
+    Widget imageOnlyBanner() {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: (banner.image ?? '').isNotEmpty
+              ? CustomCachedImage(
+                  imageUrl: banner.image!,
+                  width: double.infinity,
+                  height: 120,
+                  fit: BoxFit.cover,
+                )
+              : Container(
+                  height: 120,
+                  color: AppColors.grey200,
+                  child: const Center(
+                    child: Icon(
+                      Icons.image_not_supported_outlined,
+                      color: AppColors.grey500,
+                    ),
+                  ),
+                ),
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: () {
+        final code = coupon?.code;
+        if (code != null && code.isNotEmpty) {
+          Clipboard.setData(ClipboardData(text: code));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Coupon code '$code' copied!"),
+              duration: const Duration(seconds: 2),
+              backgroundColor: AppColors.button,
+            ),
+          );
+        }
+      },
+      child: imageOnlyBanner(),
+    );
+
     final offer = banner.offer;
 
     // ── Discount text ────────────────────────────────────────────────────

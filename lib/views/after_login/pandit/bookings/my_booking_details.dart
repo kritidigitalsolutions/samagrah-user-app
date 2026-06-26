@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:samagrah/model/request/payment_req/pandit_create_order_req_model.dart';
 import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
+import 'package:samagrah/model/response/kit_response/default_kit_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_booked_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
@@ -13,6 +14,7 @@ import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/service/helper_methods.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
+import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/booking_provider.dart';
 import 'package:intl/intl.dart';
 
@@ -632,7 +634,7 @@ class _PoojaKitSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool hasCustomSamagri = offering.customSamagri == true;
-    final bool hasRecommendedKit = booking.recommendedKit != null;
+    final bool hasStandardSamagri = offering.standardSamagri == true;
 
     // 1️⃣  Customize kit selected by pandit → show items added by him
     if (hasCustomSamagri) {
@@ -640,12 +642,46 @@ class _PoojaKitSection extends StatelessWidget {
     }
 
     // 2️⃣  Special / recommended Samagran Kit available → show it
-    if (hasRecommendedKit) {
-      return _SamagranKitCard(kit: booking.recommendedKit!, enabled: true);
+    if (hasStandardSamagri) {
+      final kitId = offering.kitId;
+
+      if (kitId == null || kitId.isEmpty) {
+        return _SamagranKitCard(enabled: false, panditId: panditId);
+      }
+
+      return ref
+          .watch(userDraftKits)
+          .when(
+            loading: () => const _StandardKitLoadingCard(),
+            error: (_, _) =>
+                _SamagranKitCard(enabled: false, panditId: panditId),
+            data: (kitState) {
+              final kits = kitState.defaultKit?.data ?? [];
+              DefaultKitData? matchedKit;
+
+              for (final kit in kits) {
+                if (kit.id == kitId) {
+                  matchedKit = kit;
+                  break;
+                }
+              }
+
+              if (matchedKit == null) {
+                return _SamagranKitCard(enabled: false, panditId: panditId);
+              }
+
+              return _SamagranKitCard(
+                kit: matchedKit,
+                enabled: true,
+                ref: ref,
+                panditId: panditId,
+              );
+            },
+          );
     }
 
     // 3️⃣  Nothing available → Standard Kit radio, blurred + disabled
-    return _SamagranKitCard(kit: null, enabled: false);
+    return _SamagranKitCard(enabled: false, panditId: panditId);
   }
 }
 
@@ -654,11 +690,18 @@ class _PoojaKitSection extends StatelessWidget {
 
 // ─────────────────────────────────────────────────────────────────────────────
 class _SamagranKitCard extends StatelessWidget {
-  const _SamagranKitCard({required this.kit, required this.enabled});
+  const _SamagranKitCard({
+    this.kit,
+    required this.enabled,
+    this.ref,
+    required this.panditId,
+  });
 
   // ignore: avoid-dynamic — mirrors Datum.recommendedKit until a typed model exists
-  final dynamic kit;
+  final DefaultKitData? kit;
   final bool enabled;
+  final WidgetRef? ref;
+  final String panditId;
 
   @override
   Widget build(BuildContext context) {
@@ -666,112 +709,135 @@ class _SamagranKitCard extends StatelessWidget {
       opacity: enabled ? 1.0 : 0.45,
       child: AbsorbPointer(
         absorbing: !enabled,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: enabled ? const Color(0xFFFFD38A) : Colors.grey.shade300,
-              width: 1.2,
+        child: GestureDetector(
+          onTap: enabled && kit != null
+              ? () {
+                  ref?.read(panditIdProvider.notifier).state = panditId;
+                  ref
+                      ?.read(customizeKitProvider.notifier)
+                      .initializeFromDefault(kit!);
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.festivalKitDetails,
+                    arguments: kit,
+                  );
+                }
+              : null,
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: enabled ? const Color(0xFFFFD38A) : Colors.grey.shade300,
+                width: 1.2,
+              ),
+              boxShadow: enabled
+                  ? [
+                      BoxShadow(
+                        color: Colors.orange.withOpacity(0.12),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                  : [],
             ),
-            boxShadow: enabled
-                ? [
-                    BoxShadow(
-                      color: Colors.orange.withOpacity(0.12),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+            child: Row(
+              children: [
+                // Radio indicator
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: enabled
+                          ? const Color(0xFFB8860B)
+                          : Colors.grey.shade400,
+                      width: 2,
                     ),
-                  ]
-                : [],
-          ),
-          child: Row(
-            children: [
-              // Radio indicator
-              Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
+                  ),
+                  child: enabled
+                      ? Center(
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFFB8860B),
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
+
+                const SizedBox(width: 12),
+
+                // Icon
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: enabled
+                        ? const Color(0xFFFFF8E1)
+                        : Colors.grey.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.inventory_2_rounded,
+                    size: 22,
                     color: enabled
                         ? const Color(0xFFB8860B)
                         : Colors.grey.shade400,
-                    width: 2,
                   ),
                 ),
-                child: enabled
-                    ? Center(
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(0xFFB8860B),
-                          ),
+
+                const SizedBox(width: 12),
+
+                // Text
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        enabled
+                            ? (kit?.name ?? 'Standard Kit')
+                            : 'Standard Kit',
+                        style: text14(
+                          fontWeight: FontWeight.w700,
+                          color: enabled
+                              ? const Color(0xFFB8860B)
+                              : Colors.grey.shade500,
                         ),
-                      )
-                    : null,
-              ),
-
-              const SizedBox(width: 12),
-
-              // Icon
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: enabled
-                      ? const Color(0xFFFFF8E1)
-                      : Colors.grey.shade100,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.inventory_2_rounded,
-                  size: 22,
-                  color: enabled
-                      ? const Color(0xFFB8860B)
-                      : Colors.grey.shade400,
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // Text
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Standard Kit',
-                      style: text14(
-                        fontWeight: FontWeight.w700,
-                        color: enabled
-                            ? const Color(0xFFB8860B)
-                            : Colors.grey.shade500,
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      enabled
-                          ? 'Curated kit for this pooja'
-                          : 'Not available for this pooja',
-                      style: text12(
-                        color: enabled
-                            ? AppColors.textSecondary
-                            : Colors.grey.shade400,
+                      const SizedBox(height: 2),
+                      Text(
+                        enabled
+                            ? '${kit?.items.length ?? 0} items included'
+                            : 'Not available for this pooja',
+                        style: text12(
+                          color: enabled
+                              ? AppColors.textSecondary
+                              : Colors.grey.shade400,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
 
-              if (!enabled)
-                Icon(
-                  Icons.lock_outline_rounded,
-                  size: 16,
-                  color: Colors.grey.shade400,
-                ),
-            ],
+                if (enabled)
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: Color(0xFFB8860B),
+                  )
+                else
+                  Icon(
+                    Icons.lock_outline_rounded,
+                    size: 16,
+                    color: Colors.grey.shade400,
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -782,6 +848,36 @@ class _SamagranKitCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // _PoojaCard  (unchanged logic, just receives ONE matched offering)
 // ─────────────────────────────────────────────────────────────────────────────
+class _StandardKitLoadingCard extends StatelessWidget {
+  const _StandardKitLoadingCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFFD38A), width: 1.2),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Loading standard kit...',
+            style: text13(color: AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _PoojaCard extends StatelessWidget {
   const _PoojaCard({
     required this.pooja,

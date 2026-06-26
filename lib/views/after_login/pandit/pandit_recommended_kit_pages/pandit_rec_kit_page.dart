@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
-import 'package:samagrah/model/response/product_res/category_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
+import 'package:samagrah/model/response/product_res/sub_category_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
-import 'package:samagrah/view_model/after_login_provider/home_provider/category_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/sub_category_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
 import 'package:samagrah/views/global_widgets/product_details_bottom_sheet.dart';
 
@@ -18,10 +18,13 @@ import '../../../../view_model/after_login_provider/checkout_providers/address.p
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
 
-CategoryData? _findCategoryById(List<CategoryData> categories, String? id) {
+SubCategoryData? _findSubCategoryById(
+  List<SubCategoryData> subCategories,
+  String? id,
+) {
   if (id == null || id.isEmpty) return null;
   try {
-    return categories.firstWhere((c) => (c.id?.trim() ?? '') == id.trim());
+    return subCategories.firstWhere((c) => (c.id?.trim() ?? '') == id.trim());
   } catch (_) {
     return null;
   }
@@ -39,7 +42,7 @@ class PanditRecKitPage extends ConsumerStatefulWidget {
 }
 
 class _PanditRecKitPageState extends ConsumerState<PanditRecKitPage> {
-  /// Pandit ke recommended categories (CustomSamagriItem list)
+  /// Pandit ke recommended subcategories (CustomSamagriItem list)
   List<CustomSamagriItem>? _kitItems;
 
   /// User ka cart: productId → quantity
@@ -112,7 +115,7 @@ class _PanditRecKitPageState extends ConsumerState<PanditRecKitPage> {
   @override
   Widget build(BuildContext context) {
     final kitItems = _kitItems ?? [];
-    final categoryAsync = ref.watch(categoryProvider);
+    final subCategoryAsync = ref.watch(subCategoryProvider);
     final productState = ref.watch(productProvider);
 
     return Scaffold(
@@ -137,7 +140,7 @@ class _PanditRecKitPageState extends ConsumerState<PanditRecKitPage> {
           children: [
             // ── Summary Banner ──
             _KitSummary(
-              categoryCount: kitItems.length,
+              subCategoryCount: kitItems.length,
               cartItemCount: _cartTotal(),
             ),
 
@@ -160,7 +163,7 @@ class _PanditRecKitPageState extends ConsumerState<PanditRecKitPage> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Tap a category to browse & add products to cart',
+                      'Tap a subcategory to browse & add products to cart',
                       style: text12(color: Colors.amber.shade800),
                     ),
                   ),
@@ -174,10 +177,11 @@ class _PanditRecKitPageState extends ConsumerState<PanditRecKitPage> {
             Expanded(
               child: kitItems.isEmpty
                   ? const _EmptyKit()
-                  : categoryAsync.when(
+                  : subCategoryAsync.when(
                       loading: () => _buildList(kitItems, [], isLoading: true),
                       error: (_, _) => _buildList(kitItems, []),
-                      data: (categories) => _buildList(kitItems, categories),
+                      data: (subCategories) =>
+                          _buildList(kitItems, subCategories),
                     ),
             ),
           ],
@@ -200,7 +204,7 @@ class _PanditRecKitPageState extends ConsumerState<PanditRecKitPage> {
 
   Widget _buildList(
     List<CustomSamagriItem> kitItems,
-    List<CategoryData> categories, {
+    List<SubCategoryData> subCategories, {
     bool isLoading = false,
   }) {
     return ListView.builder(
@@ -208,34 +212,35 @@ class _PanditRecKitPageState extends ConsumerState<PanditRecKitPage> {
       itemCount: kitItems.length,
       itemBuilder: (context, index) {
         final item = kitItems[index];
-        final categoryData = _findCategoryById(categories, item.id);
-        final imageUrl = categoryData?.image ?? '';
-        final categoryName = categoryData?.name ?? item.itemName ?? 'Category';
+        final subCategoryData = _findSubCategoryById(subCategories, item.id);
+        final imageUrl = subCategoryData?.image ?? '';
+        final subCategoryName =
+            subCategoryData?.name ?? item.itemName ?? 'Subcategory';
 
-        // Count how many products from this category are in cart
+        // Count how many products from this subcategory are in cart
         final productState = ref.read(productProvider).value;
-        final categoryProducts =
+        final subCategoryProducts =
             productState?.allProducts
                 .where(
                   (p) =>
-                      (p.categoryId?.id?.trim() ?? '') ==
+                      (p.subCategoryId?.id?.trim() ?? '') ==
                       (item.id?.trim() ?? ''),
                 )
                 .toList() ??
             [];
-        final categoryCartCount = categoryProducts
+        final subCategoryCartCount = subCategoryProducts
             .where((p) => (_cart[p.id] ?? 0) > 0)
             .fold<int>(0, (sum, p) => sum + (_cart[p.id] ?? 0));
 
         return _CategoryCard(
-          categoryName: categoryName,
+          categoryName: subCategoryName,
           imageUrl: imageUrl,
           isLoading: isLoading,
-          cartCount: categoryCartCount,
+          cartCount: subCategoryCartCount,
           onTap: () => _openCategorySheet(
             context,
             categoryId: item.id ?? '',
-            categoryName: categoryName,
+            categoryName: subCategoryName,
             categoryImage: imageUrl,
           ),
         );
@@ -585,7 +590,7 @@ class _CategoryProductsSheetState
                 final products = state.allProducts
                     .where(
                       (p) =>
-                          (p.categoryId?.id?.trim() ?? '') ==
+                          (p.subCategoryId?.id?.trim() ?? '') ==
                           widget.categoryId.trim(),
                     )
                     .toList();
@@ -644,23 +649,25 @@ class _CategoryProductsSheetState
           ),
 
           // Sheet bottom — Done button
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 10,
-                  offset: const Offset(0, -3),
-                ),
-              ],
-            ),
-            child: AppButton(
-              title: _sheetCartTotal() > 0
-                  ? 'Done  •  ${_sheetCartTotal()} items added'
-                  : 'Done',
-              onTap: () => Navigator.pop(context),
+          SafeArea(
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, -3),
+                  ),
+                ],
+              ),
+              child: AppButton(
+                title: _sheetCartTotal() > 0
+                    ? 'Done  •  ${_sheetCartTotal()} items added'
+                    : 'Done',
+                onTap: () => Navigator.pop(context),
+              ),
             ),
           ),
         ],
@@ -872,9 +879,12 @@ class _StepBtn extends StatelessWidget {
 // ════════════════════════════════════════════════════════════
 
 class _KitSummary extends StatelessWidget {
-  const _KitSummary({required this.categoryCount, required this.cartItemCount});
+  const _KitSummary({
+    required this.subCategoryCount,
+    required this.cartItemCount,
+  });
 
-  final int categoryCount;
+  final int subCategoryCount;
   final int cartItemCount;
 
   @override
@@ -902,10 +912,10 @@ class _KitSummary extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Recommended Categories', style: text15()),
+                Text('Recommended Subcategories', style: text15()),
                 const SizedBox(height: 2),
                 Text(
-                  '$categoryCount categories recommended',
+                  '$subCategoryCount subcategories recommended',
                   style: text12(color: AppColors.grey600),
                 ),
               ],
@@ -949,52 +959,54 @@ class _BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: cartCount == 0
-          ? AppOutlineButton(
-              title: 'Add items from categories above',
-              onTap: () {},
-            )
-          : Row(
-              children: [
-                // Price summary
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '$cartCount item${cartCount > 1 ? "s" : ""} selected',
-                        style: text12(color: AppColors.grey600),
-                      ),
-                      Text(
-                        '₹${cartPrice.toStringAsFixed(0)}',
-                        style: text18(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.button,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Buy now
-                Expanded(
-                  child: AppButton(title: 'Proceed to Buy', onTap: onBuyNow),
-                ),
-              ],
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, -4),
             ),
+          ],
+        ),
+        child: cartCount == 0
+            ? AppOutlineButton(
+                title: 'Add items from subcategories above',
+                onTap: () {},
+              )
+            : Row(
+                children: [
+                  // Price summary
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$cartCount item${cartCount > 1 ? "s" : ""} selected',
+                          style: text12(color: AppColors.grey600),
+                        ),
+                        Text(
+                          '₹${cartPrice.toStringAsFixed(0)}',
+                          style: text18(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.button,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  // Buy now
+                  Expanded(
+                    child: AppButton(title: 'Proceed to Buy', onTap: onBuyNow),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 }
@@ -1020,10 +1032,10 @@ class _EmptyKit extends StatelessWidget {
               color: AppColors.grey500,
             ),
             const SizedBox(height: 12),
-            Text('No categories recommended', style: text16()),
+            Text('No subcategories recommended', style: text16()),
             const SizedBox(height: 4),
             Text(
-              'Pandit ji has not added any samagri categories yet.',
+              'Pandit ji has not added any samagri subcategories yet.',
               textAlign: TextAlign.center,
               style: text13(color: AppColors.grey600),
             ),

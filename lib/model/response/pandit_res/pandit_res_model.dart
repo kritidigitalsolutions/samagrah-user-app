@@ -106,29 +106,6 @@ class PanditData {
   }
 }
 
-// class Aadhaar {
-//     Aadhaar({
-//         required this.number,
-//         required this.frontImage,
-//         required this.backImage,
-//         required this.consentGiven,
-//     });
-
-//     final String? number;
-//     final String? frontImage;
-//     final String? backImage;
-//     final bool? consentGiven;
-
-//     factory Aadhaar.fromJson(Map<String, dynamic> json){
-//         return Aadhaar(
-//             number: json["number"],
-//             frontImage: json["frontImage"],
-//             backImage: json["backImage"],
-//             consentGiven: json["consentGiven"],
-//         );
-//     }
-// }
-
 class PanditAddress {
   PanditAddress({
     required this.line1,
@@ -166,6 +143,7 @@ class PoojaOffering {
     required this.customSamagri,
     required this.customSamagriItems,
     required this.customSamagriNotes,
+    required this.kitId,
   });
 
   final String? name;
@@ -177,6 +155,7 @@ class PoojaOffering {
   final bool? customSamagri;
   final List<CustomSamagriItem> customSamagriItems;
   final List<String> customSamagriNotes;
+  final String? kitId;
 
   factory PoojaOffering.fromJson(Map<String, dynamic> json) {
     return PoojaOffering(
@@ -187,6 +166,7 @@ class PoojaOffering {
       travelForSpecialPooja: json["travelForSpecialPooja"],
       standardSamagri: json["standardSamagri"],
       customSamagri: json["customSamagri"],
+      kitId: json["kit"],
       customSamagriItems: json["customSamagriItems"] == null
           ? []
           : List<CustomSamagriItem>.from(

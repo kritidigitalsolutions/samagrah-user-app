@@ -20,8 +20,7 @@ class AppUrls {
   // ======================= product===================================
 
   static const String category = "$baseUrl/category";
-
-  static const String subCategories = "$baseUrl/sub-categories";
+  static const String subCategories = '$baseUrl/sub-categories';
 
   static const String brands = "$baseUrl/brands";
 

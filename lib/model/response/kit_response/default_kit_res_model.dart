@@ -33,10 +33,6 @@ class DefaultKitData {
     required this.kitPrice,
     required this.savings,
     required this.festivalType,
-    // required this.createdAt,
-    // required this.updatedAt,
-    // required this.slug,
-    // required this.v,
     required this.kitType,
     required this.status,
     required this.category,
@@ -54,10 +50,6 @@ class DefaultKitData {
   final num? kitPrice;
   final num? savings;
   final String? festivalType;
-  // final DateTime? createdAt;
-  // final DateTime? updatedAt;
-  // final String? slug;
-  // final int? v;
   final String? kitType;
   final String? status;
   final String? category;
@@ -78,10 +70,7 @@ class DefaultKitData {
       kitPrice: json["kitPrice"],
       savings: json["savings"],
       festivalType: json["festivalType"],
-      // createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
-      // updatedAt: DateTime.tryParse(json["updatedAt"] ?? ""),
-      // slug: json["slug"],
-      // v: json["__v"],
+
       kitType: json["kitType"],
       status: json["status"],
       category: json["category"],
