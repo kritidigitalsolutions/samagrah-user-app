@@ -6,6 +6,7 @@ import '../../../repo/notification_repo.dart';
 
 class NotificationNotifier extends StateNotifier<NotificationState> {
   final NotificationRepo _repo;
+  static const int _pageLimit = 20;
 
   NotificationNotifier(this._repo) : super(const NotificationState()) {
     fetch();
@@ -26,13 +27,17 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
   Future<void> fetch() async {
     state = state.copyWith(isLoading: true, error: null, page: 1);
     try {
-      final res = await _repo.getNotifications(status: _filterStr, page: 1);
+      final res = await _repo.getNotifications(
+        status: _filterStr,
+        page: 1,
+        limit: _pageLimit,
+      );
       state = state.copyWith(
         isLoading: false,
         notifications: res.data,
         total: res.total,
         page: 1,
-        hasMore: res.data.length < res.total,
+        hasMore: _hasMore(res, loadedCount: res.data.length),
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -41,24 +46,32 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
 
   // Pagination
   Future<void> loadMore() async {
-    if (state.isLoadingMore || !state.hasMore) return;
+    if (state.isLoading || state.isLoadingMore || !state.hasMore) return;
     state = state.copyWith(isLoadingMore: true);
     try {
       final nextPage = state.page + 1;
       final res = await _repo.getNotifications(
         status: _filterStr,
         page: nextPage,
+        limit: _pageLimit,
       );
       final merged = [...state.notifications, ...res.data];
       state = state.copyWith(
         isLoadingMore: false,
         notifications: merged,
         page: nextPage,
-        hasMore: merged.length < res.total,
+        total: res.total,
+        hasMore: _hasMore(res, loadedCount: merged.length),
       );
     } catch (e) {
       state = state.copyWith(isLoadingMore: false, error: e.toString());
     }
+  }
+
+  bool _hasMore(NotificationListResponse res, {required int loadedCount}) {
+    if (res.total > 0) return loadedCount < res.total;
+    final limit = res.limit > 0 ? res.limit : _pageLimit;
+    return res.data.length >= limit;
   }
 
   // Filter change

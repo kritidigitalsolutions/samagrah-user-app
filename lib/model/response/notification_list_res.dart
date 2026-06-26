@@ -20,15 +20,22 @@ class NotificationListResponse {
   factory NotificationListResponse.fromJson(Map<String, dynamic> json) {
     return NotificationListResponse(
       success: json['success'] ?? false,
-      count: json['count'] ?? 0,
-      total: json['total'] ?? 0,
-      page: json['page'] ?? 1,
-      limit: json['limit'] ?? 20,
+      count: _toInt(json['count']),
+      total: _toInt(json['total']),
+      page: _toInt(json['page'], fallback: 1),
+      limit: _toInt(json['limit'], fallback: 20),
       data: (json['data'] as List<dynamic>?)
           ?.map((e) => NotificationItem.fromJson(e))
           .toList() ??
           [],
     );
+  }
+
+  static int _toInt(dynamic value, {int fallback = 0}) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? fallback;
+    return fallback;
   }
 }
 
