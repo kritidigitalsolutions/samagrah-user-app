@@ -1,5 +1,5 @@
 class AppUrls {
-  //static const String baseUrl = "http://192.168.1.33:8000/api";
+ // static const String baseUrl = "http://192.168.1.26:8000/api";
 
   static const String baseUrl = "https://samagran-backend.vercel.app/api";
 

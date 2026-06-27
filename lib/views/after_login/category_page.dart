@@ -190,8 +190,7 @@ class CategoryPage extends ConsumerWidget {
 
   Widget _buildSection(BuildContext context, _Section s) {
     final preview = s.products.take(6).toList();
-    final hasMore = s.products.length > 6;
-
+   
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

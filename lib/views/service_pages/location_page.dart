@@ -73,30 +73,6 @@ const List<Map<String, String>> _kAllCities = [
 ];
 
 // ---------------------------------------------------------------------------
-// Popular cities shown as chips when search is empty
-// ---------------------------------------------------------------------------
-const List<Map<String, String>> _kPopularCities = [
-  {'city': 'Delhi', 'state': 'Delhi'},
-  {'city': 'Mumbai', 'state': 'Maharashtra'},
-  {'city': 'Bengaluru', 'state': 'Karnataka'},
-  {'city': 'Hyderabad', 'state': 'Telangana'},
-  {'city': 'Chennai', 'state': 'Tamil Nadu'},
-  {'city': 'Kolkata', 'state': 'West Bengal'},
-  {'city': 'Pune', 'state': 'Maharashtra'},
-  {'city': 'Ahmedabad', 'state': 'Gujarat'},
-  {'city': 'Jaipur', 'state': 'Rajasthan'},
-  {'city': 'Lucknow', 'state': 'Uttar Pradesh'},
-  {'city': 'Noida', 'state': 'Uttar Pradesh'},
-  {'city': 'Gurgaon', 'state': 'Haryana'},
-  {'city': 'Meerut', 'state': 'Uttar Pradesh'},
-  {'city': 'Chandigarh', 'state': 'Punjab'},
-  {'city': 'Indore', 'state': 'Madhya Pradesh'},
-  {'city': 'Surat', 'state': 'Gujarat'},
-  {'city': 'Patna', 'state': 'Bihar'},
-  {'city': 'Bhopal', 'state': 'Madhya Pradesh'},
-];
-
-// ---------------------------------------------------------------------------
 // Input mode enum
 // ---------------------------------------------------------------------------
 enum _InputMode {
