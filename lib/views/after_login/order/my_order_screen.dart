@@ -201,11 +201,15 @@ class OrderCard extends ConsumerWidget {
   // ── Status helpers ─────────────────────────────────────────────────────────
   String? get _status => order.tracking?.currentStatus ?? order.orderStatus;
 
-  bool get _isDelivered => _status?.toLowerCase() == 'delivered';
+  String get _normalizedStatus => (_status ?? '').toLowerCase();
+
+  bool get _isDelivered => _normalizedStatus == 'delivered';
 
   bool get _isCancelled =>
-      (_status?.toLowerCase() == 'cancelled') ||
-      (order.tracking?.isCancelled ?? false);
+      _normalizedStatus == 'cancelled' || (order.tracking?.isCancelled ?? false);
+
+  bool get _canCancel =>
+      _normalizedStatus == 'placed' && !(order.tracking?.isCancelled ?? false);
 
   bool get _isOnlinePaid =>
       (order.paymentMethod ?? '').toUpperCase() == 'ONLINE';
@@ -512,8 +516,8 @@ class OrderCard extends ConsumerWidget {
                           ),
                         ),
                       ]
-                      // 3) Active order (not delivered, not cancelled) → Cancel
-                      else if (!_isCancelled) ...[
+                      // 3) Active order before confirmation → Cancel
+                      else if (_canCancel) ...[
                         const SizedBox(width: 10),
                         Expanded(
                           child: AppOutlineButton(

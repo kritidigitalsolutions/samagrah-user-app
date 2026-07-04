@@ -69,6 +69,11 @@ class OrderUtils {
   static String getStatusText(String? status) {
     if (status == null) return 'Unknown';
 
+    final normalizedStatus = status.toLowerCase();
+    if (normalizedStatus == 'preparing' || normalizedStatus == 'processing') {
+      return 'Confirmed';
+    }
+
     // Convert status to title case with proper spacing
     return status
         .split('_')

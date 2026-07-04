@@ -62,6 +62,7 @@ class CartNotifier extends StateNotifier<CartState> {
 
             price: (product.product?.pricing?.price ?? 0).toDouble(),
             quantity: product.quantity ?? 1,
+            inStock: (product.product?.stock?.quantity ?? 0) > 0,
           );
         }).toList();
 
@@ -163,6 +164,7 @@ class CartNotifier extends StateNotifier<CartState> {
         thumbnail: updatedItems[index].thumbnail,
         price: updatedItems[index].price,
         quantity: updatedItems[index].quantity + 1,
+        inStock: updatedItems[index].inStock,
       );
 
       state = state.copyWith(items: updatedItems);
@@ -194,6 +196,7 @@ class CartNotifier extends StateNotifier<CartState> {
         thumbnail: updatedItems[index].thumbnail,
         price: updatedItems[index].price,
         quantity: updatedItems[index].quantity + 1,
+        inStock: updatedItems[index].inStock,
       );
 
       state = state.copyWith(items: updatedItems);
@@ -218,6 +221,7 @@ class CartNotifier extends StateNotifier<CartState> {
           thumbnail: updatedItems[index].thumbnail,
           price: updatedItems[index].price,
           quantity: updatedItems[index].quantity - 1,
+          inStock: updatedItems[index].inStock,
         );
 
         state = state.copyWith(items: updatedItems);
@@ -356,6 +360,7 @@ class CartItem {
   final String title;
   final String thumbnail;
   final double price;
+  final bool inStock;
   int quantity;
 
   CartItem({
@@ -363,6 +368,7 @@ class CartItem {
     required this.title,
     required this.thumbnail,
     required this.price,
+    this.inStock = true,
     this.quantity = 1,
   });
 
@@ -372,6 +378,7 @@ class CartItem {
     'thumbnail': thumbnail,
     'price': price,
     'quantity': quantity,
+    'inStock': inStock,
   };
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
@@ -381,6 +388,7 @@ class CartItem {
       thumbnail: json['thumbnail'] ?? '',
       price: (json['price'] ?? 0).toDouble(),
       quantity: json['quantity'] ?? 1,
+      inStock: json['inStock'] ?? true,
     );
   }
 }

@@ -46,6 +46,7 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
     final isWishlisted = ref.watch(isWishlistedProvider(product.id ?? ''));
     final showAllDetails = ref.watch(showAllDetailsProvider);
     final details = product.details;
+    final inStock = product.inStock == true;
 
     // All detail fields — show ALL, even if null (will display "N/A")
     final allDetailFields = details == null
@@ -188,11 +189,13 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                               const SizedBox(width: 8),
                               SizedBox(
                                 width: 100,
-                                child: _QuantityControl(
-                                  quantity: quantity,
-                                  product: product,
-                                  cartNotifier: cartNotifier,
-                                ),
+                                child: inStock
+                                    ? _QuantityControl(
+                                        quantity: quantity,
+                                        product: product,
+                                        cartNotifier: cartNotifier,
+                                      )
+                                    : const _OutOfStockButton(),
                               ),
                             ],
                           ),
@@ -463,24 +466,28 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
 
                           // ── Buy Now ─────────────────────────────────────
                           AppButton(
-                            title: 'Buy Now',
-                            onTap: () {
-                              final qua = quantity == 0 ? 1 : quantity;
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.orderSummary,
-                                arguments: [
-                                  OrderItem(
-                                    productId: product.id ?? '',
-                                    title: product.title ?? '',
-                                    price: product.price ?? 0,
-                                    quantity: qua,
-                                    image: product.thumbnail ?? '',
-                                  ),
-                                ],
-                              );
-                            },
-                            color: AppColors.primary,
+                            title: inStock ? 'Buy Now' : 'Out of Stock',
+                            onTap: inStock
+                                ? () {
+                                    final qua = quantity == 0 ? 1 : quantity;
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.orderSummary,
+                                      arguments: [
+                                        OrderItem(
+                                          productId: product.id ?? '',
+                                          title: product.title ?? '',
+                                          price: product.price ?? 0,
+                                          quantity: qua,
+                                          image: product.thumbnail ?? '',
+                                        ),
+                                      ],
+                                    );
+                                  }
+                                : null,
+                            color: inStock
+                                ? AppColors.primary
+                                : AppColors.grey400,
                           ),
                         ],
                       ),
@@ -555,7 +562,7 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                 // Similar Items — replace karo
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 210, // imageHeight + infoHeight
+                    height: 225, // imageHeight + infoHeight
                     child: productState.when(
                       loading: () =>
                           const Center(child: CircularProgressIndicator()),
@@ -755,6 +762,7 @@ class _QuantityControl extends StatelessWidget {
                     title: product.title ?? '',
                     thumbnail: product.thumbnail ?? '',
                     price: product.price?.toDouble() ?? 0.0,
+                    inStock: product.inStock == true,
                   ),
                 );
               },
@@ -807,6 +815,27 @@ class _QuantityControl extends StatelessWidget {
                 ],
               ),
             ),
+    );
+  }
+}
+
+class _OutOfStockButton extends StatelessWidget {
+  const _OutOfStockButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 34,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.red.shade300),
+      ),
+      child: Text(
+        'Out of Stock',
+        style: text11(color: Colors.red.shade700, fontWeight: FontWeight.w700),
+      ),
     );
   }
 }

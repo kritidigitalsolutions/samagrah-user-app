@@ -162,6 +162,7 @@ class MyFavProducts extends ConsumerWidget {
     final cartNotifier = ref.read(cartProvider.notifier);
     final productId = product?.id ?? '';
     final quantity = ref.watch(cartQuantityProvider(productId));
+    final inStock = (product?.stock?.quantity ?? 0) > 0;
 
     return Stack(
       children: [
@@ -252,7 +253,25 @@ class MyFavProducts extends ConsumerWidget {
                       ),
                     ),
                     SizedBox(height: 8),
-                    if (cartState.isLoading)
+                    if (!inStock)
+                      Container(
+                        height: 22,
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.red.shade300),
+                        ),
+                        child: Text(
+                          'Out of Stock',
+                          style: text10(
+                            color: Colors.red.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      )
+                    else if (cartState.isLoading)
                       const SizedBox(
                         height: 22,
                         child: Center(
@@ -288,6 +307,7 @@ class MyFavProducts extends ConsumerWidget {
                                           : '',
                                       price: (product?.pricing?.price ?? 0)
                                           .toDouble(),
+                                      inStock: inStock,
                                     ),
                                   );
                                 },

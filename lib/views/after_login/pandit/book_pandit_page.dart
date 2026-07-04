@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
-import 'package:samagrah/model/response/pandit_res/ritual_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
@@ -125,10 +124,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ritual = ModalRoute.of(context)!.settings.arguments as RitualData;
-      _searchController.text = ritual.name ?? '';
-    });
   }
 
   @override
@@ -139,7 +134,46 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
 
   // ── Client-side filters only (no location) ──
   List<PanditData> _applyFilters(List<PanditData> source) {
+    final selectedRitual = ref.read(selectedRitualProvider);
+    final ritualNames = {
+      _normalizeText(selectedRitual?.name),
+      _normalizeText(selectedRitual?.title),
+    }..remove('');
+    final searchTerm = _normalizeText(_searchController.text);
+
     return source.where((p) {
+      if (ritualNames.isNotEmpty) {
+        final hasRitual = p.poojaOfferings.any(
+          (offering) => ritualNames.contains(_normalizeText(offering.name)),
+        );
+        if (!hasRitual) return false;
+      }
+
+      if (searchTerm.isNotEmpty) {
+        final name = _normalizeText(p.fullName);
+        final city = _normalizeText(p.address?.city);
+        final stateName = _normalizeText(p.address?.state);
+        final line1 = _normalizeText(p.address?.line1);
+        final line2 = _normalizeText(p.address?.line2);
+        final languages = _normalizeText(p.languagesSpoken.join(' '));
+        final poojaNames = _normalizeText(
+          p.poojaOfferings.map((e) => e.name ?? '').join(' '),
+        );
+        final yearOfExp = (p.yearsOfExperience ?? '').toString();
+
+        final matchesSearch =
+            name.contains(searchTerm) ||
+            city.contains(searchTerm) ||
+            stateName.contains(searchTerm) ||
+            languages.contains(searchTerm) ||
+            poojaNames.contains(searchTerm) ||
+            line1.contains(searchTerm) ||
+            line2.contains(searchTerm) ||
+            yearOfExp.contains(searchTerm);
+
+        if (!matchesSearch) return false;
+      }
+
       if (_filters.serviceType != null) {
         final st = p.serviceTypes;
         bool matches = false;
@@ -164,6 +198,10 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
       }
       return true;
     }).toList();
+  }
+
+  String _normalizeText(String? value) {
+    return (value ?? '').trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
   }
 
   // ── Location Search Bottom Sheet ──────────────────────────────────────────
@@ -773,15 +811,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   @override
   Widget build(BuildContext context) {
     final locationState = ref.watch(panditLocationProvider);
-    ref.listen(panditProvider, (previous, next) {
-      next.whenData((_) {
-        if (_searchController.text.isNotEmpty) {
-          ref
-              .read(panditProvider.notifier)
-              .searchPandit(_searchController.text);
-        }
-      });
-    });
 
     final panditAsync = ref.watch(panditProvider);
 
@@ -834,9 +863,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                       child: TextField(
                         controller: _searchController,
                         textAlignVertical: TextAlignVertical.center,
-                        onChanged: (value) => ref
-                            .read(panditProvider.notifier)
-                            .searchPandit(value),
+                        onChanged: (_) => setState(() {}),
                         style: text14(),
                         decoration: InputDecoration(
                           hintText: 'Search by name, language...',
@@ -850,9 +877,6 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                               ? GestureDetector(
                                   onTap: () {
                                     _searchController.clear();
-                                    ref
-                                        .read(panditProvider.notifier)
-                                        .searchPandit('');
                                     setState(() {});
                                   },
                                   child: Icon(
@@ -1170,10 +1194,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                   ),
                 ),
                 data: (data) {
-                  final isSearching = _searchController.text.trim().isNotEmpty;
-                  final pandits = _applyFilters(
-                    isSearching ? data.searchResults : data.pandit,
-                  );
+                  final pandits = _applyFilters(data.pandit);
 
                   if (pandits.isEmpty) {
                     return RefreshIndicator(

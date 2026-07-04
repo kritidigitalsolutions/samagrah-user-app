@@ -23,6 +23,7 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
   Widget build(BuildContext context) {
     final cartItems = ref.watch(cartProvider);
     final itemTotal = ref.watch(totalPriceProvider);
+    final hasOutOfStockItems = cartItems.items.any((item) => !item.inStock);
     // const deliveryFee = 20;
     final totalAmount = itemTotal;
     return Scaffold(
@@ -240,8 +241,21 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
                     SizedBox(width: 10),
                     Expanded(
                       child: AppButton(
-                        title: "Place Order",
+                        title: hasOutOfStockItems
+                            ? "Remove Out of Stock"
+                            : "Place Order",
                         onTap: () {
+                          if (hasOutOfStockItems) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Remove out of stock items before placing order",
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
                           final orderItems = cartItems.items.map((item) {
                             return OrderItem(
                               productId: item.productId,
@@ -300,6 +314,8 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
   }
 
   Widget _buildCartItem(CartItem item, WidgetRef ref) {
+    final inStock = item.inStock;
+
     return Stack(
       children: [
         Container(
@@ -344,6 +360,27 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
                         color: AppColors.black87,
                       ),
                     ),
+                    if (!inStock) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.red.shade300),
+                        ),
+                        child: Text(
+                          'Out of Stock',
+                          style: text10(
+                            color: Colors.red.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                     // const SizedBox(height: 3),
                     // Text(
                     //   item.packSize,
@@ -418,9 +455,11 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => ref
-                              .read(cartProvider.notifier)
-                              .increaseQuantity(item.productId),
+                          onTap: inStock
+                              ? () => ref
+                                    .read(cartProvider.notifier)
+                                    .increaseQuantity(item.productId)
+                              : null,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,

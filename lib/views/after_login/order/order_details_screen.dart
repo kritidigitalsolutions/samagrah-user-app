@@ -73,12 +73,18 @@ class OrderDetailsContent extends ConsumerWidget {
     return (order.items.first.productType ?? '').toLowerCase() != 'item';
   }
 
-  bool get _isDelivered =>
-      (order.orderStatus ?? '').toLowerCase() == 'delivered';
+  String? get _status => order.tracking?.currentStatus ?? order.orderStatus;
+
+  String get _normalizedStatus => (_status ?? '').toLowerCase();
+
+  bool get _isDelivered => _normalizedStatus == 'delivered';
 
   bool get _isCancelled =>
       (order.tracking?.isCancelled ?? false) ||
-      (order.orderStatus ?? '').toLowerCase() == 'cancelled';
+      _normalizedStatus == 'cancelled';
+
+  bool get _canCancel =>
+      _normalizedStatus == 'placed' && !(order.tracking?.isCancelled ?? false);
 
   bool get _isOnlinePaid =>
       (order.paymentMethod ?? '').toUpperCase() == 'ONLINE';
@@ -573,8 +579,8 @@ class OrderDetailsContent extends ConsumerWidget {
                     ),
                   ),
 
-                // ── Cancel Order (active, not cancelled) ─────────────────
-                if (!_isDelivered && !_isCancelled) ...[
+                // ── Cancel Order (active before confirmation) ────────────
+                if (_canCancel) ...[
                   const SizedBox(height: 12),
                   Center(
                     child: AppOutlineButton(

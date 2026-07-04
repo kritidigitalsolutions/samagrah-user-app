@@ -311,6 +311,7 @@ class _BlinkitCard extends ConsumerWidget {
     final cartNotifier = ref.read(cartProvider.notifier);
     final isWishlisted = ref.watch(isWishlistedProvider(product.id ?? ''));
     final currentIndex = ref.watch(imageSliderIndexProvider(product.id ?? ''));
+    final inStock = product.inStock == true;
 
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
@@ -382,31 +383,6 @@ class _BlinkitCard extends ConsumerWidget {
                   ),
                 ),
 
-                // Badges top left
-                Positioned(
-                  top: 6,
-                  left: 6,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (product.isRecommended == true)
-                        _SmallBadge('Top', Icons.star, AppColors.warning),
-                      if (product.isMostPoojaEssentials == true)
-                        _SmallBadge(
-                          'Daily',
-                          Icons.local_fire_department,
-                          AppColors.error,
-                        ),
-                      if (product.isMostUsed == true)
-                        _SmallBadge(
-                          'Popular',
-                          Icons.trending_up,
-                          Colors.deepPurple,
-                        ),
-                    ],
-                  ),
-                ),
-
                 // Page dots
                 if (product.images.length > 1)
                   Positioned(
@@ -431,11 +407,28 @@ class _BlinkitCard extends ConsumerWidget {
                 Positioned(
                   bottom: 6,
                   right: 6,
-                  child: _QuantityWidget(
-                    quantity: quantity,
-                    product: product,
-                    cartNotifier: cartNotifier,
-                  ),
+                  left: inStock ? null : 6,
+                  child: inStock
+                      ? _QuantityWidget(
+                          quantity: quantity,
+                          product: product,
+                          cartNotifier: cartNotifier,
+                        )
+                      : Container(
+                          height: 22,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.52),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Text(
+                            'Out of Stock',
+                            style: text8(
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -527,41 +520,6 @@ class _BlinkitCard extends ConsumerWidget {
 }
 
 // ── Small badge ───────────────────────────────────────────────────────────────
-class _SmallBadge extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  const _SmallBadge(this.label, this.icon, this.color);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 2),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4), width: 0.8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 8),
-          const SizedBox(width: 2),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 7,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Quantity control ──────────────────────────────────────────────────────────
 class _QuantityWidget extends StatelessWidget {
   final int quantity;
@@ -588,6 +546,7 @@ class _QuantityWidget extends StatelessWidget {
                   title: product.title ?? '',
                   thumbnail: product.thumbnail ?? '',
                   price: product.price?.toDouble() ?? 0.0,
+                  inStock: product.inStock == true,
                 ),
               ),
               child: Container(

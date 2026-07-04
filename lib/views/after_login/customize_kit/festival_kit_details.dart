@@ -1568,6 +1568,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
   ) {
     final isAdded = isInLocalKit || cartQty > 0;
     final hasDiscount = (product.discountPercent ?? 0) > 0;
+    final inStock = product.inStock == true;
 
     return Container(
       decoration: BoxDecoration(
@@ -1685,66 +1686,81 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
                 const SizedBox(height: 6),
 
                 // Add / Added button
-                isAdded
-                    ? Container(
-                        height: 28,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: AppColors.button.withAlpha(20),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.button),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.check,
-                              size: 12,
-                              color: AppColors.button,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              isInLocalKit ? 'In Kit' : '$cartQty Added',
-                              style: text11(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.button,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : GestureDetector(
-                        onTap: () {
-                          cartNotifier.addItem(product);
-                          _addProduct(product);
-                        },
-                        child: Container(
-                          height: 28,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: AppColors.button,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.add,
-                                size: 12,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Add',
-                                style: text11(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                if (!inStock)
+                  Container(
+                    height: 28,
+                    width: double.infinity,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red.shade300),
+                    ),
+                    child: Text(
+                      'Out of Stock',
+                      style: text11(
+                        color: Colors.red.shade700,
+                        fontWeight: FontWeight.w600,
                       ),
+                    ),
+                  )
+                else if (isAdded)
+                  Container(
+                    height: 28,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: AppColors.button.withAlpha(20),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.button),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check, size: 12, color: AppColors.button),
+                        const SizedBox(width: 4),
+                        Text(
+                          isInLocalKit ? 'In Kit' : '$cartQty Added',
+                          style: text11(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.button,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  GestureDetector(
+                    onTap: () {
+                      cartNotifier.addItem(product);
+                      _addProduct(product);
+                    },
+                    child: Container(
+                      height: 28,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: AppColors.button,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.add,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Add',
+                            style: text11(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

@@ -556,7 +556,7 @@ class MyBookingDetails extends ConsumerWidget {
                 AppButton(
                   title: "Cancel Booking",
                   onTap: () {
-                    showCancelOrderBottomSheet(context, ref, booking.id ?? '');
+                    showCancelOrderBottomSheet(context, ref, booking);
                   },
                 ),
               ],
@@ -635,10 +635,16 @@ class _PoojaKitSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool hasCustomSamagri = offering.customSamagri == true;
     final bool hasStandardSamagri = offering.standardSamagri == true;
+    final bool canBuyRecommendedKit = _canBuyRecommendedKit(booking);
 
     // 1️⃣  Customize kit selected by pandit → show items added by him
     if (hasCustomSamagri) {
-      return _PoojaCard(pooja: offering, panditId: panditId, ref: ref);
+      return _PoojaCard(
+        pooja: offering,
+        panditId: panditId,
+        ref: ref,
+        enabled: canBuyRecommendedKit,
+      );
     }
 
     // 2️⃣  Special / recommended Samagran Kit available → show it
@@ -672,7 +678,7 @@ class _PoojaKitSection extends StatelessWidget {
 
               return _SamagranKitCard(
                 kit: matchedKit,
-                enabled: true,
+                enabled: canBuyRecommendedKit,
                 ref: ref,
                 panditId: panditId,
               );
@@ -689,6 +695,11 @@ class _PoojaKitSection extends StatelessWidget {
 // _SamagranKitCard
 
 // ─────────────────────────────────────────────────────────────────────────────
+bool _canBuyRecommendedKit(Datum booking) {
+  final status = (booking.bookingStatus ?? '').toLowerCase();
+  return status == 'confirmed' || status == 'completed';
+}
+
 class _SamagranKitCard extends StatelessWidget {
   const _SamagranKitCard({
     this.kit,
@@ -883,11 +894,13 @@ class _PoojaCard extends StatelessWidget {
     required this.pooja,
     required this.panditId,
     required this.ref,
+    required this.enabled,
   });
 
   final PoojaOffering pooja;
   final String panditId;
   final WidgetRef ref;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -1005,14 +1018,22 @@ class _PoojaCard extends StatelessWidget {
           if (pooja.customSamagriItems.isNotEmpty) ...[
             const SizedBox(height: 12),
             GestureDetector(
-              onTap: () {
-                ref.read(panditIdProvider.notifier).state = panditId;
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.panditRecKit,
-                  arguments: pooja.customSamagriItems,
-                );
-              },
+              onTap: enabled
+                  ? () {
+                      ref.read(panditIdProvider.notifier).state = panditId;
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.panditRecKit,
+                        arguments: pooja.customSamagriItems,
+                      );
+                    }
+                  : () => ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Recommended kit can be purchased after pandit accepts the booking.',
+                        ),
+                      ),
+                    ),
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -1198,8 +1219,9 @@ String _getBookingModeStatusText(String? status) {
 void showCancelOrderBottomSheet(
   BuildContext context,
   WidgetRef ref,
-  String orderId,
+  Datum booking,
 ) {
+  final orderId = booking.id ?? '';
   final reasons = [
     "Change of plans",
     "Booked by mistake",
@@ -1310,6 +1332,17 @@ void showCancelOrderBottomSheet(
                             Navigator.pushNamed(
                               context,
                               AppRoutes.cancelBooking,
+                              arguments: {
+                                'poojaName':
+                                    booking.ritual?.name ??
+                                    booking.ritualRef?.title ??
+                                    'Pooja',
+                                'panditName':
+                                    booking.pandit?.fullName ?? 'Pandit Ji',
+                                'panditImage':
+                                    booking.pandit?.profileImage ?? '',
+                                'bookingDate': booking.bookingDate ?? '',
+                              },
                             );
                             ref.invalidate(panditBookingProvider);
                             AppSnackbar.show(
@@ -1320,6 +1353,7 @@ void showCancelOrderBottomSheet(
                           }
                         },
                 ),
+                SizedBox(height: 20),
               ],
             ),
           );

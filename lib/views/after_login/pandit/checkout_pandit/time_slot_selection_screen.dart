@@ -85,17 +85,6 @@ class _TimeSlotSelectionScreenState
     return (_selectedSlots[date] ?? []).any((s) => s.time == slot.time);
   }
 
-  DateTime _getLastPanditDate(List<Availability> availability) {
-    DateTime last = DateTime.now();
-    for (final a in availability) {
-      try {
-        final d = DateTime.parse(a.date ?? '');
-        if (d.isAfter(last)) last = d;
-      } catch (_) {}
-    }
-    return last;
-  }
-
   String _tod(TimeOfDay t) {
     final h = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
     final m = t.minute.toString().padLeft(2, '0');
@@ -104,10 +93,15 @@ class _TimeSlotSelectionScreenState
   }
 
   Future<void> _pickCustomDate(DateTime minDate) async {
+    final firstSelectableDate = DateTime(
+      minDate.year,
+      minDate.month,
+      minDate.day,
+    );
     final picked = await showDatePicker(
       context: context,
-      initialDate: minDate.add(const Duration(days: 1)),
-      firstDate: minDate.add(const Duration(days: 1)),
+      initialDate: firstSelectableDate,
+      firstDate: firstSelectableDate,
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
@@ -314,7 +308,7 @@ class _TimeSlotSelectionScreenState
                 ),
                 data: (res) {
                   final availability = res.data?.availability ?? [];
-                  final lastPanditDate = _getLastPanditDate(availability);
+                  final customMinDate = DateTime.now();
 
                   // ── FIX 1: Exclude dates that are strictly in the past ──
                   final allDates = availability
@@ -503,12 +497,12 @@ class _TimeSlotSelectionScreenState
                             Expanded(
                               child: _showCustomPicker
                                   ? _CustomDateTimePicker(
-                                      lastPanditDate: lastPanditDate,
+                                      customMinDate: customMinDate,
                                       customDate: _customDate,
                                       customTimeStart: _customTimeStart,
                                       customTimeEnd: _customTimeEnd,
                                       onPickDate: () =>
-                                          _pickCustomDate(lastPanditDate),
+                                          _pickCustomDate(customMinDate),
                                       onPickStart: _pickStartTime,
                                       onPickEnd: _pickEndTime,
                                       tod: _tod,
@@ -792,7 +786,7 @@ class _CustomDateTile extends StatelessWidget {
 // ── Custom Date Time Picker Panel ───────────────────────────────────────────
 class _CustomDateTimePicker extends StatelessWidget {
   const _CustomDateTimePicker({
-    required this.lastPanditDate,
+    required this.customMinDate,
     required this.customDate,
     required this.customTimeStart,
     required this.customTimeEnd,
@@ -802,7 +796,7 @@ class _CustomDateTimePicker extends StatelessWidget {
     required this.tod,
   });
 
-  final DateTime lastPanditDate;
+  final DateTime customMinDate;
   final DateTime? customDate;
   final TimeOfDay? customTimeStart;
   final TimeOfDay? customTimeEnd;
@@ -900,7 +894,7 @@ class _CustomDateTimePicker extends StatelessWidget {
                   ? "${customDate!.day} ${_monthN(customDate!.month)} ${customDate!.year}"
                   : null,
               hint:
-                  "After ${_monthN(lastPanditDate.month)} ${lastPanditDate.day}",
+                  "From ${_monthN(customMinDate.month)} ${customMinDate.day}",
               onTap: onPickDate,
               color: const Color(0xFF6366F1),
             ),
@@ -944,7 +938,7 @@ class _CustomDateTimePicker extends StatelessWidget {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      "Sirf ${_monthN(lastPanditDate.month)} ${lastPanditDate.day} ke baad ki dates select kar sakte hain",
+                      "Aaj se future dates select kar sakte hain",
                       style: TextStyle(
                         fontSize: 11,
                         color: const Color(0xFF6366F1).withOpacity(0.8),

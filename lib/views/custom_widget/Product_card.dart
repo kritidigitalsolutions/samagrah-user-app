@@ -99,39 +99,6 @@ class ProductCard extends ConsumerWidget {
                     ),
                   ),
 
-                  // TOP-LEFT: badges
-                  Positioned(
-                    top: 4,
-                    left: 4,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (product.isRecommended == true) ...[
-                          _Badge(
-                            label: 'Top Pick',
-                            icon: Icons.star_rounded,
-                            color: AppColors.warning,
-                          ),
-                          const SizedBox(height: 2),
-                        ],
-                        if (product.isMostPoojaEssentials == true) ...[
-                          _Badge(
-                            label: 'Daily',
-                            icon: Icons.local_fire_department,
-                            color: AppColors.error,
-                          ),
-                          const SizedBox(height: 2),
-                        ],
-                        if (product.isMostUsed == true)
-                          _Badge(
-                            label: 'Popular',
-                            icon: Icons.trending_up,
-                            color: Colors.deepPurple,
-                          ),
-                      ],
-                    ),
-                  ),
-
                   // TOP-RIGHT: wishlist
                   Positioned(
                     top: 4,
@@ -299,40 +266,6 @@ class ProductCard extends ConsumerWidget {
 
 // ── Badge ──────────────────────────────────────────────────────────────────────
 
-class _Badge extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  const _Badge({required this.label, required this.icon, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4), width: 0.7),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 8),
-          const SizedBox(width: 2),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 7,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Quantity Control ───────────────────────────────────────────────────────────
 
 class _QuantityControl extends StatelessWidget {
@@ -383,6 +316,7 @@ class _QuantityControl extends StatelessWidget {
                   title: product.title ?? '',
                   thumbnail: product.thumbnail ?? '',
                   price: product.price?.toDouble() ?? 0.0,
+                  inStock: product.inStock == true,
                 ),
               ),
               child: Container(

@@ -701,6 +701,7 @@ class _ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final imageUrl = product.thumbnail?.trim() ?? '';
     final isAdded = quantity > 0;
+    final inStock = product.inStock == true;
 
     return GestureDetector(
       onTap: onViewDetail,
@@ -773,7 +774,24 @@ class _ProductCard extends StatelessWidget {
                   const SizedBox(height: 6),
 
                   // Add button OR qty stepper
-                  if (!isAdded)
+                  if (!inStock)
+                    Container(
+                      height: 30,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade300),
+                      ),
+                      child: Text(
+                        'Out of Stock',
+                        style: text11(
+                          color: Colors.red.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    )
+                  else if (!isAdded)
                     AppButton(
                       height: 30,
                       radius: 8,
