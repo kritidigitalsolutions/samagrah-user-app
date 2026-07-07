@@ -586,6 +586,7 @@ class _TimeSlotSelectionScreenState
                                       customDate: _customDate,
                                       customTimeStart: _customTimeStart,
                                       customTimeEnd: _customTimeEnd,
+                                      poojaDurationHours: poojaDurationHours,
                                       onPickDate: () =>
                                           _pickCustomDate(customMinDate),
                                       onPickStart: _pickStartTime,
@@ -875,6 +876,7 @@ class _CustomDateTimePicker extends StatelessWidget {
     required this.customDate,
     required this.customTimeStart,
     required this.customTimeEnd,
+    required this.poojaDurationHours,
     required this.onPickDate,
     required this.onPickStart,
     required this.onPickEnd,
@@ -885,6 +887,7 @@ class _CustomDateTimePicker extends StatelessWidget {
   final DateTime? customDate;
   final TimeOfDay? customTimeStart;
   final TimeOfDay? customTimeEnd;
+  final int poojaDurationHours;
   final VoidCallback onPickDate;
   final VoidCallback onPickStart;
   final VoidCallback onPickEnd;
@@ -971,6 +974,58 @@ class _CustomDateTimePicker extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6366F1).withOpacity(0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFF6366F1).withOpacity(0.16),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: const Icon(
+                      Icons.hourglass_bottom_rounded,
+                      size: 16,
+                      color: Color(0xFF6366F1),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Pooja duration",
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        Text(
+                          "$poojaDurationHours ${poojaDurationHours == 1 ? 'hour' : 'hours'}",
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF6366F1),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
 
             _PickerRow(
               icon: Icons.calendar_today_outlined,
