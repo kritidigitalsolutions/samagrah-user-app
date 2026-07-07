@@ -1315,6 +1315,10 @@ class _PoojaKitSection extends StatelessWidget {
 
     // 1️⃣  Customize kit selected by pandit → show items added by him
     if (hasCustomSamagri) {
+      if (offering.customSamagriItems.isEmpty) {
+        return _SamagranKitCard(enabled: false, panditId: panditId);
+      }
+
       return _PoojaCard(
         pooja: offering,
         panditId: panditId,
@@ -1486,9 +1490,7 @@ class _SamagranKitCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        enabled
-                            ? (kit?.name ?? 'Standard Kit')
-                            : 'Standard Kit',
+                        'Samagran Kit',
                         style: text14(
                           fontWeight: FontWeight.w700,
                           color: enabled
@@ -1556,7 +1558,7 @@ class _StandardKitLoadingCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            'Loading standard kit...',
+            'Loading Samagran kit...',
             style: text13(color: AppColors.textSecondary),
           ),
         ],
