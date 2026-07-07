@@ -302,7 +302,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         onRefresh: _onRefresh,
                         child: ListView(
                           padding: const EdgeInsets.only(bottom: 100),
-                          children: [_buildProductGrid(products, ref)],
+                          children: [
+                            _buildProductGrid(products.take(6).toList(), ref),
+                            if (products.length > 6)
+                              _buildViewMore(
+                                context,
+                                categoryType: state.selectedCategory,
+                              ),
+                          ],
                         ),
                       );
                     }
@@ -443,17 +450,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ── Horizontal Scroll Row ──────────────────────────────────────────────────
   Widget _buildHorizontalScroll(List<Product> products) {
+    final visibleProducts = products.take(6).toList();
     return SizedBox(
       height: 228,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemCount: products.length,
+        itemCount: visibleProducts.length,
         itemBuilder: (context, index) => SizedBox(
           width: 140,
           child: Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: ProductCard(product: products[index]),
+            child: ProductCard(product: visibleProducts[index]),
           ),
         ),
       ),
@@ -505,14 +513,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   // ── View More Button ───────────────────────────────────────────────────────
-  Widget _buildViewMore(BuildContext context) {
+  Widget _buildViewMore(
+    BuildContext context, {
+    String categoryType = 'allItems',
+  }) {
     return TextButton(
       onPressed: () => Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => const TypeOfCategoryPage(
+          builder: (_) => TypeOfCategoryPage(
             title: 'Buy Item for Pooja',
-            categoryType: 'allItems',
+            categoryType: categoryType,
           ),
         ),
       ),

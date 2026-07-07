@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:samagrah/model/request/payment_req/pandit_create_order_req_model.dart';
 import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
 import 'package:samagrah/model/response/kit_response/default_kit_res_model.dart';
+import 'package:samagrah/model/response/pandit_res/availability_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_booked_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
@@ -16,6 +17,7 @@ import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/checkout_providers/address.provider.dart';
 import 'package:samagrah/view_model/after_login_provider/customize_kit_providers/customize_kit_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/booking_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/pandit_details_provider.dart';
 import 'package:intl/intl.dart';
 
 class MyBookingDetails extends ConsumerWidget {
@@ -505,7 +507,12 @@ class MyBookingDetails extends ConsumerWidget {
                       ? "Rescheduling..."
                       : "Reschedule",
                   onTap: () async {
-                    final selectedSlot = await handleDateTimeSelection(context);
+                    final selectedSlot = await showRescheduleTimeSlotSheet(
+                      context: context,
+                      booking: booking,
+                      pandit: pandit,
+                      matchingOffering: matchingOffering,
+                    );
                     if (selectedSlot == null) {
                       AppSnackbar.show(
                         context,
@@ -567,45 +574,714 @@ class MyBookingDetails extends ConsumerWidget {
     );
   }
 
-  String formatDate(DateTime date) =>
-      "${date.day} ${getMonth(date.month)} ${date.year}";
+}
 
-  String formatTime(TimeOfDay time) {
+String? _dateApi(String? raw) {
+  if (raw == null || raw.trim().isEmpty) return null;
+  try {
+    final date = DateTime.parse(raw);
+    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+  } catch (_) {
+    return raw;
+  }
+}
+
+Future<DateTimeSlot?> showRescheduleTimeSlotSheet({
+  required BuildContext context,
+  required Datum booking,
+  required Pandit? pandit,
+  required PoojaOffering? matchingOffering,
+}) {
+  final panditId = pandit?.id ?? '';
+  if (panditId.isEmpty) return Future.value(null);
+
+  return showModalBottomSheet<DateTimeSlot>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (_) => _RescheduleSlotSheet(
+      panditId: panditId,
+      currentBookingDate: _dateApi(booking.bookingDate),
+      durationHours:
+          (matchingOffering?.durationHours ?? booking.ritualRef?.durationHours)
+              ?.ceil() ??
+          1,
+    ),
+  );
+}
+
+class _RescheduleSlotSheet extends ConsumerStatefulWidget {
+  const _RescheduleSlotSheet({
+    required this.panditId,
+    required this.currentBookingDate,
+    required this.durationHours,
+  });
+
+  final String panditId;
+  final String? currentBookingDate;
+  final int durationHours;
+
+  @override
+  ConsumerState<_RescheduleSlotSheet> createState() =>
+      _RescheduleSlotSheetState();
+}
+
+class _RescheduleSlotSheetState extends ConsumerState<_RescheduleSlotSheet> {
+  int? _selectedDateIndex;
+  bool _customMode = false;
+  DateTimeSlot? _selectedSlot;
+  DateTime? _customDate;
+  TimeOfDay? _customStart;
+  TimeOfDay? _customEnd;
+
+  String _dateApi(DateTime date) =>
+      "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+
+  String _displayDate(String raw) {
+    try {
+      return DateFormat('dd MMM yyyy').format(DateTime.parse(raw));
+    } catch (_) {
+      return raw;
+    }
+  }
+
+  String _tod(TimeOfDay time) {
     final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
     final minute = time.minute.toString().padLeft(2, '0');
     final period = time.period == DayPeriod.am ? 'AM' : 'PM';
     return "$hour:$minute $period";
   }
 
-  Future<DateTimeSlot?> handleDateTimeSelection(BuildContext context) async {
-    DateTime? selectedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-    );
-    if (selectedDate == null) return null;
+  TimeOfDay? _parseTimeOfDay(String raw) {
+    try {
+      final parts = raw.trim().split(' ');
+      if (parts.length < 2) return null;
+      final hm = parts.first.split(':');
+      var hour = int.parse(hm[0]);
+      final minute = int.parse(hm[1]);
+      final period = parts[1].toUpperCase();
+      if (period == 'PM' && hour != 12) hour += 12;
+      if (period == 'AM' && hour == 12) hour = 0;
+      return TimeOfDay(hour: hour, minute: minute);
+    } catch (_) {
+      return null;
+    }
+  }
 
-    TimeOfDay? startTime = await showTimePicker(
+  int _toMinutes(TimeOfDay time) => time.hour * 60 + time.minute;
+
+  String _formatMinutes(int minutes) {
+    final safeMinutes = minutes % (24 * 60);
+    final hour24 = safeMinutes ~/ 60;
+    final minute = safeMinutes % 60;
+    final period = hour24 >= 12 ? 'PM' : 'AM';
+    final hour12 = hour24 % 12 == 0 ? 12 : hour24 % 12;
+    return '$hour12:${minute.toString().padLeft(2, '0')} $period';
+  }
+
+  ({int start, int end})? _slotRange(Slot slot) {
+    final time = slot.time;
+    if (time == null || time.trim().isEmpty) return null;
+    final parts = time.split(' - ');
+    final start = _parseTimeOfDay(parts.first.trim());
+    if (start == null) return null;
+
+    final startMinutes = _toMinutes(start);
+    if (parts.length < 2) return (start: startMinutes, end: startMinutes + 60);
+
+    final end = _parseTimeOfDay(parts[1].trim());
+    if (end == null) return null;
+    var endMinutes = _toMinutes(end);
+    if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+    return (start: startMinutes, end: endMinutes);
+  }
+
+  bool _isPastDate(String? dateStr) {
+    if (dateStr == null) return false;
+    try {
+      final d = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      return DateTime(
+        d.year,
+        d.month,
+        d.day,
+      ).isBefore(DateTime(now.year, now.month, now.day));
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool _isPastSlot(String? dateStr, String? timeStr) {
+    if (dateStr == null || timeStr == null) return false;
+    try {
+      final d = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      if (d.year != now.year || d.month != now.month || d.day != now.day) {
+        return false;
+      }
+      final start = _parseTimeOfDay(timeStr.split(' - ').first.trim());
+      if (start == null) return false;
+      return DateTime(
+        now.year,
+        now.month,
+        now.day,
+        start.hour,
+        start.minute,
+      ).isBefore(now);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  List<Slot> _durationSlots(String date, List<Slot> sourceSlots) {
+    final requiredMinutes = widget.durationHours.clamp(1, 24) * 60;
+    final ranges = sourceSlots
+        .where(
+          (slot) =>
+              slot.status?.toLowerCase() == 'available' &&
+              !_isPastSlot(date, slot.time),
+        )
+        .map((slot) => _slotRange(slot))
+        .whereType<({int start, int end})>()
+        .toList()
+      ..sort((a, b) => a.start.compareTo(b.start));
+
+    final result = <Slot>[];
+    final seen = <String>{};
+    for (final startRange in ranges) {
+      final targetEnd = startRange.start + requiredMinutes;
+      var cursor = startRange.start;
+
+      while (cursor < targetEnd) {
+        ({int start, int end})? nextRange;
+        for (final range in ranges) {
+          if (range.start <= cursor && range.end > cursor) {
+            nextRange = range;
+            break;
+          }
+        }
+        if (nextRange == null) break;
+        cursor = nextRange.end;
+      }
+
+      if (cursor >= targetEnd) {
+        final time =
+            '${_formatMinutes(startRange.start)} - ${_formatMinutes(targetEnd)}';
+        if (seen.add(time)) result.add(Slot(time: time, status: 'available'));
+      }
+    }
+    return result;
+  }
+
+  Future<void> _pickCustomDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+    );
+    if (picked != null) setState(() => _customDate = picked);
+  }
+
+  Future<void> _pickCustomStart() async {
+    final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
       helpText: 'Select Start Time',
     );
-    if (startTime == null) return null;
+    if (picked != null) setState(() => _customStart = picked);
+  }
 
-    TimeOfDay? endTime = await showTimePicker(
+  Future<void> _pickCustomEnd() async {
+    final picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay(
-        hour: (startTime.hour + 1) % 24,
-        minute: startTime.minute,
-      ),
+      initialTime: _customStart == null
+          ? TimeOfDay.now()
+          : TimeOfDay(
+              hour: (_customStart!.hour + widget.durationHours).clamp(0, 23),
+              minute: _customStart!.minute,
+            ),
       helpText: 'Select End Time',
     );
-    if (endTime == null) return null;
+    if (picked != null) setState(() => _customEnd = picked);
+  }
 
+  DateTimeSlot? _customSlot() {
+    if (_customDate == null || _customStart == null || _customEnd == null) {
+      return null;
+    }
     return DateTimeSlot(
-      date: formatDate(selectedDate),
-      time: "${formatTime(startTime)} - ${formatTime(endTime)}",
+      date: _dateApi(_customDate!),
+      time: '${_tod(_customStart!)} - ${_tod(_customEnd!)}',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final availabilityAsync = ref.watch(
+      panditAvailabilityProvider(widget.panditId),
+    );
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 14,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        ),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.72,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.grey300,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                "Reschedule Booking",
+                style: text18(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "Available slots are shown for ${widget.durationHours} hour ritual duration.",
+                style: text12(color: AppColors.grey600),
+              ),
+              const SizedBox(height: 14),
+              Expanded(
+                child: availabilityAsync.when(
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(color: AppColors.button),
+                  ),
+                  error: (_, _) => Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "Could not load available slots",
+                          style: text14(color: AppColors.grey600),
+                        ),
+                        TextButton(
+                          onPressed: () => ref.invalidate(
+                            panditAvailabilityProvider(widget.panditId),
+                          ),
+                          child: const Text("Retry"),
+                        ),
+                      ],
+                    ),
+                  ),
+                  data: (res) {
+                    final dates = (res.data?.availability ?? [])
+                        .where((item) {
+                          final date = item.date ?? '';
+                          return !_isPastDate(date) &&
+                              item.status?.toLowerCase() == 'available' &&
+                              _durationSlots(date, item.slots).isNotEmpty;
+                        })
+                        .toList();
+
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 112,
+                          child: ListView.builder(
+                            itemCount: dates.length + 1,
+                            itemBuilder: (context, index) {
+                              if (index == dates.length) {
+                                return _RescheduleDateTile(
+                                  title: "Custom",
+                                  subtitle: "Request",
+                                  selected: _customMode,
+                                  enabled: true,
+                                  isCurrentBooking: false,
+                                  onTap: () => setState(() {
+                                    _customMode = true;
+                                    _selectedDateIndex = null;
+                                    _selectedSlot = null;
+                                  }),
+                                );
+                              }
+
+                              final item = dates[index];
+                              final available =
+                                  item.status?.toLowerCase() == 'available';
+                              final selected =
+                                  !_customMode && _selectedDateIndex == index;
+                              final isCurrentBooking =
+                                  item.date == widget.currentBookingDate;
+                              return _RescheduleDateTile(
+                                title: _dayNum(item.date),
+                                subtitle: _monthShort(item.date),
+                                selected: selected,
+                                enabled: available,
+                                isCurrentBooking: isCurrentBooking,
+                                onTap: available
+                                    ? () => setState(() {
+                                          _customMode = false;
+                                          _selectedDateIndex = index;
+                                          _selectedSlot = null;
+                                        })
+                                    : null,
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _customMode
+                              ? _CustomReschedulePicker(
+                                  customDate: _customDate,
+                                  customStart: _customStart,
+                                  customEnd: _customEnd,
+                                  displayDate: (date) =>
+                                      DateFormat('dd MMM yyyy').format(date),
+                                  tod: _tod,
+                                  onPickDate: _pickCustomDate,
+                                  onPickStart: _pickCustomStart,
+                                  onPickEnd: _pickCustomEnd,
+                                )
+                              : _selectedDateIndex == null
+                              ? Center(
+                                  child: Text(
+                                    "Select a date to view slots",
+                                    style: text13(color: AppColors.grey600),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                )
+                              : _AvailableRescheduleSlots(
+                                  date: dates[_selectedDateIndex!].date ?? '',
+                                  displayDate: _displayDate,
+                                  slots: _durationSlots(
+                                    dates[_selectedDateIndex!].date ?? '',
+                                    dates[_selectedDateIndex!].slots,
+                                  ),
+                                  selectedSlot: _selectedSlot,
+                                  onSelect: (slot) =>
+                                      setState(() => _selectedSlot = slot),
+                                ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+              AppButton(
+                title: "Confirm Reschedule",
+                onTap: () {
+                  final slot = _customMode ? _customSlot() : _selectedSlot;
+                  if (slot == null) {
+                    AppSnackbar.show(
+                      context,
+                      message: "Please select date and time",
+                      type: SnackBarType.warning,
+                    );
+                    return;
+                  }
+                  Navigator.pop(context, slot);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _dayNum(String? date) {
+    try {
+      return date!.split('-')[2].replaceAll(RegExp(r'^0'), '');
+    } catch (_) {
+      return date ?? '';
+    }
+  }
+
+  String _monthShort(String? date) {
+    try {
+      return getMonth(int.parse(date!.split('-')[1]));
+    } catch (_) {
+      return '';
+    }
+  }
+}
+
+class _RescheduleDateTile extends StatelessWidget {
+  const _RescheduleDateTile({
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.enabled,
+    required this.isCurrentBooking,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final bool enabled;
+  final bool isCurrentBooking;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.button
+              : isCurrentBooking
+              ? AppColors.button.withOpacity(0.08)
+              : enabled
+              ? Colors.white
+              : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected || isCurrentBooking
+                ? AppColors.button
+                : Colors.grey.shade200,
+            width: selected || isCurrentBooking ? 1.5 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: selected
+                    ? Colors.white
+                    : enabled
+                    ? AppColors.textPrimary
+                    : Colors.grey.shade400,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 11,
+                color: selected
+                    ? Colors.white70
+                    : enabled
+                    ? AppColors.grey600
+                    : Colors.grey.shade400,
+              ),
+            ),
+            if (isCurrentBooking) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? Colors.white.withOpacity(0.18)
+                      : AppColors.button.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  "Current",
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: selected ? Colors.white : AppColors.button,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AvailableRescheduleSlots extends StatelessWidget {
+  const _AvailableRescheduleSlots({
+    required this.date,
+    required this.displayDate,
+    required this.slots,
+    required this.selectedSlot,
+    required this.onSelect,
+  });
+
+  final String date;
+  final String Function(String) displayDate;
+  final List<Slot> slots;
+  final DateTimeSlot? selectedSlot;
+  final ValueChanged<DateTimeSlot> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    if (slots.isEmpty) {
+      return Center(
+        child: Text(
+          "No slots available for this date",
+          style: text13(color: AppColors.grey600),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(displayDate(date), style: text14(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 10),
+        Expanded(
+          child: ListView.builder(
+            itemCount: slots.length,
+            itemBuilder: (context, index) {
+              final slot = slots[index];
+              final current = DateTimeSlot(date: date, time: slot.time ?? '');
+              final selected =
+                  selectedSlot?.date == current.date &&
+                  selectedSlot?.time == current.time;
+              return GestureDetector(
+                onTap: () => onSelect(current),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? AppColors.button.withOpacity(0.08)
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: selected ? AppColors.button : Colors.grey.shade200,
+                      width: selected ? 2 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.schedule_rounded,
+                        size: 18,
+                        color: selected ? AppColors.button : AppColors.grey400,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          current.time,
+                          style: text13(
+                            color: selected
+                                ? AppColors.button
+                                : AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      if (selected)
+                        const Icon(
+                          Icons.check_circle,
+                          color: AppColors.button,
+                          size: 18,
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CustomReschedulePicker extends StatelessWidget {
+  const _CustomReschedulePicker({
+    required this.customDate,
+    required this.customStart,
+    required this.customEnd,
+    required this.displayDate,
+    required this.tod,
+    required this.onPickDate,
+    required this.onPickStart,
+    required this.onPickEnd,
+  });
+
+  final DateTime? customDate;
+  final TimeOfDay? customStart;
+  final TimeOfDay? customEnd;
+  final String Function(DateTime) displayDate;
+  final String Function(TimeOfDay) tod;
+  final VoidCallback onPickDate;
+  final VoidCallback onPickStart;
+  final VoidCallback onPickEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        Text("Custom Date & Time", style: text14(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 10),
+        _CustomPickerRow(
+          icon: Icons.calendar_today_outlined,
+          label: customDate == null ? "Select date" : displayDate(customDate!),
+          onTap: onPickDate,
+        ),
+        _CustomPickerRow(
+          icon: Icons.access_time_rounded,
+          label: customStart == null ? "Start time" : tod(customStart!),
+          onTap: onPickStart,
+        ),
+        _CustomPickerRow(
+          icon: Icons.timelapse_rounded,
+          label: customEnd == null ? "End time" : tod(customEnd!),
+          onTap: onPickEnd,
+        ),
+      ],
+    );
+  }
+}
+
+class _CustomPickerRow extends StatelessWidget {
+  const _CustomPickerRow({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(13),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: AppColors.button),
+            const SizedBox(width: 10),
+            Expanded(child: Text(label, style: text13())),
+            const Icon(Icons.chevron_right_rounded, size: 18),
+          ],
+        ),
+      ),
     );
   }
 }

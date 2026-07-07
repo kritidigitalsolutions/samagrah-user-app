@@ -1,3 +1,5 @@
+import 'package:samagrah/model/response/pandit_res/availability_res_model.dart';
+
 class PanditResModel {
   PanditResModel({
     required this.success,
@@ -42,6 +44,7 @@ class PanditData {
     //  required this.aadhaar,
     required this.serviceTypes,
     required this.poojaOfferings,
+    required this.availability,
     required this.createdAt,
     required this.updatedAt,
     required this.v,
@@ -65,6 +68,7 @@ class PanditData {
   //  final Aadhaar? aadhaar;
   final ServiceTypes? serviceTypes;
   final List<PoojaOffering> poojaOfferings;
+  final List<Availability> availability;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final int? v;
@@ -99,11 +103,34 @@ class PanditData {
           : List<PoojaOffering>.from(
               json["poojaOfferings"]!.map((x) => PoojaOffering.fromJson(x)),
             ),
+      availability: _parsePanditAvailability(json["availability"]),
       createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
       updatedAt: DateTime.tryParse(json["updatedAt"] ?? ""),
       v: json["__v"],
     );
   }
+}
+
+List<Availability> _parsePanditAvailability(dynamic value) {
+  if (value is! List) return [];
+
+  final availability = <Availability>[];
+  for (final item in value) {
+    if (item is! Map) continue;
+    final rawDates = item["availability"];
+    if (rawDates is! List) continue;
+
+    for (final rawDate in rawDates) {
+      if (rawDate is Map) {
+        availability.add(
+          Availability.fromJson(Map<String, dynamic>.from(rawDate)),
+        );
+      }
+    }
+  }
+
+  availability.sort((a, b) => (a.date ?? '').compareTo(b.date ?? ''));
+  return availability;
 }
 
 class PanditAddress {

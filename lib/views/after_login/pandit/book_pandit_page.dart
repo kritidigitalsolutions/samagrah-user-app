@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:samagrah/model/response/pandit_res/availability_res_model.dart';
 import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
@@ -21,6 +22,7 @@ class PanditFilterState {
   final double? minRating;
   final DateTime? date;
   final TimeOfDay? time;
+  final TimeOfDay? endTime;
 
   const PanditFilterState({
     this.serviceType,
@@ -29,6 +31,7 @@ class PanditFilterState {
     this.minRating,
     this.date,
     this.time,
+    this.endTime,
   });
 
   bool get hasAnyFilter =>
@@ -37,7 +40,8 @@ class PanditFilterState {
       minExperience != null ||
       minRating != null ||
       date != null ||
-      time != null;
+      time != null ||
+      endTime != null;
 
   PanditFilterState copyWith({
     Object? serviceType = _sentinel,
@@ -46,6 +50,7 @@ class PanditFilterState {
     Object? minRating = _sentinel,
     Object? date = _sentinel,
     Object? time = _sentinel,
+    Object? endTime = _sentinel,
   }) {
     return PanditFilterState(
       serviceType: serviceType == _sentinel
@@ -58,6 +63,7 @@ class PanditFilterState {
       minRating: minRating == _sentinel ? this.minRating : minRating as double?,
       date: date == _sentinel ? this.date : date as DateTime?,
       time: time == _sentinel ? this.time : time as TimeOfDay?,
+      endTime: endTime == _sentinel ? this.endTime : endTime as TimeOfDay?,
     );
   }
 }
@@ -121,6 +127,189 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
 
   Future<void> _refreshPandits() => ref.refresh(panditProvider.future);
 
+  String _dateApi(DateTime date) =>
+      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+  TimeOfDay? _parseTimeOfDay(String raw) {
+    try {
+      final parts = raw.trim().split(' ');
+      if (parts.length < 2) return null;
+      final hm = parts.first.split(':');
+      var hour = int.parse(hm[0]);
+      final minute = int.parse(hm[1]);
+      final period = parts[1].toUpperCase();
+      if (period == 'PM' && hour != 12) hour += 12;
+      if (period == 'AM' && hour == 12) hour = 0;
+      return TimeOfDay(hour: hour, minute: minute);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  int _toMinutes(TimeOfDay time) => time.hour * 60 + time.minute;
+
+  int _selectedFilterDurationHours(int fallbackDurationHours) {
+    if (_filters.time == null || _filters.endTime == null) {
+      return fallbackDurationHours;
+    }
+
+    final start = _toMinutes(_filters.time!);
+    var end = _toMinutes(_filters.endTime!);
+    if (end <= start) end += 24 * 60;
+    final minutes = end - start;
+    if (minutes <= 0) return fallbackDurationHours;
+    return (minutes / 60).ceil().clamp(1, 24);
+  }
+
+  TimeOfDay _addHours(TimeOfDay time, int hours) {
+    return TimeOfDay(
+      hour: (time.hour + hours).clamp(0, 23),
+      minute: time.minute,
+    );
+  }
+
+  ({int start, int end})? _slotRange(Slot slot) {
+    final time = slot.time;
+    if (time == null || time.trim().isEmpty) return null;
+
+    final parts = time.split(' - ');
+    final start = _parseTimeOfDay(parts.first.trim());
+    if (start == null) return null;
+
+    final startMinutes = _toMinutes(start);
+    if (parts.length < 2) return (start: startMinutes, end: startMinutes + 60);
+
+    final end = _parseTimeOfDay(parts[1].trim());
+    if (end == null) return null;
+
+    var endMinutes = _toMinutes(end);
+    if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+    return (start: startMinutes, end: endMinutes);
+  }
+
+  bool _isPastSlot(String date, Slot slot) {
+    final time = slot.time;
+    if (time == null) return false;
+    try {
+      final d = DateTime.parse(date);
+      final now = DateTime.now();
+      if (d.year != now.year || d.month != now.month || d.day != now.day) {
+        return false;
+      }
+
+      final start = _parseTimeOfDay(time.split(' - ').first.trim());
+      if (start == null) return false;
+      return DateTime(
+        now.year,
+        now.month,
+        now.day,
+        start.hour,
+        start.minute,
+      ).isBefore(now);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool _hasContinuousAvailability({
+    required String date,
+    required List<Slot> sourceSlots,
+    required int startMinutes,
+    required int durationHours,
+  }) {
+    final targetEnd = startMinutes + durationHours.clamp(1, 24) * 60;
+    var cursor = startMinutes;
+    final ranges = sourceSlots
+        .where(
+          (slot) =>
+              slot.status?.toLowerCase() == 'available' &&
+              !_isPastSlot(date, slot),
+        )
+        .map((slot) => _slotRange(slot))
+        .whereType<({int start, int end})>()
+        .toList()
+      ..sort((a, b) => a.start.compareTo(b.start));
+
+    while (cursor < targetEnd) {
+      ({int start, int end})? nextRange;
+      for (final range in ranges) {
+        if (range.start <= cursor && range.end > cursor) {
+          nextRange = range;
+          break;
+        }
+      }
+
+      if (nextRange == null) return false;
+      cursor = nextRange.end;
+    }
+
+    return true;
+  }
+
+  int _ritualDurationHours(PanditData pandit, Set<String> ritualNames) {
+    PoojaOffering? matchedOffering;
+    for (final offering in pandit.poojaOfferings) {
+      if (ritualNames.contains(_normalizeText(offering.name))) {
+        matchedOffering = offering;
+        break;
+      }
+    }
+
+    final selectedRitual = ref.read(selectedRitualProvider);
+    final duration = matchedOffering?.durationHours ?? selectedRitual?.durationHours;
+    if (duration == null || duration <= 0) return 1;
+    return duration.ceil();
+  }
+
+  bool _matchesDateTimeFilter(PanditData pandit, Set<String> ritualNames) {
+    if (_filters.date == null && _filters.time == null && _filters.endTime == null) {
+      return true;
+    }
+    if (pandit.availability.isEmpty) return false;
+
+    final durationHours = _ritualDurationHours(pandit, ritualNames);
+    final filterDurationHours = _selectedFilterDurationHours(durationHours);
+    final filterDate = _filters.date == null ? null : _dateApi(_filters.date!);
+    final filterStart = _filters.time == null ? null : _toMinutes(_filters.time!);
+
+    final dates = pandit.availability.where((item) {
+      if (item.status?.toLowerCase() != 'available') return false;
+      if (filterDate != null && item.date != filterDate) return false;
+      return item.date != null;
+    });
+
+    for (final availability in dates) {
+      final date = availability.date!;
+      if (filterStart != null) {
+        if (_hasContinuousAvailability(
+          date: date,
+          sourceSlots: availability.slots,
+          startMinutes: filterStart,
+          durationHours: filterDurationHours,
+        )) {
+          return true;
+        }
+      } else {
+        for (final slot in availability.slots) {
+          final range = _slotRange(slot);
+          if (slot.status?.toLowerCase() == 'available' &&
+              range != null &&
+              !_isPastSlot(date, slot) &&
+              _hasContinuousAvailability(
+                date: date,
+                sourceSlots: availability.slots,
+                startMinutes: range.start,
+                durationHours: durationHours,
+              )) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -148,6 +337,8 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
         );
         if (!hasRitual) return false;
       }
+
+      if (!_matchesDateTimeFilter(p, ritualNames)) return false;
 
       if (searchTerm.isNotEmpty) {
         final name = _normalizeText(p.fullName);
@@ -568,12 +759,13 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                     icon: Icons.access_time_rounded,
                                     label: draft.time != null
                                         ? _formatTime(draft.time!)
-                                        : 'Select Time',
+                                        : 'Start Time',
                                     isSelected: draft.time != null,
                                     onClear: draft.time != null
                                         ? () => setSheet(
                                             () => draft = draft.copyWith(
                                               time: null,
+                                              endTime: null,
                                             ),
                                           )
                                         : null,
@@ -581,6 +773,56 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                 ),
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 10),
+                          GestureDetector(
+                            onTap: () async {
+                              if (draft.time == null) {
+                                ScaffoldMessenger.of(ctx).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Please select start time first',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              final picked = await showTimePicker(
+                                context: ctx,
+                                initialTime:
+                                    draft.endTime ??
+                                    _addHours(draft.time!, 1),
+                                builder: (context, child) => Theme(
+                                  data: Theme.of(context).copyWith(
+                                    colorScheme: ColorScheme.light(
+                                      primary: AppColors.button,
+                                    ),
+                                  ),
+                                  child: child!,
+                                ),
+                              );
+                              if (picked != null) {
+                                setSheet(
+                                  () => draft = draft.copyWith(
+                                    endTime: picked,
+                                  ),
+                                );
+                              }
+                            },
+                            child: _dateTimePickerBox(
+                              icon: Icons.timelapse_rounded,
+                              label: draft.endTime != null
+                                  ? _formatTime(draft.endTime!)
+                                  : 'End Time',
+                              isSelected: draft.endTime != null,
+                              onClear: draft.endTime != null
+                                  ? () => setSheet(
+                                      () => draft = draft.copyWith(
+                                        endTime: null,
+                                      ),
+                                    )
+                                  : null,
+                            ),
                           ),
                           const SizedBox(height: 20),
 
@@ -1120,7 +1362,17 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                               _activeTag(
                                 '🕐 ${_formatTime(_filters.time!)}',
                                 onRemove: () => setState(() {
-                                  _filters = _filters.copyWith(time: null);
+                                  _filters = _filters.copyWith(
+                                    time: null,
+                                    endTime: null,
+                                  );
+                                }),
+                              ),
+                            if (_filters.endTime != null)
+                              _activeTag(
+                                'End ${_formatTime(_filters.endTime!)}',
+                                onRemove: () => setState(() {
+                                  _filters = _filters.copyWith(endTime: null);
                                 }),
                               ),
                             if (_filters.language != null)

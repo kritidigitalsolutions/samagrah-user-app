@@ -212,6 +212,82 @@ class _TimeSlotSelectionScreenState
     }
   }
 
+  int _toMinutes(TimeOfDay time) => time.hour * 60 + time.minute;
+
+  String _formatMinutes(int minutes) {
+    final safeMinutes = minutes % (24 * 60);
+    final hour24 = safeMinutes ~/ 60;
+    final minute = safeMinutes % 60;
+    final period = hour24 >= 12 ? 'PM' : 'AM';
+    final hour12 = hour24 % 12 == 0 ? 12 : hour24 % 12;
+    return '$hour12:${minute.toString().padLeft(2, '0')} $period';
+  }
+
+  ({int start, int end})? _slotRange(Slot slot) {
+    final time = slot.time;
+    if (time == null || time.trim().isEmpty) return null;
+
+    final parts = time.split(' - ');
+    final start = _parseTimeOfDay(parts.first.trim());
+    if (start == null) return null;
+
+    final startMinutes = _toMinutes(start);
+    if (parts.length < 2) return (start: startMinutes, end: startMinutes + 60);
+
+    final end = _parseTimeOfDay(parts[1].trim());
+    if (end == null) return null;
+
+    var endMinutes = _toMinutes(end);
+    if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+    return (start: startMinutes, end: endMinutes);
+  }
+
+  List<Slot> _durationSlotsForDate(
+    String date,
+    List<Slot> sourceSlots,
+    int poojaDurationHours,
+  ) {
+    final requiredMinutes = poojaDurationHours.clamp(1, 24) * 60;
+    final ranges = sourceSlots
+        .where(
+          (slot) =>
+              slot.status?.toLowerCase() == 'available' &&
+              !_isPastSlot(date, slot.time),
+        )
+        .map((slot) => _slotRange(slot))
+        .whereType<({int start, int end})>()
+        .toList()
+      ..sort((a, b) => a.start.compareTo(b.start));
+
+    final result = <Slot>[];
+    final seen = <String>{};
+    for (final startRange in ranges) {
+      final targetEnd = startRange.start + requiredMinutes;
+      var cursor = startRange.start;
+
+      while (cursor < targetEnd) {
+        ({int start, int end})? nextRange;
+        for (final range in ranges) {
+          if (range.start <= cursor && range.end > cursor) {
+            nextRange = range;
+            break;
+          }
+        }
+
+        if (nextRange == null) break;
+        cursor = nextRange.end;
+      }
+
+      if (cursor >= targetEnd) {
+        final time =
+            '${_formatMinutes(startRange.start)} - ${_formatMinutes(targetEnd)}';
+        if (seen.add(time)) result.add(Slot(time: time, status: 'available'));
+      }
+    }
+
+    return result;
+  }
+
   String _normalizePoojaName(String? value) {
     return (value ?? '').trim().toLowerCase().replaceAll(
       RegExp(r'\s+'),
@@ -312,7 +388,16 @@ class _TimeSlotSelectionScreenState
 
                   // ── FIX 1: Exclude dates that are strictly in the past ──
                   final allDates = availability
-                      .where((a) => !_isPastDate(a.date))
+                      .where((a) {
+                        final date = a.date ?? '';
+                        return !_isPastDate(date) &&
+                            a.status?.toLowerCase() == 'available' &&
+                            _durationSlotsForDate(
+                              date,
+                              a.slots,
+                              poojaDurationHours,
+                            ).isNotEmpty;
+                      })
                       .toList();
 
                   return Column(
