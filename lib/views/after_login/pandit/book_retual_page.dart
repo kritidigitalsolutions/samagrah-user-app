@@ -5,6 +5,7 @@ import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/custom_snackbar.dart';
+import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
 
 class BookRetualPage extends ConsumerStatefulWidget {
@@ -16,6 +17,7 @@ class BookRetualPage extends ConsumerStatefulWidget {
 
 class _BookRitualViewState extends ConsumerState<BookRetualPage> {
   final TextEditingController _searchController = TextEditingController();
+  final Set<String> _expandedRitualIds = {};
 
   Future<void> _refreshRituals() {
     return ref.refresh(ritualProvider.future);
@@ -206,6 +208,11 @@ class _BookRitualViewState extends ConsumerState<BookRetualPage> {
                       itemBuilder: (context, index) {
                         final ritual = rituals[index];
                         final isSelected = selectedRitual?.id == ritual.id;
+                        final isExpanded = _expandedRitualIds.contains(
+                          ritual.id,
+                        );
+                        final desc = ritual.description ?? '';
+                        final isLong = desc.length > 120;
 
                         return GestureDetector(
                           onTap: () {
@@ -233,6 +240,7 @@ class _BookRitualViewState extends ConsumerState<BookRetualPage> {
                               ],
                             ),
                             child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 /// Text
                                 Expanded(
@@ -249,11 +257,147 @@ class _BookRitualViewState extends ConsumerState<BookRetualPage> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        ritual.description ?? '',
+                                        desc,
+                                        maxLines: isExpanded ? null : 4,
+                                        overflow: isExpanded
+                                            ? TextOverflow.visible
+                                            : TextOverflow.ellipsis,
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Colors.grey.shade600,
                                         ),
+                                      ),
+                                      if (isLong) ...[
+                                        const SizedBox(height: 4),
+                                        GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              if (isExpanded) {
+                                                _expandedRitualIds.remove(
+                                                  ritual.id,
+                                                );
+                                              } else {
+                                                _expandedRitualIds.add(
+                                                  ritual.id ?? '',
+                                                );
+                                              }
+                                            });
+                                          },
+                                          child: Text(
+                                            isExpanded
+                                                ? "Show Less"
+                                                : "Read More",
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.button,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                      const SizedBox(height: 8),
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 4,
+                                        children: [
+                                          if (ritual.durationHours != null)
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.grey100,
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Icon(
+                                                    Icons.access_time_rounded,
+                                                    size: 12,
+                                                    color: AppColors.grey600,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    '${ritual.durationHours} Hours',
+                                                    style: text10(
+                                                      color: AppColors.grey700,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          if (ritual.standardSamagri == true ||
+                                              ritual.customSamagri == true)
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.green.withOpacity(
+                                                  0.1,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Icon(
+                                                    Icons.inventory_2_outlined,
+                                                    size: 12,
+                                                    color: Colors.green,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    'Samagri Available',
+                                                    style: text10(
+                                                      color: Colors.green,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          // if (ritual.travelForSpecialPooja ==
+                                          //     true)
+                                          //   Container(
+                                          //     padding:
+                                          //         const EdgeInsets.symmetric(
+                                          //           horizontal: 6,
+                                          //           vertical: 2,
+                                          //         ),
+                                          //     decoration: BoxDecoration(
+                                          //       color: Colors.blue.withOpacity(
+                                          //         0.1,
+                                          //       ),
+                                          //       borderRadius:
+                                          //           BorderRadius.circular(6),
+                                          //     ),
+                                          //     child: Row(
+                                          //       mainAxisSize: MainAxisSize.min,
+                                          //       children: [
+                                          //         const Icon(
+                                          //           Icons
+                                          //               .flight_takeoff_rounded,
+                                          //           size: 12,
+                                          //           color: Colors.blue,
+                                          //         ),
+                                          //         const SizedBox(width: 4),
+                                          //         Text(
+                                          //           'Travel Support',
+                                          //           style: text10(
+                                          //             color: Colors.blue,
+                                          //           ),
+                                          //         ),
+                                          //       ],
+                                          //     ),
+                                          //   ),
+                                        ],
                                       ),
                                     ],
                                   ),

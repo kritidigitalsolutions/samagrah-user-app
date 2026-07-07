@@ -193,7 +193,11 @@ class PoojaOffering {
       travelForSpecialPooja: json["travelForSpecialPooja"],
       standardSamagri: json["standardSamagri"],
       customSamagri: json["customSamagri"],
-      kitId: json["kit"],
+      kitId: json["kitId"] is String
+          ? json["kitId"]
+          : (json["kit"] is String
+              ? json["kit"]
+              : (json["kit"] is Map ? json["kit"]["_id"]?.toString() : null)),
       customSamagriItems: json["customSamagriItems"] == null
           ? []
           : List<CustomSamagriItem>.from(

@@ -200,23 +200,24 @@ class _AddressPageState extends ConsumerState<AddressPage> {
                                           ),
                                           const SizedBox(width: 8),
                                           if (addr.isDefault == true)
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 6,
-                                                    vertical: 2,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.green.withOpacity(
-                                                  0.1,
+                                            Expanded(
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 6,
+                                                      vertical: 2,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.green
+                                                      .withOpacity(0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
                                                 ),
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                              ),
-                                              child: Text(
-                                                "DEFAULT",
-                                                style: text10(
-                                                  color: AppColors.green,
+                                                child: Text(
+                                                  "DEFAULT",
+                                                  style: text10(
+                                                    color: AppColors.green,
+                                                  ),
                                                 ),
                                               ),
                                             ),

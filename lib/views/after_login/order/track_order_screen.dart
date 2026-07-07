@@ -5,6 +5,7 @@ import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:intl/intl.dart';
 
 import 'package:samagrah/view_model/after_login_provider/order_provider/order_provider.dart';
 
@@ -66,9 +67,8 @@ class TrackOrderPage extends ConsumerWidget {
                     Text('Failed to load order:\n$error'),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () => ref.invalidate(
-                        trackOrderProvider(orderId),
-                      ),
+                      onPressed: () =>
+                          ref.invalidate(trackOrderProvider(orderId)),
                       child: const Text('Retry'),
                     ),
                   ],
@@ -87,6 +87,12 @@ class TrackOrderPage extends ConsumerWidget {
     final tracking = data?.tracking;
     final address = order?.address;
     final items = order?.items ?? [];
+
+    final orderDate = order?.createdAt ?? tracking?.placedAt ?? DateTime.now();
+    final expectedDeliveryDate = orderDate.add(const Duration(days: 5));
+    final formattedExpectedDate = DateFormat(
+      'dd MMM yyyy',
+    ).format(expectedDeliveryDate);
 
     // Debug - Remove after it works
     debugPrint('=== TRACKING DEBUG ===');
@@ -110,6 +116,59 @@ class TrackOrderPage extends ConsumerWidget {
                 ? '${address.fullAddress}, ${address.city}, ${address.state} - ${address.pincode}'
                 : 'Address not available',
             style: text14(color: AppColors.grey700),
+          ),
+          const SizedBox(height: 24),
+
+          // Delivery Estimate Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.local_shipping_outlined,
+                    color: Colors.orange,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Estimated Delivery By',
+                        style: text12(color: AppColors.textSecondary),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        formattedExpectedDate,
+                        style: text16(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '*यह तिथि परिस्थितियों के अनुसार बढ़ भी सकती है (May increase depending on situations)',
+                        style: text10(color: Colors.grey.shade500),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
 

@@ -112,8 +112,6 @@ class CategoryPage extends ConsumerWidget {
                   ),
                 ),
 
-                const SizedBox(height: 12),
-
                 // ── Body
                 Expanded(
                   child: productState.when(
@@ -164,6 +162,7 @@ class CategoryPage extends ConsumerWidget {
                               await ref.read(productProvider.future);
                             },
                             child: ListView.builder(
+                              padding: EdgeInsets.only(top: 10),
                               itemCount: sections.length,
                               itemBuilder: (context, i) {
                                 final s = sections[i];
@@ -190,7 +189,7 @@ class CategoryPage extends ConsumerWidget {
 
   Widget _buildSection(BuildContext context, _Section s) {
     final preview = s.products.take(6).toList();
-   
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

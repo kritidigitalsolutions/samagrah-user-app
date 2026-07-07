@@ -197,7 +197,7 @@ class MyFavProducts extends ConsumerWidget {
 
               /// DETAILS
               Expanded(
-                flex: 2,
+                flex: 3,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -234,6 +234,7 @@ class MyFavProducts extends ConsumerWidget {
 
               /// PRICE
               Expanded(
+                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -313,6 +313,10 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   @override
   void initState() {
     super.initState();
+    final selectedRitual = ref.read(selectedRitualProvider);
+    if (selectedRitual != null) {
+      _searchController.text = selectedRitual.title ?? selectedRitual.name ?? '';
+    }
   }
 
   @override

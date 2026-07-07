@@ -164,9 +164,11 @@ class HelpPage extends ConsumerWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                c.issue,
-                                style: text14(fontWeight: FontWeight.w600),
+                              Expanded(
+                                child: Text(
+                                  c.issue,
+                                  style: text14(fontWeight: FontWeight.w600),
+                                ),
                               ),
                               Container(
                                 padding: const EdgeInsets.symmetric(
