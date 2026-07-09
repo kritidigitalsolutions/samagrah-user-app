@@ -26,6 +26,23 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
   late AnimationController controller;
   late Animation<double> scaleAnimation;
 
+  void _resetPanditCheckoutState() {
+    ref.invalidate(selectedDateProvider);
+    ref.invalidate(selectedAddressProvider);
+    ref.invalidate(selectedOnlineProvider);
+    ref.invalidate(useWalletProvider);
+    ref.invalidate(selectedRitualProvider);
+    ref.invalidate(panditPaymentBookingProvider);
+    ref.invalidate(selectedPanditProvider);
+    ref.invalidate(selectedServiceProvider);
+    ref.invalidate(serviceSelected);
+    ref.invalidate(selectedTempleIdProvider);
+    ref.invalidate(panditBookingProvider);
+    ref.invalidate(walletProvider);
+    ref.invalidate(couponProvider);
+    ref.invalidate(panditAvailabilityProvider);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +58,9 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
     ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
 
     controller.repeat(reverse: true); // 🔥 continuous animation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _resetPanditCheckoutState();
+    });
   }
 
   @override
@@ -56,17 +76,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
 
-        ref.invalidate(selectedDateProvider);
-        ref.invalidate(selectedAddressProvider);
-        ref.invalidate(selectedRitualProvider);
-        ref.invalidate(panditPaymentBookingProvider);
-        ref.invalidate(selectedPanditProvider);
-        ref.invalidate(selectedServiceProvider);
-        ref.invalidate(serviceSelected);
-        ref.invalidate(panditBookingProvider);
-        ref.invalidate(walletProvider);
-        ref.invalidate(couponProvider);
-        ref.invalidate(panditAvailabilityProvider);
+        _resetPanditCheckoutState();
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => MyHomeScreen(index: 0)),
@@ -149,25 +159,19 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
                       AppButton(
                         title: "View Booking",
                         onTap: () {
-                          ref.invalidate(panditBookingProvider);
-                          Navigator.pushNamed(context, AppRoutes.myBooking);
+                          _resetPanditCheckoutState();
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            AppRoutes.myBooking,
+                            (route) => false,
+                          );
                         },
                       ),
                       const SizedBox(height: 12),
                       AppOutlineButton(
                         title: "Back to Home",
                         onTap: () {
-                          ref.invalidate(selectedDateProvider);
-                          ref.invalidate(selectedAddressProvider);
-                          ref.invalidate(selectedRitualProvider);
-                          ref.invalidate(panditPaymentBookingProvider);
-                          ref.invalidate(selectedPanditProvider);
-                          ref.invalidate(selectedServiceProvider);
-                          ref.invalidate(serviceSelected);
-                          ref.invalidate(panditBookingProvider);
-                          ref.invalidate(walletProvider);
-                          ref.invalidate(couponProvider);
-                          ref.invalidate(panditAvailabilityProvider);
+                          _resetPanditCheckoutState();
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(

@@ -55,7 +55,11 @@ class ProductRepo {
   // 📦 Get all products
   Future<SubCategoryResModel> getSubCategories() async {
     try {
-      final res = await _api.getApi(AppUrls.subCategories);
+      final city = await LocationStorage.getCity() ?? "Agra";
+      final pincode = await LocationStorage.getPincode() ?? '';
+      final res = await _api.getApi(
+        "${AppUrls.subCategories}?city=$city&pincode=$pincode",
+      );
       return SubCategoryResModel.fromJson(res);
     } catch (e) {
       rethrow;

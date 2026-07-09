@@ -1,15 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samagrah/model/request/payment_req/pandit_create_order_req_model.dart';
 import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
-import 'package:samagrah/repo/payment_repo.dart';
 import 'package:samagrah/res/app_colors.dart';
-import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
-import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/pandit_payment_provider.dart';
@@ -25,6 +20,8 @@ class BookingSummaryScreen extends ConsumerStatefulWidget {
 }
 
 class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
+  bool _isSubmitting = false;
+
   @override
   void initState() {
     super.initState();
@@ -473,73 +470,81 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                         : 0.0;
                     final double toPay = total - deduction;
 
+                    final bool isSubmitting =
+                        _isSubmitting || paymentState.isLoading;
+
                     return AppButton(
-                      isLoading: paymentState.isLoading,
+                      isLoading: isSubmitting,
                       title: toPay > 0
                           ? 'Pay ₹${toPay.toStringAsFixed(0)} & Request Booking'
                           : 'Confirm Booking (Wallet)',
-                      onTap: () async {
-                        final List<DateTimeSlot> slots = dateTimeList.map((d) {
-                          return DateTimeSlot(
-                            date: d["date"] ?? "",
-                            time: d["time_slot"] ?? "",
-                          );
-                        }).toList();
+                      onTap: isSubmitting
+                          ? null
+                          : () async {
+                              if (_isSubmitting ||
+                                  ref
+                                      .read(panditPaymentBookingProvider)
+                                      .isLoading) {
+                                return;
+                              }
 
-                        final model = PanditCreateOrderReqModel(
-                          ritualId: ritual?.id ?? '',
-                          bookingMode: selectedService?.type ?? '',
-                          panditId: pandit?.id ?? '',
-                          templeId: templeId,
-                          dateAndTime: DateAndTimeWrapper(dateAndTime: slots),
-                          address: Address(
-                            name: address?.name ?? '',
-                            phone: address?.phone ?? '',
-                            fullAddress: address?.fullAddress ?? '',
-                            city: address?.city ?? '',
-                            state: address?.state ?? '',
-                            pincode: address?.pincode ?? '',
-                          ),
-                          onlineDetails: onlineDetails,
-                          price: toPay,
-                          walletAmount: deduction,
-                        );
-                        if (toPay > 0) {
-                          ref
-                              .read(panditPaymentBookingProvider.notifier)
-                              .createOrderAndPay(
-                                context: context,
-                                model: model,
-                              );
-                        } else {
-                          final repo = PaymentRepo();
+                              setState(() => _isSubmitting = true);
 
-                          final response = await repo.panditCreateOrder(model);
+                              try {
+                                final List<DateTimeSlot> slots = dateTimeList
+                                    .map((d) {
+                                      return DateTimeSlot(
+                                        date: d["date"] ?? "",
+                                        time: d["time_slot"] ?? "",
+                                      );
+                                    })
+                                    .toList();
 
-                          debugPrint(
-                            "📥 Full Response: ${jsonEncode(response)}",
-                          );
-
-                          /// ✅ VALIDATION
-                          if (response["success"] != true ||
-                              response["data"] == null) {
-                            AppSnackbar.show(
-                              context,
-                              message: 'Payment Failed: Something went wrong',
-                              type: SnackBarType.error,
-                            );
-                            return;
-                          }
-                          AppSnackbar.show(
-                            context,
-                            message: 'Payment Successful!',
-                            type: SnackBarType.success,
-                          );
-
-                          // Show success dialog
-                          Navigator.pushNamed(context, AppRoutes.panditPayment);
-                        }
-                      },
+                                final model = PanditCreateOrderReqModel(
+                                  ritualId: ritual?.id ?? '',
+                                  bookingMode: selectedService?.type ?? '',
+                                  panditId: pandit?.id ?? '',
+                                  templeId: templeId,
+                                  dateAndTime: DateAndTimeWrapper(
+                                    dateAndTime: slots,
+                                  ),
+                                  address: Address(
+                                    name: address?.name ?? '',
+                                    phone: address?.phone ?? '',
+                                    fullAddress: address?.fullAddress ?? '',
+                                    city: address?.city ?? '',
+                                    state: address?.state ?? '',
+                                    pincode: address?.pincode ?? '',
+                                  ),
+                                  onlineDetails: onlineDetails,
+                                  price: toPay,
+                                  walletAmount: deduction,
+                                );
+                                if (toPay > 0) {
+                                  await ref
+                                      .read(
+                                        panditPaymentBookingProvider.notifier,
+                                      )
+                                      .createOrderAndPay(
+                                        context: context,
+                                        model: model,
+                                      );
+                                } else {
+                                  await ref
+                                      .read(
+                                        panditPaymentBookingProvider.notifier,
+                                      )
+                                      .createWalletBooking(
+                                        context: context,
+                                        model: model,
+                                      );
+                                }
+                              } finally {
+                                if (mounted) {
+                                  setState(() => _isSubmitting = false);
+                                }
+                              }
+                            },
                       color: AppColors.button,
                       textStyle: text15(
                         color: AppColors.white,

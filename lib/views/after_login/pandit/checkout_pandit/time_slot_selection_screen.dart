@@ -23,6 +23,7 @@ class TimeSlotSelectionScreen extends ConsumerStatefulWidget {
 class _TimeSlotSelectionScreenState
     extends ConsumerState<TimeSlotSelectionScreen> {
   int? _selectedDateIndex;
+  bool _didPrepareScreen = false;
 
   bool _showCustomPicker = false;
 
@@ -63,6 +64,23 @@ class _TimeSlotSelectionScreenState
   int get _totalSelected =>
       _selectedSlots.values.fold(0, (sum, list) => sum + list.length) +
       (_customDate != null && _customTimeStart != null ? 1 : 0);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didPrepareScreen) return;
+    _didPrepareScreen = true;
+
+    final pandit = ModalRoute.of(context)?.settings.arguments as PanditData?;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      ref.read(selectedDateProvider.notifier).state = [];
+      if (pandit?.id != null) {
+        ref.invalidate(panditAvailabilityProvider(pandit!.id!));
+      }
+    });
+  }
 
   void _toggleSlot(String date, Slot slot) {
     setState(() {

@@ -28,7 +28,7 @@ class CategoryResModel {
 class CategoryData {
   CategoryData({
     required this.id,
-    required this.vendorId,
+
     required this.name,
     required this.code,
     required this.description,
@@ -41,7 +41,7 @@ class CategoryData {
   });
 
   final String? id;
-  final String? vendorId;
+
   final String? name;
   final String? code;
   final String? description;
@@ -55,7 +55,7 @@ class CategoryData {
   factory CategoryData.fromJson(Map<String, dynamic> json) {
     return CategoryData(
       id: json["_id"],
-      vendorId: json["vendorId"],
+
       name: json["name"],
       code: json["code"],
       description: json["description"],

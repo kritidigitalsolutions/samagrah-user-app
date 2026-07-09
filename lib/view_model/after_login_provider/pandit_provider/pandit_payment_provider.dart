@@ -169,6 +169,52 @@ class PanditPaymentBookingNotifier extends StateNotifier<PaymentState> {
     }
   }
 
+  Future<void> createWalletBooking({
+    required BuildContext context,
+    required PanditCreateOrderReqModel model,
+  }) async {
+    if (state.isLoading) return;
+
+    try {
+      debugPrint("🚀 Creating Wallet Booking...");
+      debugPrint("📦 Request: ${model.toJson()}");
+      state = state.copyWith(status: PaymentStatus.loading);
+
+      final response = await _repo.panditCreateOrder(model);
+
+      debugPrint("📥 Full Response: ${jsonEncode(response)}");
+
+      if (response["success"] != true || response["data"] == null) {
+        throw Exception("Something went wrong");
+      }
+
+      state = state.copyWith(status: PaymentStatus.success);
+
+      if (context.mounted) {
+        AppSnackbar.show(
+          context,
+          message: 'Payment Successful!',
+          type: SnackBarType.success,
+        );
+
+        Navigator.pushNamed(context, AppRoutes.panditPayment);
+      }
+    } catch (e) {
+      state = state.copyWith(
+        status: PaymentStatus.failed,
+        errorMessage: e.toString(),
+      );
+
+      if (context.mounted) {
+        AppSnackbar.show(
+          context,
+          message: 'Payment Failed: ${e.toString()}',
+          type: SnackBarType.error,
+        );
+      }
+    }
+  }
+
   /// Open Razorpay Payment Gateway
   void _openRazorpay({
     required String orderId,
