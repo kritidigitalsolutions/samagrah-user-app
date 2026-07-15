@@ -266,7 +266,7 @@ class _TimeSlotSelectionScreenState
     int poojaDurationHours,
   ) {
     final requiredMinutes = poojaDurationHours.clamp(1, 24) * 60;
-    final ranges = sourceSlots
+    final availableRanges = sourceSlots
         .where(
           (slot) =>
               slot.status?.toLowerCase() == 'available' &&
@@ -276,30 +276,31 @@ class _TimeSlotSelectionScreenState
         .whereType<({int start, int end})>()
         .toList()
       ..sort((a, b) => a.start.compareTo(b.start));
+    final bookedRanges = sourceSlots
+        .where((slot) => slot.status?.toLowerCase() == 'booked')
+        .map((slot) => _slotRange(slot))
+        .whereType<({int start, int end})>()
+        .toList();
 
     final result = <Slot>[];
     final seen = <String>{};
-    for (final startRange in ranges) {
-      final targetEnd = startRange.start + requiredMinutes;
-      var cursor = startRange.start;
+    for (final range in availableRanges) {
+      for (
+        var slotStart = range.start;
+        slotStart + requiredMinutes <= range.end;
+        slotStart += 60
+      ) {
+        final slotEnd = slotStart + requiredMinutes;
+        final overlapsBooking = bookedRanges.any(
+          (booked) => slotStart < booked.end && slotEnd > booked.start,
+        );
+        if (overlapsBooking) continue;
 
-      while (cursor < targetEnd) {
-        ({int start, int end})? nextRange;
-        for (final range in ranges) {
-          if (range.start <= cursor && range.end > cursor) {
-            nextRange = range;
-            break;
-          }
-        }
-
-        if (nextRange == null) break;
-        cursor = nextRange.end;
-      }
-
-      if (cursor >= targetEnd) {
         final time =
-            '${_formatMinutes(startRange.start)} - ${_formatMinutes(targetEnd)}';
-        if (seen.add(time)) result.add(Slot(time: time, status: 'available'));
+            '${_formatMinutes(slotStart)} - ${_formatMinutes(slotEnd)}';
+        if (!_isPastSlot(date, time) && seen.add(time)) {
+          result.add(Slot(time: time, status: 'available'));
+        }
       }
     }
 
@@ -1372,7 +1373,7 @@ class _SlotPanel extends StatelessWidget {
 
   List<Slot> _buildDurationSlots(String date, List<Slot> sourceSlots) {
     final requiredMinutes = poojaDurationHours.clamp(1, 24) * 60;
-    final ranges = sourceSlots
+    final availableRanges = sourceSlots
         .where(
           (s) =>
               s.status?.toLowerCase() == 'available' &&
@@ -1386,31 +1387,30 @@ class _SlotPanel extends StatelessWidget {
         .whereType<({Slot slot, int start, int end})>()
         .toList()
       ..sort((a, b) => a.start.compareTo(b.start));
+    final bookedRanges = sourceSlots
+        .where((slot) => slot.status?.toLowerCase() == 'booked')
+        .map((slot) => _slotRange(slot))
+        .whereType<({int start, int end})>()
+        .toList();
 
     final result = <Slot>[];
     final seen = <String>{};
 
-    for (final startRange in ranges) {
-      final targetEnd = startRange.start + requiredMinutes;
-      var cursor = startRange.start;
+    for (final range in availableRanges) {
+      for (
+        var slotStart = range.start;
+        slotStart + requiredMinutes <= range.end;
+        slotStart += 60
+      ) {
+        final slotEnd = slotStart + requiredMinutes;
+        final overlapsBooking = bookedRanges.any(
+          (booked) => slotStart < booked.end && slotEnd > booked.start,
+        );
+        if (overlapsBooking) continue;
 
-      while (cursor < targetEnd) {
-        ({Slot slot, int start, int end})? nextRange;
-        for (final range in ranges) {
-          if (range.start <= cursor && range.end > cursor) {
-            nextRange = range;
-            break;
-          }
-        }
-
-        if (nextRange == null) break;
-        cursor = nextRange.end;
-      }
-
-      if (cursor >= targetEnd) {
         final time =
-            '${_formatMinutes(startRange.start)} - ${_formatMinutes(targetEnd)}';
-        if (seen.add(time)) {
+            '${_formatMinutes(slotStart)} - ${_formatMinutes(slotEnd)}';
+        if (!isPastSlot(date, time) && seen.add(time)) {
           result.add(Slot(time: time, status: 'available'));
         }
       }
@@ -1461,6 +1461,17 @@ class _SlotPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
+
+          if (isAvailable && slots.isNotEmpty) ...[
+            Text(
+              '${slots.length} available time slots',
+              style: text12(
+                color: AppColors.grey600,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
 
           if (!isAvailable)
             Expanded(

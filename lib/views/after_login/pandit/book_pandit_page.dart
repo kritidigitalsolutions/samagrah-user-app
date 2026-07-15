@@ -261,53 +261,18 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
     return duration.ceil();
   }
 
-  bool _matchesDateTimeFilter(PanditData pandit, Set<String> ritualNames) {
-    if (_filters.date == null && _filters.time == null && _filters.endTime == null) {
-      return true;
-    }
+  bool _matchesDateTimeFilter(PanditData pandit) {
+    // Start/end-time filtering is intentionally disabled. Pandits are filtered
+    // only by the selected availability date.
+    if (_filters.date == null) return true;
     if (pandit.availability.isEmpty) return false;
 
-    final durationHours = _ritualDurationHours(pandit, ritualNames);
-    final filterDurationHours = _selectedFilterDurationHours(durationHours);
-    final filterDate = _filters.date == null ? null : _dateApi(_filters.date!);
-    final filterStart = _filters.time == null ? null : _toMinutes(_filters.time!);
-
-    final dates = pandit.availability.where((item) {
-      if (item.status?.toLowerCase() != 'available') return false;
-      if (filterDate != null && item.date != filterDate) return false;
-      return item.date != null;
-    });
-
-    for (final availability in dates) {
-      final date = availability.date!;
-      if (filterStart != null) {
-        if (_hasContinuousAvailability(
-          date: date,
-          sourceSlots: availability.slots,
-          startMinutes: filterStart,
-          durationHours: filterDurationHours,
-        )) {
-          return true;
-        }
-      } else {
-        for (final slot in availability.slots) {
-          final range = _slotRange(slot);
-          if (slot.status?.toLowerCase() == 'available' &&
-              range != null &&
-              !_isPastSlot(date, slot) &&
-              _hasContinuousAvailability(
-                date: date,
-                sourceSlots: availability.slots,
-                startMinutes: range.start,
-                durationHours: durationHours,
-              )) {
-            return true;
-          }
-        }
-      }
-    }
-
-    return false;
+    final filterDate = _dateApi(_filters.date!);
+    return pandit.availability.any(
+      (item) =>
+          item.status?.toLowerCase() == 'available' &&
+          item.date == filterDate,
+    );
   }
 
   @override
@@ -342,7 +307,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
         if (!hasRitual) return false;
       }
 
-      if (!_matchesDateTimeFilter(p, ritualNames)) return false;
+      if (!_matchesDateTimeFilter(p)) return false;
 
       if (searchTerm.isNotEmpty) {
         final name = _normalizeText(p.fullName);
@@ -734,8 +699,10 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 10),
-                              Expanded(
+                              // Start-time filter disabled: filtering is date-only.
+                              if (false) ...[
+                                const SizedBox(width: 10),
+                                Expanded(
                                 child: GestureDetector(
                                   onTap: () async {
                                     final picked = await showTimePicker(
@@ -775,11 +742,14 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                         : null,
                                   ),
                                 ),
-                              ),
+                                ),
+                              ],
                             ],
                           ),
-                          const SizedBox(height: 10),
-                          GestureDetector(
+                          // End-time filter disabled: filtering is date-only.
+                          if (false) ...[
+                            const SizedBox(height: 10),
+                            GestureDetector(
                             onTap: () async {
                               if (draft.time == null) {
                                 ScaffoldMessenger.of(ctx).showSnackBar(
@@ -827,7 +797,8 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                     )
                                   : null,
                             ),
-                          ),
+                            ),
+                          ],
                           const SizedBox(height: 20),
 
                           // ── Language ──
@@ -989,7 +960,9 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                     child: AppButton(
                       title: 'Apply Filters',
                       onTap: () {
-                        setState(() => _filters = draft);
+                        setState(() {
+                          _filters = draft.copyWith(time: null, endTime: null);
+                        });
                         Navigator.pop(sheetCtx);
                       },
                     ),
@@ -1362,7 +1335,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                   _filters = _filters.copyWith(date: null);
                                 }),
                               ),
-                            if (_filters.time != null)
+                            if (false && _filters.time != null)
                               _activeTag(
                                 '🕐 ${_formatTime(_filters.time!)}',
                                 onRemove: () => setState(() {
@@ -1372,7 +1345,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                   );
                                 }),
                               ),
-                            if (_filters.endTime != null)
+                            if (false && _filters.endTime != null)
                               _activeTag(
                                 'End ${_formatTime(_filters.endTime!)}',
                                 onRemove: () => setState(() {
