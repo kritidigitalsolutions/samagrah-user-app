@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:samagrah/data/exception/app_exception.dart';
 import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
 import 'package:samagrah/model/response/product_res/delivered_res_model.dart';
 import 'package:samagrah/repo/payment_repo.dart';
@@ -168,7 +169,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
       debugPrint("🔥 ERROR: $e");
       debugPrint("📍 STACK: $stack");
 
-      state = state.copyWith(isLoading: false, error: "Something went wrong");
+      state = state.copyWith(isLoading: false, error: _userFriendlyError(e));
     }
   }
 
@@ -267,7 +268,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
       debugPrint("❌ Error: $e");
       debugPrint("📍 StackTrace: $stack");
 
-      state = state.copyWith(isLoading: false, error: "Verification error");
+      state = state.copyWith(isLoading: false, error: _userFriendlyError(e));
     }
   }
 
@@ -278,5 +279,12 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
         : "Payment failed";
     debugPrint("❌ Error: $res");
     state = state.copyWith(isLoading: false, error: message);
+  }
+
+  String _userFriendlyError(Object error) {
+    if (error is AppException && error.message.trim().isNotEmpty) {
+      return error.message.trim();
+    }
+    return "Something went wrong. Please try again.";
   }
 }

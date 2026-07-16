@@ -20,7 +20,11 @@ class NetworkApiService extends BaseApiService {
       InterceptorsWrapper(
         onRequest: (options, handler) {
           debugPrint("➡️ REQUEST [${options.method}] => ${options.uri}");
-          debugPrint("Headers: ${options.headers}");
+          final safeHeaders = Map<String, dynamic>.from(options.headers);
+          if (safeHeaders.containsKey("Authorization")) {
+            safeHeaders["Authorization"] = "Bearer ***";
+          }
+          debugPrint("Headers: $safeHeaders");
           debugPrint("Data: ${options.data}");
           return handler.next(options);
         },
@@ -39,7 +43,7 @@ class NetworkApiService extends BaseApiService {
   /// 🔑 Set Authorization Token
   void setToken(String token) {
     _dio.options.headers["Authorization"] = "Bearer $token";
-    debugPrint("🔐 Token Set: Bearer $token");
+    debugPrint("🔐 Authorization token set");
   }
 
   /// ❌ Remove Token (Logout)
@@ -126,18 +130,16 @@ class NetworkApiService extends BaseApiService {
 
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode ?? 0;
-        final message = error.response?.data.toString() ?? "Unknown error";
+        final message = _extractErrorMessage(error.response?.data);
 
         if (statusCode == 400) {
           return BadRequestException(message);
         } else if (statusCode == 401 || statusCode == 403) {
           return UnauthorizedException(message);
-        } else if (statusCode == 500) {
-          return FetchDataException("Server Error");
+        } else if (statusCode >= 500) {
+          return FetchDataException(message);
         } else {
-          return FetchDataException(
-            "Error occurred with status code : $statusCode",
-          );
+          return BadRequestException(message);
         }
 
       case DioExceptionType.cancel:
@@ -147,6 +149,27 @@ class NetworkApiService extends BaseApiService {
       default:
         return FetchDataException("No Internet Connection");
     }
+  }
+
+  String _extractErrorMessage(dynamic data) {
+    if (data is Map) {
+      final message = data['message'] ?? data['error'];
+      if (message is String && message.trim().isNotEmpty) {
+        return message.trim();
+      }
+
+      final errors = data['errors'];
+      if (errors is Map && errors.isNotEmpty) {
+        final firstError = errors.values.first;
+        if (firstError is List && firstError.isNotEmpty) {
+          return firstError.first.toString();
+        }
+        return firstError.toString();
+      }
+    }
+
+    if (data is String && data.trim().isNotEmpty) return data.trim();
+    return "Something went wrong. Please try again.";
   }
 }
 

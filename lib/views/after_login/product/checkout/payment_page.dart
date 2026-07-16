@@ -52,7 +52,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     // ── Listeners ────────────────────────────────────────────────────────────
     ref.listen<PaymentState>(paymentProvider, (previous, next) {
       if (!mounted) return;
-      if (next.error?.isNotEmpty == true) {
+      if (next.error?.isNotEmpty == true && next.error != previous?.error) {
         _showSafeSnackbar(next.error!, SnackBarType.error);
       }
       if (next.isSuccess) {
