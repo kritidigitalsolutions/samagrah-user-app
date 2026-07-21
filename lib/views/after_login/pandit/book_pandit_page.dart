@@ -83,19 +83,19 @@ const _quickFilters = [
     'Home Visit',
     Icons.home_outlined,
     'home',
-    'Pooja will be performed at your home.',
+    'Puja will be performed at your home.',
   ),
   _QuickFilter(
     'Online',
     Icons.video_call_outlined,
     'online',
-    'Pooja will be performed online.',
+    'Puja will be performed online.',
   ),
   _QuickFilter(
     'Temple',
     Icons.temple_hindu_outlined,
     'temple',
-    'Pooja will be performed at temple.',
+    'Puja will be performed at temple.',
   ),
 ];
 
@@ -219,16 +219,17 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   }) {
     final targetEnd = startMinutes + durationHours.clamp(1, 24) * 60;
     var cursor = startMinutes;
-    final ranges = sourceSlots
-        .where(
-          (slot) =>
-              slot.status?.toLowerCase() == 'available' &&
-              !_isPastSlot(date, slot),
-        )
-        .map((slot) => _slotRange(slot))
-        .whereType<({int start, int end})>()
-        .toList()
-      ..sort((a, b) => a.start.compareTo(b.start));
+    final ranges =
+        sourceSlots
+            .where(
+              (slot) =>
+                  slot.status?.toLowerCase() == 'available' &&
+                  !_isPastSlot(date, slot),
+            )
+            .map((slot) => _slotRange(slot))
+            .whereType<({int start, int end})>()
+            .toList()
+          ..sort((a, b) => a.start.compareTo(b.start));
 
     while (cursor < targetEnd) {
       ({int start, int end})? nextRange;
@@ -256,7 +257,8 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
     }
 
     final selectedRitual = ref.read(selectedRitualProvider);
-    final duration = matchedOffering?.durationHours ?? selectedRitual?.durationHours;
+    final duration =
+        matchedOffering?.durationHours ?? selectedRitual?.durationHours;
     if (duration == null || duration <= 0) return 1;
     return duration.ceil();
   }
@@ -270,8 +272,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
     final filterDate = _dateApi(_filters.date!);
     return pandit.availability.any(
       (item) =>
-          item.status?.toLowerCase() == 'available' &&
-          item.date == filterDate,
+          item.status?.toLowerCase() == 'available' && item.date == filterDate,
     );
   }
 
@@ -280,7 +281,8 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
     super.initState();
     final selectedRitual = ref.read(selectedRitualProvider);
     if (selectedRitual != null) {
-      _searchController.text = selectedRitual.title ?? selectedRitual.name ?? '';
+      _searchController.text =
+          selectedRitual.title ?? selectedRitual.name ?? '';
     }
   }
 
@@ -368,7 +370,9 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   void _openLocationSheet() {
     final locationState = ref.read(panditLocationProvider);
     final cityController = TextEditingController(text: locationState.city);
-    final pincodeController = TextEditingController(text: locationState.pincode);
+    final pincodeController = TextEditingController(
+      text: locationState.pincode,
+    );
 
     showModalBottomSheet(
       context: context,
@@ -700,103 +704,104 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                 ),
                               ),
                               // Start-time filter disabled: filtering is date-only.
+                              // ignore: dead_code
                               if (false) ...[
                                 const SizedBox(width: 10),
                                 Expanded(
-                                child: GestureDetector(
-                                  onTap: () async {
-                                    final picked = await showTimePicker(
-                                      context: ctx,
-                                      initialTime:
-                                          draft.time ?? TimeOfDay.now(),
-                                      builder: (context, child) => Theme(
-                                        data: Theme.of(context).copyWith(
-                                          colorScheme: ColorScheme.light(
-                                            primary: AppColors.button,
+                                  child: GestureDetector(
+                                    onTap: () async {
+                                      final picked = await showTimePicker(
+                                        context: ctx,
+                                        initialTime:
+                                            draft.time ?? TimeOfDay.now(),
+                                        builder: (context, child) => Theme(
+                                          data: Theme.of(context).copyWith(
+                                            colorScheme: ColorScheme.light(
+                                              primary: AppColors.button,
+                                            ),
                                           ),
-                                        ),
-                                        child: child!,
-                                      ),
-                                    );
-                                    if (picked != null) {
-                                      setSheet(
-                                        () => draft = draft.copyWith(
-                                          time: picked,
+                                          child: child!,
                                         ),
                                       );
-                                    }
-                                  },
-                                  child: _dateTimePickerBox(
-                                    icon: Icons.access_time_rounded,
-                                    label: draft.time != null
-                                        ? _formatTime(draft.time!)
-                                        : 'Start Time',
-                                    isSelected: draft.time != null,
-                                    onClear: draft.time != null
-                                        ? () => setSheet(
-                                            () => draft = draft.copyWith(
-                                              time: null,
-                                              endTime: null,
-                                            ),
-                                          )
-                                        : null,
+                                      if (picked != null) {
+                                        setSheet(
+                                          () => draft = draft.copyWith(
+                                            time: picked,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: _dateTimePickerBox(
+                                      icon: Icons.access_time_rounded,
+                                      label: draft.time != null
+                                          ? _formatTime(draft.time!)
+                                          : 'Start Time',
+                                      isSelected: draft.time != null,
+                                      onClear: draft.time != null
+                                          ? () => setSheet(
+                                              () => draft = draft.copyWith(
+                                                time: null,
+                                                endTime: null,
+                                              ),
+                                            )
+                                          : null,
+                                    ),
                                   ),
-                                ),
                                 ),
                               ],
                             ],
                           ),
                           // End-time filter disabled: filtering is date-only.
+                          // ignore: dead_code
                           if (false) ...[
                             const SizedBox(height: 10),
                             GestureDetector(
-                            onTap: () async {
-                              if (draft.time == null) {
-                                ScaffoldMessenger.of(ctx).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Please select start time first',
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
-                              final picked = await showTimePicker(
-                                context: ctx,
-                                initialTime:
-                                    draft.endTime ??
-                                    _addHours(draft.time!, 1),
-                                builder: (context, child) => Theme(
-                                  data: Theme.of(context).copyWith(
-                                    colorScheme: ColorScheme.light(
-                                      primary: AppColors.button,
-                                    ),
-                                  ),
-                                  child: child!,
-                                ),
-                              );
-                              if (picked != null) {
-                                setSheet(
-                                  () => draft = draft.copyWith(
-                                    endTime: picked,
-                                  ),
-                                );
-                              }
-                            },
-                            child: _dateTimePickerBox(
-                              icon: Icons.timelapse_rounded,
-                              label: draft.endTime != null
-                                  ? _formatTime(draft.endTime!)
-                                  : 'End Time',
-                              isSelected: draft.endTime != null,
-                              onClear: draft.endTime != null
-                                  ? () => setSheet(
-                                      () => draft = draft.copyWith(
-                                        endTime: null,
+                              onTap: () async {
+                                if (draft.time == null) {
+                                  ScaffoldMessenger.of(ctx).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Please select start time first',
                                       ),
-                                    )
-                                  : null,
-                            ),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                final picked = await showTimePicker(
+                                  context: ctx,
+                                  initialTime:
+                                      draft.endTime ??
+                                      _addHours(draft.time!, 1),
+                                  builder: (context, child) => Theme(
+                                    data: Theme.of(context).copyWith(
+                                      colorScheme: ColorScheme.light(
+                                        primary: AppColors.button,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  ),
+                                );
+                                if (picked != null) {
+                                  setSheet(
+                                    () =>
+                                        draft = draft.copyWith(endTime: picked),
+                                  );
+                                }
+                              },
+                              child: _dateTimePickerBox(
+                                icon: Icons.timelapse_rounded,
+                                label: draft.endTime != null
+                                    ? _formatTime(draft.endTime!)
+                                    : 'End Time',
+                                isSelected: draft.endTime != null,
+                                onClear: draft.endTime != null
+                                    ? () => setSheet(
+                                        () => draft = draft.copyWith(
+                                          endTime: null,
+                                        ),
+                                      )
+                                    : null,
+                              ),
                             ),
                           ],
                           const SizedBox(height: 20),

@@ -51,7 +51,7 @@ class _SearchProductPageState extends ConsumerState<SearchProductPage> {
                   cursorColor: AppColors.white,
                   onChanged: _performSearch,
                   decoration: InputDecoration(
-                    hintText: 'Search diya, agarbatti, thali...',
+                    hintText: 'Search "diya", "agarbatti", "dhoop"',
                     hintStyle: text14(color: AppColors.grey100),
                     prefixIcon: const Icon(
                       Icons.search,
@@ -106,13 +106,8 @@ class _SearchProductPageState extends ConsumerState<SearchProductPage> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Search for Pooja items',
+                              'Search for Puja items',
                               style: text16(color: AppColors.grey),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Try "diya", "agarbatti", "mala"...',
-                              style: text14(color: AppColors.grey500),
                             ),
                           ],
                         ),

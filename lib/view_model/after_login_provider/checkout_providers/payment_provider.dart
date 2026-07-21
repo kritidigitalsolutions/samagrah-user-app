@@ -187,7 +187,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 
       'order_id': orderId,
       'name': 'Samagran',
-      'description': 'Pooja Kit Payment',
+      'description': 'Puja Kit Payment',
 
       'prefill': {
         'contact': contact?.isNotEmpty == true ? contact : '',

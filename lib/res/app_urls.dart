@@ -1,7 +1,7 @@
 class AppUrls {
-  // static const String baseUrl = "http://192.168.1.31:8000/api";
+  static const String baseUrl = "http://192.168.1.31:8000/api";
 
-  static const String baseUrl = "https://samagran-backend.vercel.app/api";
+  // static const String baseUrl = "https://samagran-backend.vercel.app/api";
 
   // ================ Auth =====================================
 

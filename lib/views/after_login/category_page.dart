@@ -44,11 +44,11 @@ class CategoryPage extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Prepare for your',
+                              'Everything for your',
                               style: text15(fontWeight: FontWeight.bold),
                             ),
                             Text(
-                              'Pooja today',
+                              'Puja',
                               style: text15(fontWeight: FontWeight.bold),
                             ),
                           ],

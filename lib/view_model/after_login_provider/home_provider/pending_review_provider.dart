@@ -110,7 +110,7 @@ final pendingReviewProvider = FutureProvider<List<PendingReviewItem>>((
     if (_isDismissed(dismissed, reviewKey, booking.id)) continue;
 
     final ritualName =
-        booking.ritual?.name ?? booking.ritualRef?.title ?? 'Pooja';
+        booking.ritual?.name ?? booking.ritualRef?.title ?? 'Puja';
 
     result.add(
       PendingReviewItem(

@@ -232,17 +232,17 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                 const SizedBox(height: 12),
                 _buildProcessStep(
                   '1',
-                  'After your order, receipt copy will be sent to your email.',
+                  'Your booking request will be sent to the Pandit for approval.',
                   true,
                 ),
                 _buildProcessStep(
                   '2',
-                  'Pandit Ji will review and accept your booking request.',
+                  'You will be notified after Pandit confirms your booking.',
                   true,
                 ),
                 _buildProcessStep(
                   '3',
-                  'You will receive confirmation shortly.',
+                  'This is only a slot booking charge Dakshina (Pandit fee) must be paid directly to the Pandit in cash or online after the Puja.',
                   true,
                 ),
                 const SizedBox(height: 8),
@@ -565,7 +565,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                 const SizedBox(height: 8),
                 const Center(
                   child: Text(
-                    'Pooja fee can be transferred offline after booking\nconfirmation and transaction.',
+                    'Puja fee can be transferred offline after booking\nconfirmation and transaction.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 10, color: Colors.grey),
                   ),

@@ -51,7 +51,7 @@ class PendingReviewCard extends ConsumerWidget {
                     children: [
                       Text(
                         item.isPanditBooking
-                            ? 'Your pooja was completed!'
+                            ? 'Your Puja was completed!'
                             : 'Your order was delivered!',
                         style: text13(
                           color: const Color(0xFF854F0B),
@@ -217,7 +217,7 @@ class PendingReviewCard extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => RatingBottomSheet(
         orderId: item.sourceId,
-        title: item.isPanditBooking ? 'Rate this Pooja' : 'Rate this Product',
+        title: item.isPanditBooking ? 'Rate this Puja' : 'Rate this Product',
         isPanditBooking: item.isPanditBooking,
         item: ProductDisplayItem(
           name: item.title,
@@ -292,7 +292,7 @@ class _QuickStarRowState extends ConsumerState<_QuickStarRow> {
       builder: (_) => RatingBottomSheet(
         orderId: widget.item.sourceId,
         title: widget.item.isPanditBooking
-            ? 'Rate this Pooja'
+            ? 'Rate this Puja'
             : 'Rate this Product',
         isPanditBooking: widget.item.isPanditBooking,
         item: ProductDisplayItem(

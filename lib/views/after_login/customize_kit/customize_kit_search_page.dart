@@ -49,7 +49,7 @@ class _CustomizePoojaKitScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Customize\nYour Pooja Kit',
+                          'Customize\nYour Puja Kit',
                           style: text18(fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -140,7 +140,7 @@ class _CustomizePoojaKitScreenState
           onChanged: (val) => setState(() => _searchQuery = val),
           style: text14(color: AppColors.grey800),
           decoration: InputDecoration(
-            hintText: 'Search pooja kit...',
+            hintText: 'Search Puja kit...',
             hintStyle: text14(color: AppColors.grey600),
             prefixIcon: Icon(
               Icons.search_rounded,

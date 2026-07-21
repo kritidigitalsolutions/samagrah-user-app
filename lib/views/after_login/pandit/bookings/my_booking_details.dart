@@ -573,7 +573,6 @@ class MyBookingDetails extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 String? _dateApi(String? raw) {
@@ -738,16 +737,17 @@ class _RescheduleSlotSheetState extends ConsumerState<_RescheduleSlotSheet> {
 
   List<Slot> _durationSlots(String date, List<Slot> sourceSlots) {
     final requiredMinutes = widget.durationHours.clamp(1, 24) * 60;
-    final ranges = sourceSlots
-        .where(
-          (slot) =>
-              slot.status?.toLowerCase() == 'available' &&
-              !_isPastSlot(date, slot.time),
-        )
-        .map((slot) => _slotRange(slot))
-        .whereType<({int start, int end})>()
-        .toList()
-      ..sort((a, b) => a.start.compareTo(b.start));
+    final ranges =
+        sourceSlots
+            .where(
+              (slot) =>
+                  slot.status?.toLowerCase() == 'available' &&
+                  !_isPastSlot(date, slot.time),
+            )
+            .map((slot) => _slotRange(slot))
+            .whereType<({int start, int end})>()
+            .toList()
+          ..sort((a, b) => a.start.compareTo(b.start));
 
     final result = <Slot>[];
     final seen = <String>{};
@@ -883,14 +883,12 @@ class _RescheduleSlotSheetState extends ConsumerState<_RescheduleSlotSheet> {
                     ),
                   ),
                   data: (res) {
-                    final dates = (res.data?.availability ?? [])
-                        .where((item) {
-                          final date = item.date ?? '';
-                          return !_isPastDate(date) &&
-                              item.status?.toLowerCase() == 'available' &&
-                              _durationSlots(date, item.slots).isNotEmpty;
-                        })
-                        .toList();
+                    final dates = (res.data?.availability ?? []).where((item) {
+                      final date = item.date ?? '';
+                      return !_isPastDate(date) &&
+                          item.status?.toLowerCase() == 'available' &&
+                          _durationSlots(date, item.slots).isNotEmpty;
+                    }).toList();
 
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -930,10 +928,10 @@ class _RescheduleSlotSheetState extends ConsumerState<_RescheduleSlotSheet> {
                                 isCurrentBooking: isCurrentBooking,
                                 onTap: available
                                     ? () => setState(() {
-                                          _customMode = false;
-                                          _selectedDateIndex = index;
-                                          _selectedSlot = null;
-                                        })
+                                        _customMode = false;
+                                        _selectedDateIndex = index;
+                                        _selectedSlot = null;
+                                      })
                                     : null,
                               );
                             },
@@ -1410,7 +1408,7 @@ class _SamagranKitCard extends StatelessWidget {
                   Navigator.pushNamed(
                     context,
                     AppRoutes.festivalKitDetails,
-                    arguments: kit,
+                    arguments: {'kit': kit, 'isCustomizable': false},
                   );
                 }
               : null,
@@ -1911,6 +1909,10 @@ void showCancelOrderBottomSheet(
     "Other",
   ];
 
+  // ── NEW: pandit ne accept kar liya hai to refund wallet me nahi jayega
+  final status = (booking.bookingStatus ?? '').toLowerCase();
+  final isPostAcceptance = status == 'confirmed' || status == 'completed';
+
   ref.read(selectedCancelReasonProvider.notifier).state = null;
 
   showModalBottomSheet(
@@ -1933,106 +1935,181 @@ void showCancelOrderBottomSheet(
               top: 20,
               bottom: MediaQuery.of(context).viewInsets.bottom + 20,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.grey300,
-                      borderRadius: BorderRadius.circular(10),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.grey300,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  "Cancel Order",
-                  style: text18(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  "Please select a reason for cancellation",
-                  style: text14(color: AppColors.grey600),
-                ),
-                const SizedBox(height: 16),
-                ...reasons.map(
-                  (reason) => Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: selectedReason == reason
-                            ? AppColors.button
-                            : AppColors.grey200,
-                      ),
-                    ),
-                    child: RadioListTile<String>(
-                      activeColor: AppColors.button,
-                      fillColor: WidgetStateProperty.resolveWith<Color>(
-                        (states) => states.contains(WidgetState.selected)
-                            ? AppColors.button
-                            : AppColors.grey400,
-                      ),
-                      value: reason,
-                      groupValue: selectedReason,
-                      title: Text(
-                        reason,
-                        style: text14(fontWeight: FontWeight.w500),
-                      ),
-                      onChanged: (value) {
-                        ref.read(selectedCancelReasonProvider.notifier).state =
-                            value;
-                      },
-                    ),
+                  const SizedBox(height: 20),
+                  Text(
+                    "Cancel Booking",
+                    style: text18(fontWeight: FontWeight.bold),
                   ),
-                ),
-                const SizedBox(height: 20),
-                AppButton(
-                  title: cancelState.isLoading ? "Cancelling..." : "Submit",
-                  onTap: cancelState.isLoading
-                      ? null
-                      : () async {
-                          if (selectedReason == null) {
-                            AppSnackbar.show(
-                              context,
-                              message: "Please select reason",
-                              type: SnackBarType.warning,
-                            );
-                            return;
-                          }
-                          final success = await ref
-                              .read(cancelBookingProvider.notifier)
-                              .cancelOrder(orderId, selectedReason);
-                          if (success) {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.cancelBooking,
-                              arguments: {
-                                'poojaName':
-                                    booking.ritual?.name ??
-                                    booking.ritualRef?.title ??
-                                    'Pooja',
-                                'panditName':
-                                    booking.pandit?.fullName ?? 'Pandit Ji',
-                                'panditImage':
-                                    booking.pandit?.profileImage ?? '',
-                                'bookingDate': booking.bookingDate ?? '',
-                              },
-                            );
-                            ref.invalidate(panditBookingProvider);
-                            AppSnackbar.show(
-                              context,
-                              message: "Booking Cancelled Successfully",
-                              type: SnackBarType.success,
-                            );
-                          }
+                  const SizedBox(height: 6),
+                  Text(
+                    "Please select a reason for cancellation",
+                    style: text14(color: AppColors.grey600),
+                  ),
+
+                  // ── NEW: warning banner ──
+                  if (isPostAcceptance) ...[
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF4E5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFFC069)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.info_outline_rounded,
+                            size: 18,
+                            color: Color(0xFFAD6800),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "Pandit ji ne is booking ko accept kar liya hai. "
+                              "Ab cancel karne par amount aapke wallet me refund "
+                              "nahi hoga.",
+                              style: text13(
+                                color: const Color(0xFFAD6800),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 16),
+                  ...reasons.map(
+                    (reason) => Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: selectedReason == reason
+                              ? AppColors.button
+                              : AppColors.grey200,
+                        ),
+                      ),
+                      child: RadioListTile<String>(
+                        activeColor: AppColors.button,
+                        fillColor: WidgetStateProperty.resolveWith<Color>(
+                          (states) => states.contains(WidgetState.selected)
+                              ? AppColors.button
+                              : AppColors.grey400,
+                        ),
+                        value: reason,
+                        groupValue: selectedReason,
+                        title: Text(
+                          reason,
+                          style: text14(fontWeight: FontWeight.w500),
+                        ),
+                        onChanged: (value) {
+                          ref
+                                  .read(selectedCancelReasonProvider.notifier)
+                                  .state =
+                              value;
                         },
-                ),
-                SizedBox(height: 20),
-              ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  AppButton(
+                    title: cancelState.isLoading ? "Cancelling..." : "Submit",
+                    onTap: cancelState.isLoading
+                        ? null
+                        : () async {
+                            if (selectedReason == null) {
+                              AppSnackbar.show(
+                                context,
+                                message: "Please select reason",
+                                type: SnackBarType.warning,
+                              );
+                              return;
+                            }
+
+                            // ── NEW: extra confirm step for post-acceptance cancel ──
+                            if (isPostAcceptance) {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (dialogContext) => AlertDialog(
+                                  title: const Text("Are you sure?"),
+                                  content: const Text(
+                                    "Pandit has already accepted your booking. If you cancel now, the booking amount will not be refunded to your wallet. Are you sure you want to continue?",
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(dialogContext, false),
+                                      child: const Text("No, keep booking"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(dialogContext, true),
+                                      child: const Text(
+                                        "Yes, cancel",
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed != true) return;
+                            }
+
+                            final success = await ref
+                                .read(cancelBookingProvider.notifier)
+                                .cancelOrder(orderId, selectedReason);
+                            if (success) {
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.cancelBooking,
+                                arguments: {
+                                  'poojaName':
+                                      booking.ritual?.name ??
+                                      booking.ritualRef?.title ??
+                                      'Pooja',
+                                  'panditName':
+                                      booking.pandit?.fullName ?? 'Pandit Ji',
+                                  'panditImage':
+                                      booking.pandit?.profileImage ?? '',
+                                  'bookingDate': booking.bookingDate ?? '',
+                                  // pass this along so the confirmation screen
+                                  // can also show "no refund to wallet" if needed
+                                  'refundToWallet': !isPostAcceptance,
+                                },
+                              );
+                              ref.invalidate(panditBookingProvider);
+                              AppSnackbar.show(
+                                context,
+                                message: isPostAcceptance
+                                    ? "Booking Cancelled. No wallet refund applicable."
+                                    : "Booking Cancelled Successfully",
+                                type: SnackBarType.success,
+                              );
+                            }
+                          },
+                  ),
+                  SizedBox(height: 20),
+                ],
+              ),
             ),
           );
         },

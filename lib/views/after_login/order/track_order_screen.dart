@@ -5,7 +5,7 @@ import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
-import 'package:intl/intl.dart';
+import 'package:samagrah/views/after_login/profile/policy/policy_page.dart';
 
 import 'package:samagrah/view_model/after_login_provider/order_provider/order_provider.dart';
 
@@ -35,7 +35,7 @@ class TrackOrderPage extends ConsumerWidget {
       body: orderAsync.when(
         data: (response) => RefreshIndicator(
           onRefresh: () => _refreshOrder(ref, orderId),
-          child: _buildOrderContent(response),
+          child: _buildOrderContent(context, response),
         ),
         loading: () => RefreshIndicator(
           onRefresh: () => _refreshOrder(ref, orderId),
@@ -81,18 +81,15 @@ class TrackOrderPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildOrderContent(TrackOrderResModel response) {
+  Widget _buildOrderContent(
+    BuildContext context,
+    TrackOrderResModel response,
+  ) {
     final data = response.data;
     final order = data?.order;
     final tracking = data?.tracking;
     final address = order?.address;
     final items = order?.items ?? [];
-
-    final orderDate = order?.createdAt ?? tracking?.placedAt ?? DateTime.now();
-    final expectedDeliveryDate = orderDate.add(const Duration(days: 5));
-    final formattedExpectedDate = DateFormat(
-      'dd MMM yyyy',
-    ).format(expectedDeliveryDate);
 
     // Debug - Remove after it works
     debugPrint('=== TRACKING DEBUG ===');
@@ -148,12 +145,7 @@ class TrackOrderPage extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Estimated Delivery By',
-                        style: text12(color: AppColors.textSecondary),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        formattedExpectedDate,
+                        'Estimated Delivery by Today',
                         style: text16(
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
@@ -161,8 +153,42 @@ class TrackOrderPage extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '*यह तिथि परिस्थितियों के अनुसार बढ़ भी सकती है (May increase depending on situations)',
-                        style: text10(color: Colors.grey.shade500),
+                        'In rare cases, delivery may be completed by the next day.',
+                        style: text12(color: AppColors.textSecondary),
+                      ),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            'For more details, please refer to the ',
+                            style: text10(color: Colors.grey.shade600),
+                          ),
+                          InkWell(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const PolicyPage(
+                                  title: 'Terms & Conditions',
+                                  isTerms: true,
+                                ),
+                              ),
+                            ),
+                            child: Text(
+                              'Terms & Conditions',
+                              style: text10(
+                                color: AppColors.button,
+                                fontWeight: FontWeight.w600,
+                              ).copyWith(
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            ' section.',
+                            style: text10(color: Colors.grey.shade600),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -310,13 +336,15 @@ class TrackOrderPage extends ConsumerWidget {
   //   );
   // }
 
-  Widget _buildOrderItem(dynamic item) {
-    final kit = item.product;
-    final name = kit?.name ?? 'Product';
+  Widget _buildOrderItem(OrderItem item) {
+    final product = item.product;
+    final name = product?.title ?? product?.name ?? 'Product';
 
-    String imageUrl = '';
-    if (kit?.items != null && kit!.items.isNotEmpty) {
-      final subItem = kit.items.first;
+    final productImages = product?.media?.image ?? const <String>[];
+    String imageUrl = productImages.isNotEmpty ? productImages.first : '';
+    final kitItems = product?.items ?? const <ProductItem>[];
+    if (imageUrl.isEmpty && kitItems.isNotEmpty) {
+      final subItem = kitItems.first;
       imageUrl = subItem.product?.media?.image.isNotEmpty == true
           ? subItem.product!.media!.image.first
           : '';

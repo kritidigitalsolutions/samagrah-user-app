@@ -1254,10 +1254,15 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     );
                     return;
                   }
-                  if (items.isEmpty) {
+                  if (items.isEmpty ||
+                      effectiveTotal <= 0 ||
+                      items.any(
+                        (item) =>
+                            item.productId.isEmpty || item.quantity <= 0,
+                      )) {
                     AppSnackbar.show(
                       context,
-                      message: "No items found",
+                      message: "Add a valid product before placing the order",
                       type: SnackBarType.error,
                     );
                     return;

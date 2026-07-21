@@ -162,6 +162,9 @@ class MyFavProducts extends ConsumerWidget {
     final cartNotifier = ref.read(cartProvider.notifier);
     final productId = product?.id ?? '';
     final quantity = ref.watch(cartQuantityProvider(productId));
+    final isWishlistLoading = ref.watch(
+      isWishlistTogglingProvider(productId),
+    );
     final inStock = (product?.stock?.quantity ?? 0) > 0;
 
     return Stack(
@@ -240,17 +243,28 @@ class MyFavProducts extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        ref.read(wishlistProvider.notifier).toggle(productId);
-                      },
+                      onTap: isWishlistLoading
+                          ? null
+                          : () => ref
+                                .read(wishlistProvider.notifier)
+                                .toggle(productId),
                       child: CircleAvatar(
                         radius: 12,
                         backgroundColor: AppColors.button.withAlpha(20),
-                        child: const Icon(
-                          Icons.delete_outline,
-                          size: 18,
-                          color: AppColors.button,
-                        ),
+                        child: isWishlistLoading
+                            ? const SizedBox(
+                                width: 15,
+                                height: 15,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.button,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.delete_outline,
+                                size: 18,
+                                color: AppColors.button,
+                              ),
                       ),
                     ),
                     SizedBox(height: 8),

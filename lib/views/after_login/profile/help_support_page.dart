@@ -21,6 +21,43 @@ class HelpPage extends ConsumerWidget {
     }
   }
 
+  String _statusLabel(String status) {
+    switch (status.toLowerCase().trim()) {
+      case 'resolved':
+        return 'Resolved';
+      case 'rejected':
+        return 'Closed';
+      case 'in_progress':
+      case 'in progress':
+        return 'In Progress';
+      default:
+        return 'Under Review';
+    }
+  }
+
+  String _shortOrderId(String orderId) {
+    if (orderId.isEmpty) return 'Not available';
+    return orderId.length > 8 ? orderId.substring(orderId.length - 8) : orderId;
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final complaintsAsync = ref.watch(complaintListProvider);
@@ -131,25 +168,57 @@ class HelpPage extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            Text('My Complaints', style: text16(fontWeight: FontWeight.bold)),
+            Text(
+              'Your Reported Issues',
+              style: text16(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Track issues reported from your orders and see updates from our support team. Pull down to refresh the latest status.',
+              style: text12(color: AppColors.grey600),
+            ),
             const SizedBox(height: 12),
 
             complaintsAsync.when(
               data: (complaints) {
                 if (complaints.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 30),
-                    child: Center(
-                      child: Text(
-                        "No complaints raised yet",
-                        style: text14(color: AppColors.grey600),
-                      ),
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 30,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.grey200),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.task_alt_rounded,
+                          size: 36,
+                          color: AppColors.grey400,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'No issues reported yet',
+                          style: text14(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Issues reported from your orders will appear here with their current status.',
+                          textAlign: TextAlign.center,
+                          style: text12(color: AppColors.grey600),
+                        ),
+                      ],
                     ),
                   );
                 }
                 return Column(
                   children: complaints.map((c) {
                     final color = _statusColor(c.status);
+                    final statusLabel = _statusLabel(c.status);
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(14),
@@ -180,7 +249,7 @@ class HelpPage extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
-                                  c.status,
+                                  statusLabel,
                                   style: text11(
                                     color: color,
                                     fontWeight: FontWeight.w600,
@@ -189,9 +258,48 @@ class HelpPage extends ConsumerWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.receipt_long_outlined,
+                                size: 14,
+                                color: AppColors.grey600,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  'Order #${_shortOrderId(c.orderId)}',
+                                  style: text12(color: AppColors.grey600),
+                                ),
+                              ),
+                              Icon(
+                                Icons.calendar_today_outlined,
+                                size: 13,
+                                color: AppColors.grey600,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Reported ${_formatDate(c.createdAt)}',
+                                style: text11(color: AppColors.grey600),
+                              ),
+                            ],
+                          ),
+                          if (c.details.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            Text(
+                              'Your message',
+                              style: text11(
+                                color: AppColors.grey600,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                          ],
                           Text(
-                            c.details,
+                            c.details.isEmpty
+                                ? 'No additional details'
+                                : c.details,
                             style: text13(color: AppColors.grey700),
                           ),
                           if (c.adminResponse.isNotEmpty) ...[
@@ -202,10 +310,31 @@ class HelpPage extends ConsumerWidget {
                                 color: Colors.blue.shade50,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Text(
-                                "Support: ${c.adminResponse}",
-                                style: text12(color: Colors.blue.shade900),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Support response',
+                                    style: text11(
+                                      color: Colors.blue.shade900,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    c.adminResponse,
+                                    style: text12(color: Colors.blue.shade900),
+                                  ),
+                                ],
                               ),
+                            ),
+                          ] else ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              statusLabel == 'Under Review'
+                                  ? 'Our support team is reviewing your issue.'
+                                  : 'No support response added yet.',
+                              style: text11(color: AppColors.grey600),
                             ),
                           ],
                         ],

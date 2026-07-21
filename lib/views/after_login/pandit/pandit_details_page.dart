@@ -7,6 +7,7 @@ import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
 
 class PanditDetailsPage extends ConsumerWidget {
   const PanditDetailsPage({super.key});
@@ -102,7 +103,7 @@ class PanditDetailsPage extends ConsumerWidget {
 
                     // Pooja Services
                     if (pandit.poojaOfferings.isNotEmpty) ...[
-                      const _Label('Pooja Services'),
+                      const _Label('Puja Services'),
                       const SizedBox(height: 10),
                       ...pandit.poojaOfferings.map(
                         (p) => _PoojaCard(
@@ -112,6 +113,9 @@ class PanditDetailsPage extends ConsumerWidget {
                         ),
                       ),
                     ],
+
+                    if (pandit.serviceTypes != null)
+                      _ServiceAreaCard(serviceTypes: pandit.serviceTypes!),
 
                     const SizedBox(height: 8),
                   ],
@@ -253,7 +257,7 @@ class _ServiceChips extends StatelessWidget {
       if (pandit.serviceTypes?.atTemple == true)
         _ChipItem(Icons.temple_hindu_outlined, 'Temple'),
       if (pandit.serviceTypes?.travelForSpecialPoojas == true)
-        _ChipItem(Icons.luggage_outlined, 'Travel'),
+        _ChipItem(Icons.luggage_outlined, 'Travel for Puja'),
     ];
     if (items.isEmpty) return const SizedBox.shrink();
 
@@ -393,7 +397,7 @@ class _PoojaCard extends StatelessWidget {
               const SizedBox(width: 7),
               Expanded(
                 child: Text(
-                  pooja.name ?? 'Pooja',
+                  pooja.name ?? 'Puja',
                   style: text14(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -472,6 +476,47 @@ class _BottomBar extends ConsumerWidget {
   const _BottomBar({required this.pandit});
   final PanditData pandit;
 
+  // ── Checks whether booking this pandit needs outstation approval ──
+  bool _isOutstationBooking(WidgetRef ref) {
+    final locationState = ref.read(panditLocationProvider);
+
+    // Agar user ne koi custom location search nahi ki (GPS/default use ho
+    // raha hai), to local booking treat karo — outstation check nahi lagega.
+    if (!locationState.isActive) return false;
+
+    final detectedCity = pandit.serviceTypes?.detectedLocation?.city
+        ?.trim()
+        .toLowerCase();
+    final searchedCity = locationState.city.trim().toLowerCase();
+
+    if (detectedCity == null || detectedCity.isEmpty) return false;
+    if (searchedCity.isEmpty) return false;
+
+    // Agar city match kar rahi hai to outstation nahi hai
+    return detectedCity != searchedCity;
+  }
+
+  void _showOutstationBlockedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Booking Not Available"),
+        content: Text(
+          "${pandit.fullName ?? 'This pandit'} sirf apne local service area "
+          "(${pandit.serviceTypes?.detectedLocation?.city ?? 'their city'}) "
+          "me hi available hain. Ye pandit doosre city/pincode ke liye "
+          "outstation booking accept nahi karte.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Okay"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
@@ -490,23 +535,34 @@ class _BottomBar extends ConsumerWidget {
           Expanded(
             child: ElevatedButton.icon(
               onPressed: () {
+                // ── NEW: outstation booking gate ──
+                final isOutstation = _isOutstationBooking(ref);
+                final anywhereInIndia =
+                    pandit
+                        .serviceTypes
+                        ?.outstationAvailability
+                        ?.anywhereInIndia ==
+                    true;
+
+                if (isOutstation && !anywhereInIndia) {
+                  _showOutstationBlockedDialog(context);
+                  return;
+                }
+
                 ref.read(selectedPanditProvider.notifier).state = pandit;
 
                 final selectedService = ref.read(selectedServiceProvider);
 
                 if (selectedService == null) {
-                  print(selectedService);
-                  // ❌ no service selected → go to service selection page
                   Navigator.pushNamed(
                     context,
                     AppRoutes.serviceSelection,
                     arguments: pandit,
                   );
                 } else {
-                  // ✅ service already selected → go to next page
                   Navigator.pushNamed(
                     context,
-                    AppRoutes.timeSelection, // change this to your page
+                    AppRoutes.timeSelection,
                     arguments: pandit,
                   );
                 }
@@ -531,6 +587,102 @@ class _BottomBar extends ConsumerWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Service Area Card ────────────────────────────────────────────────────
+class _ServiceAreaCard extends StatelessWidget {
+  const _ServiceAreaCard({required this.serviceTypes});
+  final ServiceTypes serviceTypes;
+
+  String _distanceLabel() {
+    final sd = serviceTypes.serviceDistance;
+    if (sd == null) return 'Not specified';
+    if (sd.customKm != null) return 'Within ${sd.customKm} km';
+    switch (sd.selected) {
+      case 'within5':
+        return 'Within 5 km';
+      case 'within10':
+        return 'Within 10 km';
+      case 'within20':
+        return 'Within 20 km';
+      default:
+        return sd.selected ?? 'Not specified';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = serviceTypes.detectedLocation;
+    final outstation = serviceTypes.outstationAvailability;
+
+    final locationLabel = [
+      loc?.city,
+      loc?.state,
+    ].where((e) => e != null && e.isNotEmpty).join(', ');
+
+    final outstationTags = <String>[
+      if (outstation?.withinDistrict == true) 'Within District',
+      if (outstation?.withinState == true) 'Within State',
+      if (outstation?.anywhereInIndia == true) 'Anywhere in India',
+    ];
+
+    return _Card(
+      title: 'Service Area',
+      icon: Icons.map_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (locationLabel.isNotEmpty)
+            Row(
+              children: [
+                const Icon(
+                  Icons.my_location_rounded,
+                  size: 14,
+                  color: AppColors.grey600,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Based in $locationLabel',
+                  style: text12(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(
+                Icons.social_distance_rounded,
+                size: 14,
+                color: AppColors.grey600,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Local service radius: ${_distanceLabel()}',
+                style: text12(color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (outstationTags.isNotEmpty)
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: outstationTags
+                  .map((t) => _Tag(Icons.travel_explore_rounded, t))
+                  .toList(),
+            )
+          else
+            Text(
+              'Does not travel outside local service area',
+              style: text12(color: AppColors.grey500),
+            ),
         ],
       ),
     );

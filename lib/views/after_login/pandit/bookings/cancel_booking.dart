@@ -132,7 +132,7 @@ class _CancelBookingState extends State<CancelBooking>
                           ),
                           const SizedBox(height: 10),
                           if (poojaName?.isNotEmpty == true)
-                            _DetailRow(label: 'Pooja', value: poojaName!),
+                            _DetailRow(label: 'Puja', value: poojaName!),
                           if (panditName?.isNotEmpty == true)
                             _DetailRow(label: 'Pandit', value: panditName!),
                           if (bookingDate?.isNotEmpty == true)

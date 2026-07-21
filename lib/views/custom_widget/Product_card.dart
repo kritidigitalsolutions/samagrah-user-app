@@ -29,10 +29,18 @@ class ProductCard extends ConsumerWidget {
     final quantity = ref.watch(cartQuantityProvider(product.id ?? ''));
     final cartNotifier = ref.read(cartProvider.notifier);
     final isWishlisted = ref.watch(isWishlistedProvider(product.id ?? ''));
+    final isWishlistLoading = ref.watch(
+      isWishlistTogglingProvider(product.id ?? ''),
+    );
     final currentIndex = ref.watch(imageSliderIndexProvider(product.id ?? ''));
 
     final hasDiscount = (product.discountPercent ?? 0) != 0;
     final inStock = product.inStock == true;
+    final brandName = (product.brand?.name ??
+            product.brandId?.name ??
+            product.details?.brand ??
+            '')
+        .trim();
 
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
@@ -104,22 +112,34 @@ class ProductCard extends ConsumerWidget {
                     top: 4,
                     right: 4,
                     child: GestureDetector(
-                      onTap: () => ref
-                          .read(wishlistProvider.notifier)
-                          .toggle(product.id ?? ''),
+                      onTap: isWishlistLoading
+                          ? null
+                          : () => ref
+                                .read(wishlistProvider.notifier)
+                                .toggle(product.id ?? ''),
                       child: Container(
                         padding: const EdgeInsets.all(3),
                         decoration: BoxDecoration(
                           color: AppColors.white.withOpacity(0.88),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
-                          isWishlisted ? Icons.favorite : Icons.favorite_border,
-                          size: 13,
-                          color: isWishlisted
-                              ? AppColors.error
-                              : AppColors.grey,
-                        ),
+                        child: isWishlistLoading
+                            ? const SizedBox(
+                                width: 13,
+                                height: 13,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.8,
+                                ),
+                              )
+                            : Icon(
+                                isWishlisted
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                size: 13,
+                                color: isWishlisted
+                                    ? AppColors.error
+                                    : AppColors.grey,
+                              ),
                       ),
                     ),
                   ),
@@ -186,6 +206,19 @@ class ProductCard extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (brandName.isNotEmpty) ...[
+                    Text(
+                      capitalizeWords(brandName),
+                      style: text10(
+                        color: AppColors.grey,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                  ],
+
                   // Unit
                   if (product.details?.unit != null &&
                       product.details!.unit!.isNotEmpty)

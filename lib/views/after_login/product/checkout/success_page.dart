@@ -24,6 +24,7 @@ class _SuccessPageState extends ConsumerState<SuccessPage>
     with SingleTickerProviderStateMixin {
   late AnimationController controller;
   late Animation<double> scaleAnimation;
+  late final Future<void> _checkoutCleanupFuture;
 
   @override
   void initState() {
@@ -40,6 +41,12 @@ class _SuccessPageState extends ConsumerState<SuccessPage>
     ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
 
     controller.repeat(reverse: true); // 🔥 continuous animation
+    // Updating Riverpod state synchronously from initState is not allowed while
+    // this route is being mounted. Run the one-time cleanup after the first
+    // frame, and let both navigation actions await the same operation.
+    _checkoutCleanupFuture = WidgetsBinding.instance.endOfFrame.then(
+      (_) => _completeCheckoutCleanup(),
+    );
   }
 
   @override
@@ -114,8 +121,9 @@ class _SuccessPageState extends ConsumerState<SuccessPage>
                     AppButton(
                       radius: 8,
                       title: "My Order",
-                      onTap: () {
-                        ref.invalidate(orderProvider);
+                      onTap: () async {
+                        await _checkoutCleanupFuture;
+                        if (!mounted) return;
                         Navigator.pushNamed(context, AppRoutes.myOrder);
                       },
                     ),
@@ -140,6 +148,18 @@ class _SuccessPageState extends ConsumerState<SuccessPage>
   }
 
   Future<void> _handleBackToHome() async {
+    await _checkoutCleanupFuture;
+
+    if (!mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => MyHomeScreen(index: 0)),
+      (route) => false,
+    );
+  }
+
+  Future<void> _completeCheckoutCleanup() async {
     final bookingItems = ref.read(bookingItemProvider);
     final cartState = ref.read(cartProvider);
 
@@ -168,13 +188,5 @@ class _SuccessPageState extends ConsumerState<SuccessPage>
     ref.invalidate(offerProvider);
     ref.invalidate(orderProvider);
     ref.invalidate(notificationProvider);
-
-    if (!mounted) return;
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => MyHomeScreen(index: 0)),
-      (route) => false,
-    );
   }
 }

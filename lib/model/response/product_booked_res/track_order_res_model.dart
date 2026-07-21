@@ -145,6 +145,9 @@ class PurpleProduct {
     required this.id,
     required this.user,
     required this.name,
+    required this.title,
+    required this.media,
+    required this.pricing,
     required this.baseKit,
     required this.items,
     required this.totalPrice,
@@ -158,6 +161,9 @@ class PurpleProduct {
   final String? id;
   final String? user;
   final String? name;
+  final String? title;
+  final Media? media;
+  final Pricing? pricing;
   final dynamic baseKit;
   final List<ProductItem> items;
   final num? totalPrice;
@@ -172,6 +178,11 @@ class PurpleProduct {
       id: json["_id"],
       user: json["user"],
       name: json["name"],
+      title: json["title"],
+      media: json["media"] == null ? null : Media.fromJson(json["media"]),
+      pricing: json["pricing"] == null
+          ? null
+          : Pricing.fromJson(json["pricing"]),
       baseKit: json["baseKit"],
       items: json["items"] == null
           ? []

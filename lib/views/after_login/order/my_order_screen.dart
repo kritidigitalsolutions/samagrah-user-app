@@ -206,7 +206,8 @@ class OrderCard extends ConsumerWidget {
   bool get _isDelivered => _normalizedStatus == 'delivered';
 
   bool get _isCancelled =>
-      _normalizedStatus == 'cancelled' || (order.tracking?.isCancelled ?? false);
+      _normalizedStatus == 'cancelled' ||
+      (order.tracking?.isCancelled ?? false);
 
   bool get _canCancel =>
       _normalizedStatus == 'placed' && !(order.tracking?.isCancelled ?? false);
@@ -224,18 +225,18 @@ class OrderCard extends ConsumerWidget {
     final statusText = OrderUtils.getStatusText(
       order.tracking?.currentStatus ?? order.orderStatus,
     );
-    final hasReportedIssue = ref.watch(complaintListProvider).maybeWhen(
-      data: (complaints) => complaints.any(
-        (complaint) => _isComplaintForOrder(complaint, order),
-      ),
-      orElse: () => false,
-    );
+    final hasReportedIssue = ref
+        .watch(complaintListProvider)
+        .maybeWhen(
+          data: (complaints) => complaints.any(
+            (complaint) => _isComplaintForOrder(complaint, order),
+          ),
+          orElse: () => false,
+        );
 
     void showAlreadyReportedMessage() {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Issue already reported for this order"),
-        ),
+        const SnackBar(content: Text("Issue already reported for this order")),
       );
     }
 
@@ -826,9 +827,7 @@ Future<void> showComplainBottomSheet(
       ref.invalidate(complaintListProvider);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Issue already reported for this order"),
-        ),
+        const SnackBar(content: Text("Issue already reported for this order")),
       );
       return;
     }
@@ -943,140 +942,142 @@ Future<void> showComplainBottomSheet(
               top: 20,
               bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Text(
+                    "Report issues",
+                    style: text18(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "Order ID: $orderId",
+                    style: text13(
+                      color: AppColors.grey600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    complaintType == ComplaintType.refund
+                        ? "Note: Your order was cancelled. If you have any issue with the refund, please report it below."
+                        : "Note: Any product-related issue or complaint must be reported within 24 hours of delivery. Issues raised after 24 hours of delivery will not be eligible for review or resolution.",
+                    style: text12(color: AppColors.error),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Text(
+                    "Select Issue",
+                    style: text14(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.grey700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                Text(
-                  "Report issues",
-                  style: text18(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  "Order ID: $orderId",
-                  style: text13(
-                    color: AppColors.grey600,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  complaintType == ComplaintType.refund
-                      ? "Note: Your order was cancelled. If you have any issue with the refund, please report it below."
-                      : "Note: Refunds are not applicable for delivered orders. You can report an issue or replacement query below.",
-                  style: text12(color: AppColors.error),
-                ),
-                const SizedBox(height: 16),
-
-                Text(
-                  "Select Issue",
-                  style: text14(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.grey700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.grey300),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      isExpanded: true,
-                      value: selectedReason,
-                      hint: Text(
-                        "Choose reason...",
-                        style: text14(color: AppColors.grey500),
-                      ),
-                      items: reasons
-                          .map(
-                            (r) => DropdownMenuItem(
-                              value: r,
-                              child: Text(r, style: text14()),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (val) =>
-                          setSheetState(() => selectedReason = val),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                Text(
-                  "Explain in Detail",
-                  style: text14(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.grey700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: detailController,
-                  maxLines: 3,
-                  style: text14(),
-                  decoration: InputDecoration(
-                    hintText: "Tell us more about the issue...",
-                    hintStyle: text13(color: AppColors.grey400),
-                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.grey300),
+                      border: Border.all(color: AppColors.grey300),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                AppButton(
-                  title: isSubmitting ? "Submitting..." : "Submit Report",
-                  onTap: isSubmitting ? null : submitComplaint,
-                ),
-
-                const SizedBox(height: 16),
-                Center(
-                  child: Text(
-                    "Or contact our support team directly:",
-                    style: text12(color: AppColors.grey600),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                const SizedBox(height: 16),
-                Center(
-                  child: TextButton.icon(
-                    onPressed: () {
-                      Navigator.pop(sheetCtx); // bottomsheet close karo
-                      Navigator.pushNamed(context, AppRoutes.helpAndSupport);
-                    },
-                    icon: Icon(
-                      Icons.help_outline_rounded,
-                      color: AppColors.button,
-                      size: 18,
-                    ),
-                    label: Text(
-                      "Need More Help?",
-                      style: text13(
-                        color: AppColors.button,
-                        fontWeight: FontWeight.bold,
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: selectedReason,
+                        hint: Text(
+                          "Choose reason...",
+                          style: text14(color: AppColors.grey500),
+                        ),
+                        items: reasons
+                            .map(
+                              (r) => DropdownMenuItem(
+                                value: r,
+                                child: Text(r, style: text14()),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (val) =>
+                            setSheetState(() => selectedReason = val),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(height: 20),
-              ],
+                  const SizedBox(height: 16),
+
+                  Text(
+                    "Explain in Detail",
+                    style: text14(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.grey700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: detailController,
+                    maxLines: 3,
+                    style: text14(),
+                    decoration: InputDecoration(
+                      hintText: "Tell us more about the issue...",
+                      hintStyle: text13(color: AppColors.grey400),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.grey300),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  AppButton(
+                    title: isSubmitting ? "Submitting..." : "Submit Report",
+                    onTap: isSubmitting ? null : submitComplaint,
+                  ),
+
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Text(
+                      "Or contact our support team directly:",
+                      style: text12(color: AppColors.grey600),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  const SizedBox(height: 16),
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () {
+                        Navigator.pop(sheetCtx); // bottomsheet close karo
+                        Navigator.pushNamed(context, AppRoutes.helpAndSupport);
+                      },
+                      icon: Icon(
+                        Icons.help_outline_rounded,
+                        color: AppColors.button,
+                        size: 18,
+                      ),
+                      label: Text(
+                        "Need More Help?",
+                        style: text13(
+                          color: AppColors.button,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                ],
+              ),
             ),
           );
         },

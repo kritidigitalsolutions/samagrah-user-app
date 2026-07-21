@@ -103,7 +103,7 @@ class _AddressSelectionScreenState
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            "Choose a temple for your pooja",
+                            "Choose a temple for your Puja",
                             style: text12(color: AppColors.grey600),
                           ),
                         ],

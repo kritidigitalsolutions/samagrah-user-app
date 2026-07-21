@@ -25,11 +25,23 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
   DefaultKitData? _lastKit;
   bool _showAllItems = false;
   List<Item> _originalItems = [];
+  bool _isCustomizable = true;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final kit = ModalRoute.of(context)!.settings.arguments as DefaultKitData;
+    final args = ModalRoute.of(context)!.settings.arguments;
+    DefaultKitData kit;
+    if (args is DefaultKitData) {
+      kit = args;
+      _isCustomizable = true;
+    } else if (args is Map<String, dynamic>) {
+      kit = args['kit'] as DefaultKitData;
+      _isCustomizable = args['isCustomizable'] as bool? ?? true;
+    } else {
+      kit = args as DefaultKitData;
+      _isCustomizable = true;
+    }
     if (_lastKit?.id != kit.id) {
       _lastKit = kit;
       _originalItems = kit.items
@@ -40,10 +52,14 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
 
   @override
   Widget build(BuildContext context) {
-    final kit = ModalRoute.of(context)!.settings.arguments as DefaultKitData;
+    final args = ModalRoute.of(context)!.settings.arguments;
+    final kit = args is Map<String, dynamic>
+        ? args['kit'] as DefaultKitData
+        : args as DefaultKitData;
     final isLoading = ref.watch(defaultKitLoaderPro);
 
-    final bool isSpecialKit = (kit.kitType ?? '').toLowerCase() == 'special';
+    final bool isSpecialKit =
+        (kit.kitType ?? '').toLowerCase() == 'samagran kit';
     final bool isPanditApproved = kit.isPanditApproved == true;
     final bool isMostUsed = kit.isMostUserUse == true;
     final bool isPopular = kit.isMostPopularKit == true;
@@ -447,7 +463,7 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                       ),
               ),
               const SizedBox(height: 10),
-              if (!isSpecialKit)
+              if (!isSpecialKit && _isCustomizable)
                 AppOutlineButton(
                   title: 'Customize This Kit ✏️',
                   onTap: () => _openCustomizeSheet(context, ref, kit),
@@ -474,7 +490,9 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Special kits cannot be customized',
+                        _isCustomizable
+                            ? 'Special kits cannot be customized'
+                            : 'Samagran kits cannot be customized',
                         style: text12(color: Colors.purple.shade700),
                       ),
                     ],
@@ -1744,11 +1762,7 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
-                            Icons.add,
-                            size: 12,
-                            color: Colors.white,
-                          ),
+                          const Icon(Icons.add, size: 12, color: Colors.white),
                           const SizedBox(width: 4),
                           Text(
                             'Add',

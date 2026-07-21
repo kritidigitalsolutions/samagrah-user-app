@@ -44,6 +44,9 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
     final cartNotifier = ref.read(cartProvider.notifier);
     final productState = ref.watch(productProvider);
     final isWishlisted = ref.watch(isWishlistedProvider(product.id ?? ''));
+    final isWishlistLoading = ref.watch(
+      isWishlistTogglingProvider(product.id ?? ''),
+    );
     final showAllDetails = ref.watch(showAllDetailsProvider);
     final details = product.details;
     final inStock = product.inStock == true;
@@ -89,7 +92,7 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
         _BadgeData('Recommended', Icons.star_rounded, const Color(0xFFF59E0B)),
       if (product.isMostPoojaEssentials == true)
         _BadgeData(
-          'Pooja Essential',
+          'Puja Essential',
           Icons.local_fire_department,
           Colors.deepOrange,
         ),
@@ -128,20 +131,30 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: GestureDetector(
-                        onTap: () => ref
-                            .read(wishlistProvider.notifier)
-                            .toggle(product.id ?? ''),
+                        onTap: isWishlistLoading
+                            ? null
+                            : () => ref
+                                  .read(wishlistProvider.notifier)
+                                  .toggle(product.id ?? ''),
                         child: CircleAvatar(
                           backgroundColor: AppColors.white,
-                          child: Icon(
-                            isWishlisted
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            size: 23,
-                            color: isWishlisted
-                                ? AppColors.error
-                                : AppColors.grey500,
-                          ),
+                          child: isWishlistLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.2,
+                                  ),
+                                )
+                              : Icon(
+                                  isWishlisted
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  size: 23,
+                                  color: isWishlisted
+                                      ? AppColors.error
+                                      : AppColors.grey500,
+                                ),
                         ),
                       ),
                     ),

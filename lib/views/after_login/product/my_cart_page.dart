@@ -24,6 +24,13 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
     final cartItems = ref.watch(cartProvider);
     final itemTotal = ref.watch(totalPriceProvider);
     final hasOutOfStockItems = cartItems.items.any((item) => !item.inStock);
+    final canPlaceOrder =
+        cartItems.items.isNotEmpty &&
+        itemTotal > 0 &&
+        cartItems.items.every(
+          (item) =>
+              item.productId.isNotEmpty && item.quantity > 0 && item.price > 0,
+        );
     // const deliveryFee = 20;
     final totalAmount = itemTotal;
     return Scaffold(
@@ -121,14 +128,14 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Get 5% Off on your first',
+                                  'Special Offers',
                                   style: text11(
                                     color: AppColors.black87,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 Text(
-                                  'pooja package order',
+                                  'Exclusive deals on Puja essentials',
                                   style: text10(color: AppColors.grey600),
                                 ),
                               ],
@@ -167,14 +174,14 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Free Delivery on Puja Essentials',
+                                  'Free Delivery',
                                   style: text11(
                                     color: AppColors.black87,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 Text(
-                                  'On orders above ₹499',
+                                  'Minimum order value applies',
                                   style: text10(color: AppColors.grey600),
                                 ),
                               ],
@@ -243,13 +250,28 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
                       child: AppButton(
                         title: hasOutOfStockItems
                             ? "Remove Out of Stock"
-                            : "Place Order",
-                        onTap: () {
+                            : canPlaceOrder
+                            ? "Place Order"
+                            : "Add Products to Continue",
+                        onTap: cartItems.items.isEmpty
+                            ? null
+                            : () {
                           if (hasOutOfStockItems) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
                                   "Remove out of stock items before placing order",
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (!canPlaceOrder) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Add a valid product before placing the order",
                                 ),
                               ),
                             );

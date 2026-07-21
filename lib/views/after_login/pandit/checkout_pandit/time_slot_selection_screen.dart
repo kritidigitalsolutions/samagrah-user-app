@@ -86,15 +86,12 @@ class _TimeSlotSelectionScreenState
     setState(() {
       final list = _selectedSlots[date] ?? [];
       final exists = list.any((s) => s.time == slot.time);
-      if (exists) {
-        list.removeWhere((s) => s.time == slot.time);
-        if (list.isEmpty) {
-          _selectedSlots.remove(date);
-        } else {
-          _selectedSlots[date] = list;
-        }
-      } else {
-        _selectedSlots[date] = [...list, slot];
+      _selectedSlots.clear();
+      _customDate = null;
+      _customTimeStart = null;
+      _customTimeEnd = null;
+      if (!exists) {
+        _selectedSlots[date] = [slot];
       }
     });
   }
@@ -133,7 +130,10 @@ class _TimeSlotSelectionScreenState
       ),
     );
     if (picked != null) {
-      setState(() => _customDate = picked);
+      setState(() {
+        _selectedSlots.clear();
+        _customDate = picked;
+      });
     }
   }
 
@@ -148,7 +148,13 @@ class _TimeSlotSelectionScreenState
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _customTimeStart = picked);
+    if (picked != null) {
+      setState(() {
+        _selectedSlots.clear();
+        _customTimeStart = picked;
+        _customTimeEnd = null;
+      });
+    }
   }
 
   Future<void> _pickEndTime() async {
@@ -167,7 +173,12 @@ class _TimeSlotSelectionScreenState
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _customTimeEnd = picked);
+    if (picked != null) {
+      setState(() {
+        _selectedSlots.clear();
+        _customTimeEnd = picked;
+      });
+    }
   }
 
   // ── FIX: Strip the time component so today's date compares correctly ──

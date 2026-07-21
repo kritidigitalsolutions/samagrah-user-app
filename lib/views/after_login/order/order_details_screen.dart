@@ -663,7 +663,7 @@ class OrderDetailsContent extends ConsumerWidget {
                 const SizedBox(height: 24),
                 Center(
                   child: Text(
-                    'Thank you for ordering your pooja\nessentials with us ^_^',
+                    'Thank you for ordering your Puja\nessentials with us ^_^',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,

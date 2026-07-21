@@ -46,9 +46,9 @@ class MyBookingsPage extends ConsumerWidget {
       case "home":
         return "Home Visit";
       case "online":
-        return "Online Pooja (Video Call)";
+        return "Online Puja (Video Call)";
       case "temple":
-        return "Temple Pooja";
+        return "Temple Puja";
       default:
         return "Home Visit";
     }
@@ -147,7 +147,7 @@ class MyBookingsPage extends ConsumerWidget {
                                 title:
                                     booking.ritual?.name ??
                                     booking.ritualRef?.title ??
-                                    "Pooja",
+                                    "Puja",
                                 date: _formatDate(booking.bookingDate),
                                 time: _formatTime(
                                   booking.dateAndTime?.dateAndTime,

@@ -8,6 +8,7 @@ import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
 
 class ServiceSelectionScreen extends ConsumerWidget {
   const ServiceSelectionScreen({super.key});
@@ -16,16 +17,18 @@ class ServiceSelectionScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final pandit = ModalRoute.of(context)!.settings.arguments as PanditData;
     final selectedIndex = ref.watch(serviceSelected);
+    final selectedRitual = ref.watch(selectedRitualProvider);
+    final hasTravel = selectedRitual?.travelForSpecialPooja == true;
 
     /// 🔥 Dynamic Service List
     final List<ServiceModel> serviceList = [];
 
-    if (pandit.serviceTypes?.homeVisit == true) {
+    if (pandit.serviceTypes?.homeVisit == true && hasTravel) {
       serviceList.add(
         ServiceModel(
           title: 'Home Visit',
           type: "home",
-          description: 'Pooja will be performed at your home.',
+          description: 'Puja will be performed at your home.',
           icon: Icons.home_outlined,
         ),
       );
@@ -34,9 +37,9 @@ class ServiceSelectionScreen extends ConsumerWidget {
     if (pandit.serviceTypes?.onlinePooja == true) {
       serviceList.add(
         ServiceModel(
-          title: 'Online Pooja',
+          title: 'Online Puja',
           type: "online",
-          description: 'Pooja will be performed online.',
+          description: 'Puja will be performed online.',
           icon: Icons.video_call_outlined,
         ),
       );
@@ -47,7 +50,7 @@ class ServiceSelectionScreen extends ConsumerWidget {
         ServiceModel(
           title: 'Temple Ritual',
           type: "temple",
-          description: 'Pooja will be performed at temple.',
+          description: 'Puja will be performed at temple.',
           icon: Icons.temple_hindu_outlined,
         ),
       );
@@ -137,11 +140,11 @@ class ServiceSelectionScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Select Pooja Mode",
+                            "Select Puja Mode",
                             style: text16(fontWeight: FontWeight.w600),
                           ),
                           Text(
-                            "Choose how you want your pooja",
+                            "Choose how you want your Puja",
                             style: text12(color: AppColors.grey600),
                           ),
                         ],

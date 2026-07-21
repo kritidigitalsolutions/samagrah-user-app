@@ -59,11 +59,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Prepare for your',
+                            'Everything for your',
                             style: text15(fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            'Pooja today',
+                            'Puja',
                             style: text15(fontWeight: FontWeight.bold),
                           ),
                           InkWell(
@@ -134,7 +134,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             cursorColor: AppColors.white,
                             decoration: InputDecoration(
-                              hintText: 'diya, agarbatti thali...',
+                              hintText: 'Search "diya", "agarbatti", "dhoop"',
                               hintStyle: text14(color: AppColors.grey100),
                               prefixIcon: const Icon(
                                 Icons.search,
@@ -374,7 +374,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             // ── Pooja Essentials (grid) ─────────────
                             if (state.poojaEssentials.isNotEmpty) ...[
                               _buildSectionHeader(
-                                '🛕 Pooja Essentials',
+                                '🛕 Puja Essentials',
                                 context,
                               ),
                               _buildProductGrid(
@@ -430,7 +430,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               context,
               MaterialPageRoute(
                 builder: (_) => const TypeOfCategoryPage(
-                  title: 'Buy Item for Pooja',
+                  title: 'Buy Item for Puja',
                   categoryType: 'allItems',
                 ),
               ),
@@ -522,7 +522,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         context,
         MaterialPageRoute(
           builder: (_) => TypeOfCategoryPage(
-            title: 'Buy Item for Pooja',
+            title: 'Buy Item for Puja',
             categoryType: categoryType,
           ),
         ),
