@@ -250,15 +250,13 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   int _ritualDurationHours(PanditData pandit, Set<String> ritualNames) {
     PoojaOffering? matchedOffering;
     for (final offering in pandit.poojaOfferings) {
-      if (ritualNames.contains(_normalizeText(offering.name))) {
+      if (_ritualAliases(offering.name).intersection(ritualNames).isNotEmpty) {
         matchedOffering = offering;
         break;
       }
     }
 
-    final selectedRitual = ref.read(selectedRitualProvider);
-    final duration =
-        matchedOffering?.durationHours ?? selectedRitual?.durationHours;
+    final duration = matchedOffering?.durationHours;
     if (duration == null || duration <= 0) return 1;
     return duration.ceil();
   }
@@ -296,15 +294,17 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
   List<PanditData> _applyFilters(List<PanditData> source) {
     final selectedRitual = ref.read(selectedRitualProvider);
     final ritualNames = {
-      _normalizeText(selectedRitual?.name),
-      _normalizeText(selectedRitual?.title),
-    }..remove('');
+      ..._ritualAliases(selectedRitual?.name),
+      ..._ritualAliases(selectedRitual?.title),
+    };
     final searchTerm = _normalizeText(_searchController.text);
+    final searchAliases = _ritualAliases(_searchController.text);
 
     return source.where((p) {
       if (ritualNames.isNotEmpty) {
         final hasRitual = p.poojaOfferings.any(
-          (offering) => ritualNames.contains(_normalizeText(offering.name)),
+          (offering) =>
+              _ritualAliases(offering.name).intersection(ritualNames).isNotEmpty,
         );
         if (!hasRitual) return false;
       }
@@ -321,6 +321,9 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
         final poojaNames = _normalizeText(
           p.poojaOfferings.map((e) => e.name ?? '').join(' '),
         );
+        final poojaAliases = p.poojaOfferings
+            .expand((offering) => _ritualAliases(offering.name))
+            .toSet();
         final yearOfExp = (p.yearsOfExperience ?? '').toString();
 
         final matchesSearch =
@@ -329,6 +332,7 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
             stateName.contains(searchTerm) ||
             languages.contains(searchTerm) ||
             poojaNames.contains(searchTerm) ||
+            poojaAliases.intersection(searchAliases).isNotEmpty ||
             line1.contains(searchTerm) ||
             line2.contains(searchTerm) ||
             yearOfExp.contains(searchTerm);
@@ -364,6 +368,14 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
 
   String _normalizeText(String? value) {
     return (value ?? '').trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  }
+
+  Set<String> _ritualAliases(String? value) {
+    return (value ?? '')
+        .split('/')
+        .map(_normalizeText)
+        .where((alias) => alias.isNotEmpty)
+        .toSet();
   }
 
   // ── Location Search Bottom Sheet ──────────────────────────────────────────

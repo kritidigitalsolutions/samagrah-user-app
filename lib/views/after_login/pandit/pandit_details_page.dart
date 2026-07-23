@@ -5,6 +5,7 @@ import 'package:samagrah/model/response/pandit_res/pandit_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
+import 'package:samagrah/utils/localStogare_service/location_storage.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
@@ -256,7 +257,10 @@ class _ServiceChips extends StatelessWidget {
         _ChipItem(Icons.videocam_outlined, 'Online Puja'),
       if (pandit.serviceTypes?.atTemple == true)
         _ChipItem(Icons.temple_hindu_outlined, 'Temple'),
-      if (pandit.serviceTypes?.travelForSpecialPoojas == true)
+      if (pandit.serviceTypes?.travelForSpecialPoojas == true ||
+          pandit.poojaOfferings.any(
+            (offering) => offering.travelForSpecialPooja == true,
+          ))
         _ChipItem(Icons.luggage_outlined, 'Travel for Puja'),
     ];
     if (items.isEmpty) return const SizedBox.shrink();
@@ -477,23 +481,27 @@ class _BottomBar extends ConsumerWidget {
   final PanditData pandit;
 
   // ── Checks whether booking this pandit needs outstation approval ──
-  bool _isOutstationBooking(WidgetRef ref) {
+  Future<bool> _isOtherCityOrPincode(WidgetRef ref) async {
     final locationState = ref.read(panditLocationProvider);
 
     // Agar user ne koi custom location search nahi ki (GPS/default use ho
     // raha hai), to local booking treat karo — outstation check nahi lagega.
     if (!locationState.isActive) return false;
 
-    final detectedCity = pandit.serviceTypes?.detectedLocation?.city
-        ?.trim()
-        .toLowerCase();
     final searchedCity = locationState.city.trim().toLowerCase();
+    final searchedPincode = locationState.pincode.trim();
+    final userCity = (await LocationStorage.getCity() ?? '')
+        .trim()
+        .toLowerCase();
+    final userPincode = (await LocationStorage.getPincode() ?? '').trim();
 
-    if (detectedCity == null || detectedCity.isEmpty) return false;
-    if (searchedCity.isEmpty) return false;
+    final isDifferentCity =
+        userCity.isEmpty || searchedCity.isEmpty || userCity != searchedCity;
+    final isDifferentPincode =
+        searchedPincode.isNotEmpty &&
+        (userPincode.isEmpty || userPincode != searchedPincode);
 
-    // Agar city match kar rahi hai to outstation nahi hai
-    return detectedCity != searchedCity;
+    return isDifferentCity || isDifferentPincode;
   }
 
   void _showOutstationBlockedDialog(BuildContext context) {
@@ -502,10 +510,7 @@ class _BottomBar extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         title: const Text("Booking Not Available"),
         content: Text(
-          "${pandit.fullName ?? 'This pandit'} sirf apne local service area "
-          "(${pandit.serviceTypes?.detectedLocation?.city ?? 'their city'}) "
-          "me hi available hain. Ye pandit doosre city/pincode ke liye "
-          "outstation booking accept nahi karte.",
+          "${pandit.fullName ?? 'This pandit'} currently does not accept outstation bookings. To book a pandit in a different city or pincode, please select another pandit.",
         ),
         actions: [
           TextButton(
@@ -534,9 +539,10 @@ class _BottomBar extends ConsumerWidget {
         children: [
           Expanded(
             child: ElevatedButton.icon(
-              onPressed: () {
+              onPressed: () async {
                 // ── NEW: outstation booking gate ──
-                final isOutstation = _isOutstationBooking(ref);
+                final isOtherLocation = await _isOtherCityOrPincode(ref);
+                if (!context.mounted) return;
                 final anywhereInIndia =
                     pandit
                         .serviceTypes
@@ -544,7 +550,7 @@ class _BottomBar extends ConsumerWidget {
                         ?.anywhereInIndia ==
                     true;
 
-                if (isOutstation && !anywhereInIndia) {
+                if (isOtherLocation && !anywhereInIndia) {
                   _showOutstationBlockedDialog(context);
                   return;
                 }

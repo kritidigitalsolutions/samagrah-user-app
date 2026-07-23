@@ -300,36 +300,6 @@ class _BookRitualViewState extends ConsumerState<BookRetualPage> {
                                         spacing: 8,
                                         runSpacing: 4,
                                         children: [
-                                          if (ritual.durationHours != null)
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 6,
-                                                    vertical: 2,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: AppColors.grey100,
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  const Icon(
-                                                    Icons.access_time_rounded,
-                                                    size: 12,
-                                                    color: AppColors.grey600,
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    '${ritual.durationHours} Hours',
-                                                    style: text10(
-                                                      color: AppColors.grey700,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
                                           if (ritual.standardSamagri == true ||
                                               ritual.customSamagri == true)
                                             Container(

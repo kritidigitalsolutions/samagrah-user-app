@@ -53,6 +53,22 @@ final resolvedDeliveryChargeProvider =
       );
     });
 
+/// COD charge always applies for COD orders, regardless of order amount.
+final resolvedCodChargeProvider = Provider<AsyncValue<double>>((ref) {
+  final deliveryAsync = ref.watch(deliveryProvider);
+
+  return deliveryAsync.when(
+    data: (model) {
+      final activeDatum = model.data
+          .where((d) => d.status == 'active')
+          .firstOrNull;
+      return AsyncValue.data(activeDatum?.codCharge?.toDouble() ?? 0.0);
+    },
+    loading: () => const AsyncValue.loading(),
+    error: (e, st) => AsyncValue.error(e, st),
+  );
+});
+
 // payment provider
 //
 //====================================
@@ -283,6 +299,9 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 
   String _userFriendlyError(Object error) {
     if (error is AppException && error.message.trim().isNotEmpty) {
+      if (error.message.toLowerCase().contains('multiple vendors')) {
+        return "Products from different sellers cannot be ordered together. Please keep products from one seller in your cart.";
+      }
       return error.message.trim();
     }
     return "Something went wrong. Please try again.";

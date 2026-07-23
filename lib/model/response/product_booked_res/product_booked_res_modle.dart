@@ -41,6 +41,7 @@ class Order {
     required this.vendorId,
     required this.items,
     required this.totalAmount,
+    required this.codCharge,
     required this.amountBreakup,
     required this.couponCode,
     required this.offer,
@@ -75,6 +76,7 @@ class Order {
   final String? vendorId;
   final List<OrderItem> items;
   final num? totalAmount;
+  final num? codCharge;
   final AmountBreakup? amountBreakup;
   final dynamic couponCode;
   final Offer? offer;
@@ -114,6 +116,7 @@ class Order {
               json["items"]!.map((x) => OrderItem.fromJson(x)),
             ),
       totalAmount: json["totalAmount"],
+      codCharge: json["codCharge"],
       amountBreakup: json["amountBreakup"] == null
           ? null
           : AmountBreakup.fromJson(json["amountBreakup"]),
@@ -191,6 +194,7 @@ class AmountBreakup {
   AmountBreakup({
     required this.itemTotal,
     required this.deliveryFee,
+    required this.codCharge,
     required this.couponDiscount,
     required this.offerDiscount,
     required this.walletUsed,
@@ -199,6 +203,7 @@ class AmountBreakup {
 
   final num? itemTotal;
   final num? deliveryFee;
+  final num? codCharge;
   final num? couponDiscount;
   final num? offerDiscount;
   final num? walletUsed;
@@ -208,6 +213,7 @@ class AmountBreakup {
     return AmountBreakup(
       itemTotal: json["itemTotal"],
       deliveryFee: json["deliveryFee"],
+      codCharge: json["codCharge"],
       couponDiscount: json["couponDiscount"],
       offerDiscount: json["offerDiscount"],
       walletUsed: json["walletUsed"],

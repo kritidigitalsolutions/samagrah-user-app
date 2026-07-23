@@ -1,5 +1,6 @@
 class CreateOrderReqModel {
   final double deliveryFee;
+  final num codCharge;
   final List<VerifyItem> items;
   final String? couponCode;
   final String? offerId;
@@ -8,6 +9,7 @@ class CreateOrderReqModel {
   CreateOrderReqModel({
     required this.deliveryFee,
     required this.items,
+    this.codCharge = 0,
     this.couponCode,
     this.offerId,
     this.panditId,
@@ -16,6 +18,7 @@ class CreateOrderReqModel {
   Map<String, dynamic> toJson() {
     return {
       "deliveryFee": deliveryFee,
+      "codCharge": codCharge,
       "items": items.map((e) => e.toJson()).toList(),
       "couponCode": couponCode,
       "offerId": offerId,
@@ -29,6 +32,7 @@ class CreateOrderReqModel {
 class VerifyPaymentReqModel {
   final String paymentMethod;
   final num deliveryFee;
+  final num codCharge;
   final num? walletAmount;
   final String? couponCode;
   final String? offerId;
@@ -45,6 +49,7 @@ class VerifyPaymentReqModel {
     required this.deliveryFee,
     required this.address,
     required this.items,
+    this.codCharge = 0,
     this.walletAmount,
     this.couponCode,
     this.offerId,
@@ -58,6 +63,7 @@ class VerifyPaymentReqModel {
     final data = {
       "paymentMethod": paymentMethod,
       "deliveryFee": deliveryFee,
+      "codCharge": codCharge,
       "address": address.toJson(),
       "items": items.map((e) => e.toJson()).toList(),
       "couponCode": couponCode,

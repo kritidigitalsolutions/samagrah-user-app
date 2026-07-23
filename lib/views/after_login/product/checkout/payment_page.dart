@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:samagrah/data/exception/app_exception.dart';
 import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
 import 'package:samagrah/model/response/coupon_res_model.dart';
 import 'package:samagrah/repo/payment_repo.dart';
@@ -27,8 +28,6 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
   String selectedPaymentMethod = 'online';
   num walletBalance = 0.0;
 
-  final double codCharges = 0.00;
-
   final TextEditingController _couponController = TextEditingController();
 
   @override
@@ -42,6 +41,16 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) AppSnackbar.show(context, message: message, type: type);
     });
+  }
+
+  String _checkoutErrorMessage(Object error) {
+    final message = error is AppException ? error.message : error.toString();
+    if (message.toLowerCase().contains('multiple vendors')) {
+      return "Products from different sellers cannot be ordered together. Please keep products from one seller in your cart.";
+    }
+    return message.trim().isEmpty
+        ? "Something went wrong. Please try again."
+        : message.trim();
   }
 
   @override
@@ -92,6 +101,11 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       data: (v) => v,
       orElse: () => 0.0,
     );
+    final codChargeAsync = ref.watch(resolvedCodChargeProvider);
+    final resolvedCodCharge = codChargeAsync.maybeWhen(
+      data: (v) => v,
+      orElse: () => 0.0,
+    );
 
     // ✅ Grand total ek jagah calculate
     final grandTotal = couponState.isCouponApplied
@@ -122,6 +136,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                       totalAmount,
                       couponState,
                       resolvedDeliveryCharge,
+                      resolvedCodCharge,
                     ),
                     const SizedBox(height: 20),
 
@@ -150,10 +165,13 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     const SizedBox(height: 12),
                     _buildOnlineMethods(),
                     const SizedBox(height: 12),
-                    _buildCODOption(),
+                    _buildCODOption(resolvedCodCharge),
                     if (selectedPaymentMethod == 'cod') ...[
                       const SizedBox(height: 12),
-                      _buildCODChargesInfo(resolvedDeliveryCharge),
+                      _buildCODChargesInfo(
+                        resolvedDeliveryCharge,
+                        resolvedCodCharge,
+                      ),
                     ],
                     const SizedBox(height: 8),
                   ],
@@ -167,6 +185,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
               couponState,
               panditId,
               resolvedDeliveryCharge,
+              resolvedCodCharge,
             ),
           ],
         ),
@@ -681,11 +700,12 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     num totalAmount,
     CouponState couponState,
     double deliveryCharge,
+    double codCharge,
   ) {
     final isCOD = selectedPaymentMethod == 'cod';
     final grandTotal = couponState.isCouponApplied
-        ? couponState.finalAmount + (isCOD ? codCharges : 0)
-        : totalAmount + deliveryCharge + (isCOD ? codCharges : 0);
+        ? couponState.finalAmount + (isCOD ? codCharge : 0)
+        : totalAmount + deliveryCharge + (isCOD ? codCharge : 0);
 
     return Container(
       width: double.infinity,
@@ -786,7 +806,11 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
 
           if (isCOD) ...[
             const SizedBox(height: 8),
-            _buildPriceRow("COD Charges", "₹$codCharges", false),
+            _buildPriceRow(
+              "COD Charges",
+              "₹${codCharge.toStringAsFixed(2)}",
+              false,
+            ),
           ],
 
           const Divider(height: 24),
@@ -1095,7 +1119,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
   // COD
   // ──────────────────────────────────────────────────────────────────────────
 
-  Widget _buildCODOption() {
+  Widget _buildCODOption(double codCharge) {
     final isSelected = selectedPaymentMethod == 'cod';
     return GestureDetector(
       onTap: () => setState(() => selectedPaymentMethod = 'cod'),
@@ -1135,8 +1159,8 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    codCharges > 0
-                        ? "Extra ₹${codCharges.toStringAsFixed(0)} COD charges apply"
+                    codCharge > 0
+                        ? "Extra ₹${codCharge.toStringAsFixed(0)} COD charges apply"
                         : "No extra charges",
                     style: text11(color: AppColors.grey600),
                   ),
@@ -1151,7 +1175,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     );
   }
 
-  Widget _buildCODChargesInfo(double deliveryCharge) {
+  Widget _buildCODChargesInfo(double deliveryCharge, double codCharge) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -1178,9 +1202,9 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                 const SizedBox(height: 4),
                 Text(
                   deliveryCharge > 0
-                      ? "Delivery charges (₹${deliveryCharge.toStringAsFixed(0)}) and COD handling fee (₹${codCharges.toStringAsFixed(0)}) will be added."
-                      : codCharges > 0
-                      ? "COD handling fee (₹${codCharges.toStringAsFixed(0)}) will be added to your total."
+                      ? "Delivery charges (₹${deliveryCharge.toStringAsFixed(0)}) and COD handling fee (₹${codCharge.toStringAsFixed(0)}) will be added."
+                      : codCharge > 0
+                      ? "COD handling fee (₹${codCharge.toStringAsFixed(0)}) will be added to your total."
                       : "No additional charges for this order.",
                   style: text11(color: AppColors.grey700),
                 ),
@@ -1203,14 +1227,15 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     CouponState couponState,
     String panditId,
     double deliveryCharge,
+    double codCharge,
   ) {
     final paymentState = ref.watch(paymentProvider);
     final loading = ref.watch(loadingProvider);
 
     final finalAmount = couponState.isCouponApplied
         ? couponState.finalAmount +
-              (selectedPaymentMethod == 'cod' ? codCharges : 0)
-        : effectiveTotal + (selectedPaymentMethod == 'cod' ? codCharges : 0);
+              (selectedPaymentMethod == 'cod' ? codCharge : 0)
+        : effectiveTotal + (selectedPaymentMethod == 'cod' ? codCharge : 0);
 
     String buttonText = "Pay ₹${finalAmount.toStringAsFixed(0)}";
     Color buttonColor = AppColors.green;
@@ -1268,12 +1293,14 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     return;
                   }
 
-                  if (selectedPaymentMethod == 'cod') {
+                  try {
+                    if (selectedPaymentMethod == 'cod') {
                     ref.read(loadingProvider.notifier).state = true;
                     final repo = PaymentRepo();
 
                     final createReq = CreateOrderReqModel(
                       deliveryFee: deliveryCharge,
+                      codCharge: codCharge,
                       items: items,
                       couponCode: couponState.appliedCode,
                       panditId: panditId,
@@ -1305,6 +1332,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     final verifyReq = VerifyPaymentReqModel(
                       paymentMethod: "COD",
                       deliveryFee: deliveryCharge,
+                      codCharge: codCharge,
                       address: address,
                       items: items,
                       couponCode: couponState.appliedCode,
@@ -1316,7 +1344,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     if (success && mounted) {
                       Navigator.pushNamed(context, AppRoutes.successPage);
                     }
-                  } else if (selectedPaymentMethod == 'wallet') {
+                    } else if (selectedPaymentMethod == 'wallet') {
                     if (walletBalance >= effectiveTotal) {
                       ref.read(loadingProvider.notifier).state = true;
                       final repo = PaymentRepo();
@@ -1374,16 +1402,26 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                         type: SnackBarType.error,
                       );
                     }
-                  } else {
-                    await ref
-                        .read(paymentProvider.notifier)
-                        .startPayment(
-                          address,
-                          items,
-                          couponState.appliedCode ?? '',
-                          panditId,
-                          deliveryCharge,
-                        );
+                    } else {
+                      await ref
+                          .read(paymentProvider.notifier)
+                          .startPayment(
+                            address,
+                            items,
+                            couponState.appliedCode ?? '',
+                            panditId,
+                            deliveryCharge,
+                          );
+                    }
+                  } catch (error) {
+                    ref.read(loadingProvider.notifier).state = false;
+                    if (mounted) {
+                      AppSnackbar.show(
+                        context,
+                        message: _checkoutErrorMessage(error),
+                        type: SnackBarType.error,
+                      );
+                    }
                   }
                 },
         ),

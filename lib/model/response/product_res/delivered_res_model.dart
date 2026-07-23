@@ -34,6 +34,7 @@ class Datum {
     required this.state,
     required this.pincode,
     required this.deliveryCharge,
+    required this.codCharge,
     required this.status,
   });
 
@@ -43,6 +44,7 @@ class Datum {
   final String? state;
   final String? pincode;
   final int? deliveryCharge;
+  final int? codCharge;
   final String? status;
 
   factory Datum.fromJson(Map<String, dynamic> json) {
@@ -53,6 +55,7 @@ class Datum {
       state: json["state"],
       pincode: json["pincode"],
       deliveryCharge: json["deliveryCharge"],
+      codCharge: json["codCharge"],
       status: json["status"],
     );
   }

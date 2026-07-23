@@ -21,6 +21,9 @@ class _AddressSelectionScreenState
   @override
   Widget build(BuildContext context) {
     final templeAsync = ref.watch(templeProvider);
+    final associatedTempleName = ref.watch(
+      selectedPanditProvider.select((pandit) => pandit?.templeAssociated),
+    );
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
@@ -143,7 +146,33 @@ class _AddressSelectionScreenState
               error: (error, stackTrace) =>
                   Center(child: Text("Something went wrong")),
               data: (data) {
-                final temples = data.data;
+                final normalizedAssociatedTemple = associatedTempleName
+                    ?.trim()
+                    .toLowerCase();
+                final temples = data.data.where((temple) {
+                  if (normalizedAssociatedTemple == null ||
+                      normalizedAssociatedTemple.isEmpty) {
+                    return false;
+                  }
+
+                  return temple.name?.trim().toLowerCase() ==
+                      normalizedAssociatedTemple;
+                }).toList();
+
+                if (temples.isEmpty) {
+                  return const Expanded(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          "Associated temple is not available.",
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
                 return Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -14,9 +14,11 @@ import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/textstyle.dart';
 
 import 'package:samagrah/view_model/after_login_provider/order_provider/order_provider.dart';
+import 'package:samagrah/view_model/after_login_provider/order_provider/complaint_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/pandit_review_provider.dart';
 
 import 'package:samagrah/views/after_login/order/my_order_screen.dart';
+import 'package:samagrah/views/after_login/order/order_complaint_status_card.dart';
 
 class OrderDetailsPage extends ConsumerWidget {
   final String? orderId;
@@ -89,6 +91,11 @@ class OrderDetailsContent extends ConsumerWidget {
   bool get _isOnlinePaid =>
       (order.paymentMethod ?? '').toUpperCase() == 'ONLINE';
 
+  num? get _displayTotal =>
+      order.amountBreakup?.payableAmount ??
+      order.payableAmount ??
+      order.totalAmount;
+
   List<ProductDisplayItem> _getDisplayItems() {
     final displayItems = <ProductDisplayItem>[];
 
@@ -102,6 +109,13 @@ class OrderDetailsContent extends ConsumerWidget {
               emoji: kitItem.product?.media?.image.firstOrNull ?? '',
               quantity: kitItem.quantity ?? 1,
               price: kitItem.product?.pricing?.price ?? 0,
+              mrp: kitItem.product?.pricing?.mrp,
+              basePrice: kitItem.product?.pricing?.basePrice,
+              gstPercent: kitItem.product?.pricing?.gstPercent,
+              gstAmount: kitItem.product?.pricing?.gstAmount,
+              priceIncludesGst:
+                  kitItem.product?.pricing?.priceIncludesGst ?? false,
+              currency: kitItem.product?.pricing?.currency,
               productId: kitItem.product?.id ?? '',
             ),
           );
@@ -115,7 +129,14 @@ class OrderDetailsContent extends ConsumerWidget {
                 'Unknown',
             emoji: orderItem.product?.media?.image.firstOrNull ?? '',
             quantity: orderItem.quantity ?? 1,
-            price: orderItem.price ?? 0,
+            price: orderItem.product?.pricing?.price ?? orderItem.price ?? 0,
+            mrp: orderItem.product?.pricing?.mrp,
+            basePrice: orderItem.product?.pricing?.basePrice,
+            gstPercent: orderItem.product?.pricing?.gstPercent,
+            gstAmount: orderItem.product?.pricing?.gstAmount,
+            priceIncludesGst:
+                orderItem.product?.pricing?.priceIncludesGst ?? false,
+            currency: orderItem.product?.pricing?.currency,
             productId: orderItem.product?.id ?? '',
           ),
         );
@@ -195,7 +216,7 @@ class OrderDetailsContent extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  OrderUtils.formatCurrency(order.totalAmount),
+                  OrderUtils.formatCurrency(_displayTotal),
                   style: text16(
                     color: AppColors.white,
                     fontWeight: FontWeight.bold,
@@ -267,7 +288,7 @@ class OrderDetailsContent extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  OrderUtils.formatCurrency(order.totalAmount),
+                  OrderUtils.formatCurrency(_displayTotal),
                   style: text16(
                     color: AppColors.white,
                     fontWeight: FontWeight.bold,
@@ -295,6 +316,10 @@ class OrderDetailsContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final invoiceState = ref.watch(invoiceProvider);
+    final reportedComplaint = ref.watch(complaintListProvider).maybeWhen(
+          data: (complaints) => complaintForOrder(complaints, order),
+          orElse: () => null,
+        );
     final displayItems = _getDisplayItems();
     final isKit = _isKit();
     final statusColor = OrderUtils.getStatusColor(
@@ -361,7 +386,7 @@ class OrderDetailsContent extends ConsumerWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          "Your refund of ${OrderUtils.formatCurrency(order.totalAmount)} will be credited to your wallet within 5–7 business days.",
+                          "Your refund of ${OrderUtils.formatCurrency(_displayTotal)} will be credited to your wallet within 5–7 business days.",
                           style: text12(color: Colors.amber.shade900),
                         ),
                       ],
@@ -391,75 +416,7 @@ class OrderDetailsContent extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 ...displayItems.map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.orange.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: CustomCachedImage(imageUrl: item.emoji),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.name,
-                                style: text14(fontWeight: FontWeight.w500),
-                              ),
-                              Text(
-                                'Qty: ${item.quantity}',
-                                style: text12(color: AppColors.grey600),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (_isDelivered)
-                          GestureDetector(
-                            onTap: () => _showRatingSheet(context, ref, item),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.button),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.star_rounded,
-                                    size: 14,
-                                    color: AppColors.button,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Rate',
-                                    style: text12(color: AppColors.button),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        else
-                          Text(
-                            OrderUtils.formatCurrency(item.price),
-                            style: text14(fontWeight: FontWeight.w600),
-                          ),
-                      ],
-                    ),
-                  ),
+                  (item) => _buildOrderedItemCard(context, ref, item),
                 ),
                 const SizedBox(height: 12),
 
@@ -508,16 +465,37 @@ class OrderDetailsContent extends ConsumerWidget {
                   'Delivery Fee:',
                   OrderUtils.formatCurrency(order.amountBreakup?.deliveryFee),
                 ),
+                _buildInfoRow(
+                  'COD Charge:',
+                  OrderUtils.formatCurrency(
+                    order.amountBreakup?.codCharge ?? order.codCharge,
+                  ),
+                ),
+                if ((order.amountBreakup?.couponDiscount ?? 0) > 0)
+                  _buildInfoRow(
+                    'Coupon Discount:',
+                    '-${OrderUtils.formatCurrency(order.amountBreakup?.couponDiscount)}',
+                  ),
+                if ((order.amountBreakup?.offerDiscount ?? 0) > 0)
+                  _buildInfoRow(
+                    'Offer Discount:',
+                    '-${OrderUtils.formatCurrency(order.amountBreakup?.offerDiscount)}',
+                  ),
+                if ((order.amountBreakup?.walletUsed ?? 0) > 0)
+                  _buildInfoRow(
+                    'Wallet Used:',
+                    '-${OrderUtils.formatCurrency(order.amountBreakup?.walletUsed)}',
+                  ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Total Amount:',
+                      'Payable Amount:',
                       style: text14(fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      OrderUtils.formatCurrency(order.totalAmount),
+                      OrderUtils.formatCurrency(_displayTotal),
                       style: text16(
                         color: AppColors.button,
                         fontWeight: FontWeight.bold,
@@ -594,7 +572,9 @@ class OrderDetailsContent extends ConsumerWidget {
                 ],
 
                 // ── Refund Issue (cancelled + online paid) ───────────────
-                if (_isCancelled && _isOnlinePaid) ...[
+                if (_isCancelled &&
+                    _isOnlinePaid &&
+                    reportedComplaint == null) ...[
                   const SizedBox(height: 12),
                   Center(
                     child: AppOutlineButton(
@@ -612,7 +592,7 @@ class OrderDetailsContent extends ConsumerWidget {
                 ],
 
                 // ── Complain (delivered) ─────────────────────────────────
-                if (_isDelivered) ...[
+                if (_isDelivered && reportedComplaint == null) ...[
                   const SizedBox(height: 12),
                   Center(
                     child: AppOutlineButton(
@@ -627,6 +607,11 @@ class OrderDetailsContent extends ConsumerWidget {
                       ),
                     ),
                   ),
+                ],
+
+                if (reportedComplaint != null) ...[
+                  const SizedBox(height: 12),
+                  OrderComplaintStatusCard(complaint: reportedComplaint),
                 ],
 
                 // ── Rate Your Order (delivered) ──────────────────────────
@@ -676,6 +661,161 @@ class OrderDetailsContent extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildOrderedItemCard(
+    BuildContext context,
+    WidgetRef ref,
+    ProductDisplayItem item,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.grey200),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  color: Colors.orange.shade50,
+                  child: CustomCachedImage(imageUrl: item.emoji),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name,
+                      style: text14(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Quantity: ${item.quantity}',
+                      style: text12(color: AppColors.grey600),
+                    ),
+                  ],
+                ),
+              ),
+              if (_isDelivered)
+                GestureDetector(
+                  onTap: () => _showRatingSheet(context, ref, item),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.button),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.star_rounded,
+                          size: 14,
+                          color: AppColors.button,
+                        ),
+                        const SizedBox(width: 4),
+                        Text('Rate', style: text12(color: AppColors.button)),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const Divider(height: 24),
+          Row(
+            children: [
+              Icon(
+                Icons.receipt_long_outlined,
+                size: 16,
+                color: AppColors.button,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Unit Price Breakdown',
+                style: text13(fontWeight: FontWeight.w600),
+              ),
+              const Spacer(),
+              if (item.priceIncludesGst)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'GST included',
+                    style: text10(color: AppColors.green),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (item.mrp != null)
+            _buildPricingRow('MRP', OrderUtils.formatCurrency(item.mrp)),
+          if (item.basePrice != null)
+            _buildPricingRow(
+              'Base Price',
+              OrderUtils.formatCurrency(item.basePrice),
+            ),
+          if (item.gstPercent != null || item.gstAmount != null)
+            _buildPricingRow(
+              'GST (${item.gstPercent ?? 0}%)',
+              OrderUtils.formatCurrency(item.gstAmount),
+            ),
+          const Divider(height: 18),
+          _buildPricingRow(
+            'Final Price${item.currency?.isNotEmpty == true ? ' (${item.currency})' : ''}',
+            OrderUtils.formatCurrency(item.price),
+            isTotal: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPricingRow(
+    String label,
+    String value, {
+    bool isTotal = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 7),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: text12(
+              color: isTotal ? AppColors.textPrimary : AppColors.grey600,
+              fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+          Text(
+            value,
+            style: text13(
+              color: isTotal ? AppColors.button : AppColors.textPrimary,
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1122,6 +1262,12 @@ class ProductDisplayItem {
   final String emoji;
   final num quantity;
   final num price;
+  final num? mrp;
+  final num? basePrice;
+  final num? gstPercent;
+  final num? gstAmount;
+  final bool priceIncludesGst;
+  final String? currency;
   final String productId;
 
   ProductDisplayItem({
@@ -1129,6 +1275,12 @@ class ProductDisplayItem {
     required this.emoji,
     required this.quantity,
     required this.price,
+    this.mrp,
+    this.basePrice,
+    this.gstPercent,
+    this.gstAmount,
+    this.priceIncludesGst = false,
+    this.currency,
     required this.productId,
   });
 }

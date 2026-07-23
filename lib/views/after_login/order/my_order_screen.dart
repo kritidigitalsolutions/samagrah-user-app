@@ -13,6 +13,7 @@ import 'package:samagrah/view_model/after_login_provider/order_provider/complain
 import 'package:samagrah/view_model/after_login_provider/order_provider/order_provider.dart';
 import 'package:samagrah/views/custom_loader.dart/order_card_loader.dart';
 import 'package:samagrah/views/custom_widget/empty_data_widget.dart';
+import 'package:samagrah/views/after_login/order/order_complaint_status_card.dart';
 
 /// Type of complaint the user is raising
 enum ComplaintType {
@@ -215,6 +216,11 @@ class OrderCard extends ConsumerWidget {
   bool get _isOnlinePaid =>
       (order.paymentMethod ?? '').toUpperCase() == 'ONLINE';
 
+  num? get _displayTotal =>
+      order.amountBreakup?.payableAmount ??
+      order.payableAmount ??
+      order.totalAmount;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final displayItems = _getDisplayItems();
@@ -225,20 +231,12 @@ class OrderCard extends ConsumerWidget {
     final statusText = OrderUtils.getStatusText(
       order.tracking?.currentStatus ?? order.orderStatus,
     );
-    final hasReportedIssue = ref
+    final reportedComplaint = ref
         .watch(complaintListProvider)
         .maybeWhen(
-          data: (complaints) => complaints.any(
-            (complaint) => _isComplaintForOrder(complaint, order),
-          ),
-          orElse: () => false,
+          data: (complaints) => complaintForOrder(complaints, order),
+          orElse: () => null,
         );
-
-    void showAlreadyReportedMessage() {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Issue already reported for this order")),
-      );
-    }
 
     return GestureDetector(
       onTap: onTap,
@@ -351,7 +349,11 @@ class OrderCard extends ConsumerWidget {
                           children: [
                             const SizedBox(height: 4),
                             Text(
-                              OrderUtils.formatCurrency(order.totalAmount),
+                              'Order Total',
+                              style: text11(color: AppColors.grey600),
+                            ),
+                            Text(
+                              OrderUtils.formatCurrency(_displayTotal),
                               style: text16(
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.grey700,
@@ -417,12 +419,21 @@ class OrderCard extends ConsumerWidget {
                               '${displayItems.length} items',
                               style: text14(color: AppColors.grey600),
                             ),
-                            Text(
-                              OrderUtils.formatCurrency(order.totalAmount),
-                              style: text18(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.button,
-                              ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'Order Total',
+                                  style: text11(color: AppColors.grey600),
+                                ),
+                                Text(
+                                  OrderUtils.formatCurrency(_displayTotal),
+                                  style: text18(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.button,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -461,6 +472,11 @@ class OrderCard extends ConsumerWidget {
                     ),
                   ],
 
+                  if (reportedComplaint != null) ...[
+                    const SizedBox(height: 12),
+                    OrderComplaintStatusCard(complaint: reportedComplaint),
+                  ],
+
                   const SizedBox(height: 12),
 
                   // ── Action buttons ─────────────────────────────────────────
@@ -476,18 +492,14 @@ class OrderCard extends ConsumerWidget {
                       ),
 
                       // 1) Delivered → Complain (product quality)
-                      if (_isDelivered) ...[
+                      if (_isDelivered && reportedComplaint == null) ...[
                         const SizedBox(width: 10),
                         Expanded(
                           child: AppOutlineButton(
                             height: 38,
                             radius: 15,
-                            title: hasReportedIssue
-                                ? "Issue Reported"
-                                : "Report issues",
-                            onTap: hasReportedIssue
-                                ? showAlreadyReportedMessage
-                                : () => showComplainBottomSheet(
+                            title: "Report issues",
+                            onTap: () => showComplainBottomSheet(
                                     context,
                                     ref,
                                     order,
@@ -497,18 +509,16 @@ class OrderCard extends ConsumerWidget {
                         ),
                       ]
                       // 2) Cancelled + Online paid → Refund Issue
-                      else if (_isCancelled && _isOnlinePaid) ...[
+                      else if (_isCancelled &&
+                          _isOnlinePaid &&
+                          reportedComplaint == null) ...[
                         const SizedBox(width: 10),
                         Expanded(
                           child: AppOutlineButton(
                             height: 38,
                             radius: 15,
-                            title: hasReportedIssue
-                                ? "Issue Reported"
-                                : "Report issues",
-                            onTap: hasReportedIssue
-                                ? showAlreadyReportedMessage
-                                : () => showComplainBottomSheet(
+                            title: "Report issues",
+                            onTap: () => showComplainBottomSheet(
                                     context,
                                     ref,
                                     order,

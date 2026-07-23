@@ -13,12 +13,46 @@ import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_
 class ServiceSelectionScreen extends ConsumerWidget {
   const ServiceSelectionScreen({super.key});
 
+  Set<String> _ritualAliases(String? value) {
+    return (value ?? '')
+        .split('/')
+        .map(
+          (part) => part.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' '),
+        )
+        .where((part) => part.isNotEmpty)
+        .toSet();
+  }
+
+  PoojaOffering? _selectedOffering(
+    PanditData pandit,
+    String? name,
+    String? title,
+  ) {
+    final selectedAliases = {
+      ..._ritualAliases(name),
+      ..._ritualAliases(title),
+    };
+    for (final offering in pandit.poojaOfferings) {
+      if (_ritualAliases(
+        offering.name,
+      ).intersection(selectedAliases).isNotEmpty) {
+        return offering;
+      }
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pandit = ModalRoute.of(context)!.settings.arguments as PanditData;
     final selectedIndex = ref.watch(serviceSelected);
     final selectedRitual = ref.watch(selectedRitualProvider);
-    final hasTravel = selectedRitual?.travelForSpecialPooja == true;
+    final selectedOffering = _selectedOffering(
+      pandit,
+      selectedRitual?.name,
+      selectedRitual?.title,
+    );
+    final hasTravel = selectedOffering?.travelForSpecialPooja == true;
 
     /// 🔥 Dynamic Service List
     final List<ServiceModel> serviceList = [];
@@ -217,7 +251,10 @@ class ServiceSelectionScreen extends ConsumerWidget {
               color: AppColors.button,
               child: AppButton(
                 title: "Next",
-                onTap: (selectedIndex == null || serviceList.isEmpty)
+                onTap:
+                    (selectedIndex == null ||
+                        selectedIndex < 0 ||
+                        selectedIndex >= serviceList.length)
                     ? () {
                         AppSnackbar.show(
                           context,

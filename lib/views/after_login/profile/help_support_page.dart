@@ -1,6 +1,7 @@
 // views/after_login/profile/help_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:samagrah/model/response/complaint_res_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/textstyle.dart';
@@ -356,6 +357,108 @@ class HelpPage extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class ComplaintDetailPage extends StatelessWidget {
+  final Complaint complaint;
+
+  const ComplaintDetailPage({super.key, required this.complaint});
+
+  String _statusLabel(String status) {
+    switch (status.toLowerCase().trim().replaceAll('-', '_')) {
+      case 'resolved':
+        return 'Resolved';
+      case 'rejected':
+      case 'closed':
+        return 'Closed';
+      case 'in_progress':
+      case 'processing':
+        return 'In progress';
+      default:
+        return 'Open';
+    }
+  }
+
+  Color _statusColor(String status) {
+    switch (_statusLabel(status)) {
+      case 'Resolved':
+        return AppColors.success;
+      case 'Closed':
+        return AppColors.grey600;
+      case 'In progress':
+        return AppColors.info;
+      default:
+        return AppColors.warningDark;
+    }
+  }
+
+  String _date(DateTime value) =>
+      '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
+
+  @override
+  Widget build(BuildContext context) {
+    final label = _statusLabel(complaint.status);
+    final color = _statusColor(complaint.status);
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: CustomAppBar(title: 'Issue details'),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.grey200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(complaint.issue,
+                          style: text16(fontWeight: FontWeight.w600)),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      child: Text(label,
+                          style: text11(color: color, fontWeight: FontWeight.w600)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text('Ticket #${complaint.id}', style: text11(color: AppColors.grey600)),
+                Text('Reported on ${_date(complaint.createdAt)}',
+                    style: text11(color: AppColors.grey600)),
+                const Divider(height: 28),
+                Text('Your message', style: text12(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 5),
+                Text(complaint.details.isEmpty ? 'No additional details' : complaint.details,
+                    style: text13(color: AppColors.grey700)),
+                const SizedBox(height: 18),
+                Text('Support response', style: text12(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 5),
+                Text(
+                  complaint.adminResponse.isEmpty
+                      ? (label == 'Open'
+                          ? 'Our support team is reviewing your issue.'
+                          : 'No support response added yet.')
+                      : complaint.adminResponse,
+                  style: text13(color: AppColors.grey700),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

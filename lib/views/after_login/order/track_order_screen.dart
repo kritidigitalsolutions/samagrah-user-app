@@ -225,6 +225,7 @@ class TrackOrderPage extends ConsumerWidget {
                 title: step.label ?? 'Step',
                 subtitle: _getStepSubtitle(step),
                 isCompleted: step.completed ?? false,
+                isActive: step.active ?? false,
                 isLast: tracking.orderSteps.last == step,
               ),
             )
@@ -429,6 +430,7 @@ class TimelineStep extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool isCompleted;
+  final bool isActive;
   final bool isLast;
 
   const TimelineStep({
@@ -436,11 +438,15 @@ class TimelineStep extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.isCompleted,
+    required this.isActive,
     required this.isLast,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isReached = isCompleted || isActive;
+    final statusColor = isReached ? Colors.green : Colors.grey.shade300;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -450,10 +456,10 @@ class TimelineStep extends StatelessWidget {
               width: 24,
               height: 24,
               decoration: BoxDecoration(
-                color: isCompleted ? Colors.green : Colors.grey.shade300,
+                color: statusColor,
                 shape: BoxShape.circle,
               ),
-              child: isCompleted
+              child: isReached
                   ? const Icon(Icons.check, color: Colors.white, size: 16)
                   : null,
             ),
@@ -461,7 +467,7 @@ class TimelineStep extends StatelessWidget {
               Container(
                 width: 2,
                 height: 48,
-                color: isCompleted ? Colors.green : Colors.grey.shade300,
+                color: isReached ? Colors.green : Colors.grey.shade300,
               ),
           ],
         ),
@@ -474,15 +480,20 @@ class TimelineStep extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
+                  style: TextStyle(
+                    color: isActive ? Colors.green : null,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
                     fontSize: 15,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                  style: TextStyle(
+                    color: isActive ? Colors.green : Colors.grey.shade600,
+                    fontSize: 14,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                  ),
                 ),
               ],
             ),
