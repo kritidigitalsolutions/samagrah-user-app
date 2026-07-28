@@ -20,6 +20,7 @@ class CreateOrderResModel {
 
 class Data {
   Data({
+    required this.razorpayKey,
     required this.itemTotal,
     required this.deliveryFee,
     required this.totalAmount,
@@ -27,6 +28,7 @@ class Data {
     required this.razorpayOrder,
   });
 
+  final String? razorpayKey;
   final int? itemTotal;
   final int? deliveryFee;
   final int? totalAmount;
@@ -35,6 +37,7 @@ class Data {
 
   factory Data.fromJson(Map<String, dynamic> json) {
     return Data(
+      razorpayKey: json["keyId"],
       itemTotal: json["itemTotal"],
       deliveryFee: json["deliveryFee"],
       totalAmount: json["totalAmount"],

@@ -124,10 +124,12 @@ class PanditPaymentBookingNotifier extends StateNotifier<PaymentState> {
       //final String bookingId = data["_id"];
       final String bookingId = data["booking"]?["_id"];
       final double amount = model.price.toDouble();
+      final String razorpayKey = payment["keyId"] ?? "";
 
       debugPrint("🧾 OrderId: $orderId");
       debugPrint("📌 BookingId: $bookingId");
       debugPrint("💰 Amount: $amount");
+      debugPrint("🔑 Razorpay Key: $razorpayKey");
 
       /// ✅ SAVE IN STATE
       state = state.copyWith(orderId: orderId);
@@ -148,6 +150,7 @@ class PanditPaymentBookingNotifier extends StateNotifier<PaymentState> {
       _openRazorpay(
         orderId: orderId,
         amount: amount,
+        razorpayKey: razorpayKey,
         userName: name ?? "User",
         userEmail: email ?? "user@email.com",
         userPhone: contact ?? "9999999999",
@@ -219,13 +222,14 @@ class PanditPaymentBookingNotifier extends StateNotifier<PaymentState> {
   void _openRazorpay({
     required String orderId,
     required double amount,
+    required String razorpayKey,
     required String userName,
     required String userEmail,
     required String userPhone,
   }) {
     state = state.copyWith(status: PaymentStatus.idle);
     var options = {
-      'key': 'rzp_test_ScAfkfdSrrcuVo', // Replace with your Razorpay Key
+      'key': razorpayKey.isNotEmpty ? razorpayKey : 'rzp_test_ScAfkfdSrrcuVo', // Use backend key if available, else fallback
       'amount': (amount * 100).toInt(), // Amount in paise
       'order_id': orderId,
       'name': 'Samagrah',

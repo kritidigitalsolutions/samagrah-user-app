@@ -163,6 +163,13 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 
       final orderId = order.id!;
       final amount = order.amount!;
+      final razorpayKey = data?.razorpayKey ?? '';
+
+      if (razorpayKey.isEmpty) {
+        debugPrint("❌ Invalid Razorpay Key");
+        state = state.copyWith(isLoading: false, error: "Invalid Razorpay Key");
+        return;
+      }
 
       final contact = user?["phone"] ?? "";
       final email = user?["email"] ?? "";
@@ -176,6 +183,7 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
       _openCheckout(
         orderId: orderId,
         amount: amount,
+        razorpayKey: razorpayKey,
         contact: contact,
         email: email,
       );
@@ -192,11 +200,12 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
   void _openCheckout({
     required String orderId,
     required int amount,
+    required String razorpayKey,
     String? contact,
     String? email,
   }) {
     var options = {
-      'key': 'rzp_test_ScAfkfdSrrcuVo',
+      'key': razorpayKey,
 
       // ✅ Use backend amount (already in paise)
       'amount': amount,
