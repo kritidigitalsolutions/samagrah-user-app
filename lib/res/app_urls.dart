@@ -1,7 +1,7 @@
 class AppUrls {
-  // static const String baseUrl = "http://192.168.1.31:8000/api";
+  static const String baseUrl = "http://192.168.1.28:8000/api";
 
-  static const String baseUrl = "https://api.samagran.com/api";
+  // static const String baseUrl = "https://api.samagran.com/api";
 
   // ================ Auth =====================================
 
@@ -9,6 +9,7 @@ class AppUrls {
   static const String login = "$baseUrl/auth/send-otp";
   static const String verifyOtp = "$baseUrl/auth/verify-otp";
   static const String resendOtp = "$baseUrl/auth/resend-otp";
+  static const String verifyToken = "$baseUrl/auth/verify-token";
 
   // ======================= Kit===================================
 

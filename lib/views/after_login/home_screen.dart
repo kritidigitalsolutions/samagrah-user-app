@@ -3,11 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:dio/dio.dart';
+import 'package:samagrah/data/exception/app_exception.dart';
+import 'package:samagrah/res/app_urls.dart';
+import 'package:samagrah/view_model/after_login_provider/home_provider/product_state.dart';
 import 'package:samagrah/model/response/banner_res_model.dart';
 import 'package:samagrah/model/response/product_res/product_response_model.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
+import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
 import 'package:samagrah/utils/service/helper_methods.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
@@ -31,6 +36,86 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _authErrorShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkTokenValidity();
+  }
+
+  Future<void> _checkTokenValidity() async {
+    try {
+      final token = await AuthLocalstorageService.getToken();
+      if (token == null || token.isEmpty) {
+        _maybeShowAuthPopup(UnauthorizedException("No token found"));
+        return;
+      }
+
+      final dio = Dio();
+      final response = await dio.get(
+        AppUrls.verifyToken,
+        options: Options(headers: {"Authorization": "Bearer $token"}),
+      );
+
+      if (response.data != null && response.data is Map) {
+        final data = response.data as Map;
+        final bool isValid = data['valid'] ?? true;
+        final bool isExpired = data['expired'] ?? false;
+        if (!isValid || isExpired) {
+          _maybeShowAuthPopup(UnauthorizedException("Token has expired"));
+        }
+      }
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode ?? 0;
+      if (statusCode == 401 || statusCode == 403) {
+        _maybeShowAuthPopup(UnauthorizedException("Token verification failed"));
+      } else if (e.response?.data != null && e.response?.data is Map) {
+        final data = e.response!.data as Map;
+        final bool isValid = data['valid'] ?? true;
+        final bool isExpired = data['expired'] ?? false;
+        if (!isValid || isExpired) {
+          _maybeShowAuthPopup(UnauthorizedException("Token has expired"));
+        }
+      }
+    } catch (e) {
+      debugPrint("Error checking token: $e");
+    }
+  }
+
+  // ── Auth Error Helpers ────────────────────────────────────────────────────
+  bool _isAuthError(Object? error) {
+    return error is UnauthorizedException;
+  }
+
+  void _maybeShowAuthPopup(Object? error) {
+    if (!_isAuthError(error)) return;
+    if (_authErrorShown) return;
+    _authErrorShown = true;
+    // Use addPostFrameCallback so dialog is shown after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _showAuthErrorDialog();
+    });
+  }
+
+  void _showAuthErrorDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _AuthErrorDialog(
+        onLogout: () async {
+          Navigator.of(ctx).pop();
+          await AuthLocalstorageService.clear();
+          if (mounted) {
+            Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil(AppRoutes.loginPage, (route) => false);
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final userAsync = ref.watch(userProvider);
@@ -39,6 +124,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final location = ref.watch(locationProvider);
     final bannerAsync = ref.watch(bannerProvider);
     final categoryAsync = ref.watch(categoryProvider);
+
+    // ── Listen for auth/token errors on all home providers ────────────────
+    ref.listen<AsyncValue<ProductState>>(productProvider, (_, next) {
+      if (next is AsyncError) _maybeShowAuthPopup((next as AsyncError).error);
+    });
+    ref.listen<AsyncValue<BannerResModel>>(bannerProvider, (_, next) {
+      next.whenOrNull(error: (e, _) => _maybeShowAuthPopup(e));
+    });
+    ref.listen<AsyncValue>(categoryProvider, (_, next) {
+      next.whenOrNull(error: (e, _) => _maybeShowAuthPopup(e));
+    });
 
     return Stack(
       children: [
@@ -411,6 +507,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ── Refresh ────────────────────────────────────────────────────────────────
   Future<void> _onRefresh() async {
+    _checkTokenValidity();
     ref.invalidate(productProvider);
     ref.invalidate(categoryProvider);
     ref.invalidate(pendingReviewProvider);
@@ -654,6 +751,95 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       },
       child: imageOnlyBanner(),
     );
+  }
+}
 
+// ── Auth Error Dialog ────────────────────────────────────────────────────────
+class _AuthErrorDialog extends StatelessWidget {
+  final VoidCallback onLogout;
+  const _AuthErrorDialog({required this.onLogout});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Icon ──────────────────────────────────────────────────────
+            Container(
+              height: 76,
+              width: 76,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.button.withAlpha(40),
+                    AppColors.button.withAlpha(15),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.lock_person_rounded,
+                color: AppColors.button,
+                size: 36,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // ── Title ─────────────────────────────────────────────────────
+            const Text(
+              'Session Expired',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1A2E),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+
+            // ── Subtitle ──────────────────────────────────────────────────
+            Text(
+              'For your security, you have been logged out. Please login again to continue using the app.',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.grey600,
+                height: 1.55,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 28),
+
+            // ── Logout Button ─────────────────────────────────────────────
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: onLogout,
+                icon: const Icon(Icons.logout_rounded, size: 18),
+                label: const Text(
+                  'Logout & Login Again',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.button,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
