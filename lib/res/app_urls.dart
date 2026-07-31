@@ -1,7 +1,7 @@
 class AppUrls {
-  static const String baseUrl = "http://192.168.1.28:8000/api";
+  // static const String baseUrl = "http://192.168.1.28:8000/api";
 
-  // static const String baseUrl = "https://api.samagran.com/api";
+  static const String baseUrl = "https://api.samagran.com/api";
 
   // ================ Auth =====================================
 
