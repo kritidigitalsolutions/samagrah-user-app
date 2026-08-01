@@ -109,7 +109,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     children: [
                       const SizedBox(height: 48),
                       Text(
-                        'Log In ',
+                        'Log In',
                         textAlign: TextAlign.center,
                         style: text26(),
                       ),
