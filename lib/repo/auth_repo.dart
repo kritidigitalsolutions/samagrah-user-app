@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:samagrah/data/exception/app_exception.dart';
 import 'package:samagrah/data/network/network_api_service.dart';
 import 'package:samagrah/model/request/auth_models/user_request_model.dart';
 import 'package:samagrah/model/response/auth_response/Auth_response.dart';
@@ -38,52 +39,52 @@ class AuthRepository {
       final formData = await _buildFormData(model);
       final res = await api.postApi(AppUrls.registerUser, formData);
       return UserRegisterResponseModel.fromJson(res);
-    } on DioException catch (e) {
-      // ✅ 400 response ka data parse karo
-      if (e.response?.statusCode == 400 && e.response?.data != null) {
-        return UserRegisterResponseModel.fromJson(e.response!.data);
+    } on AppException catch (e) {
+      if (e.data != null && e.data is Map<String, dynamic>) {
+        return UserRegisterResponseModel.fromJson(e.data);
       }
-      rethrow;
-    } catch (e) {
       rethrow;
     }
   }
 
   Future<UserRegisterResponseModel> login(String mobile) async {
+    print("🔵 LOGIN CALLED => $mobile");
     try {
       final res = await api.postApi(AppUrls.login, {"phone": mobile});
+      print("🟢 LOGIN RESPONSE => success:${res != null}");
       return UserRegisterResponseModel.fromJson(res);
-    } on DioException catch (e) {
-      // ✅ Same fix for login
-      if (e.response?.statusCode == 400 && e.response?.data != null) {
-        return UserRegisterResponseModel.fromJson(e.response!.data);
+    } on AppException catch (e) {
+      print("🟡 LOGIN ERROR-DATA => ${e.data}");
+      if (e.data != null && e.data is Map<String, dynamic>) {
+        return UserRegisterResponseModel.fromJson(e.data);
       }
-      rethrow;
-    } catch (e) {
       rethrow;
     }
   }
 
-  // resend otp
   Future<UserRegisterResponseModel> resendOtp(String mobile) async {
     try {
       final res = await api.postApi(AppUrls.resendOtp, {"phone": mobile});
       return UserRegisterResponseModel.fromJson(res);
-    } catch (e) {
+    } on AppException catch (e) {
+      if (e.data != null && e.data is Map<String, dynamic>) {
+        return UserRegisterResponseModel.fromJson(e.data);
+      }
       rethrow;
     }
   }
 
-  // 🔐 VERIFY OTP
   Future<VerifyOtpResponseModel> verifyOtp(String mobile, String otp) async {
     try {
       final res = await api.postApi(AppUrls.verifyOtp, {
         "phone": mobile,
         "otp": otp,
       });
-
       return VerifyOtpResponseModel.fromJson(res);
-    } catch (e) {
+    } on AppException catch (e) {
+      if (e.data != null && e.data is Map<String, dynamic>) {
+        return VerifyOtpResponseModel.fromJson(e.data);
+      }
       rethrow;
     }
   }

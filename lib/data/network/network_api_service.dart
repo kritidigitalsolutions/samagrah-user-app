@@ -121,6 +121,7 @@ class NetworkApiService extends BaseApiService {
 
   AppException _handleDioError(DioException error) {
     debugPrint("HANDLE ERROR => ${error.response?.data}");
+    final rawData = error.response?.data; // 👈 add this
 
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
@@ -133,13 +134,13 @@ class NetworkApiService extends BaseApiService {
         final message = _extractErrorMessage(error.response?.data);
 
         if (statusCode == 400) {
-          return BadRequestException(message);
+          return BadRequestException(message, rawData); // 👈 pass data
         } else if (statusCode == 401 || statusCode == 403) {
-          return UnauthorizedException(message);
+          return UnauthorizedException(message, rawData); // 👈 pass data
         } else if (statusCode >= 500) {
-          return FetchDataException(message);
+          return FetchDataException(message, rawData); // 👈 pass data
         } else {
-          return BadRequestException(message);
+          return BadRequestException(message, rawData); // 👈 pass data
         }
 
       case DioExceptionType.cancel:

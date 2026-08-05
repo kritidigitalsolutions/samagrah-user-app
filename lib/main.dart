@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'Samagran',
       theme: ThemeData(
         appBarTheme: const AppBarTheme(
           backgroundColor: AppColors.headerCard,

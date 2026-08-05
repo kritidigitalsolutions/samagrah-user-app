@@ -1,8 +1,10 @@
 class AppException implements Exception {
   final String message;
   final String prefix;
+  final dynamic
+  data; // 👈 raw response data (for structured errors like isNewUser, success, etc.)
 
-  AppException(this.message, this.prefix);
+  AppException(this.message, this.prefix, [this.data]);
 
   @override
   String toString() {
@@ -11,21 +13,25 @@ class AppException implements Exception {
 }
 
 class FetchDataException extends AppException {
-  FetchDataException([String? message])
-    : super(message ?? "Error During Communication", "FetchDataException: ");
+  FetchDataException([String? message, dynamic data])
+    : super(
+        message ?? "Error During Communication",
+        "FetchDataException: ",
+        data,
+      );
 }
 
 class BadRequestException extends AppException {
-  BadRequestException([String? message])
-    : super(message ?? "Invalid Request", "BadRequestException: ");
+  BadRequestException([String? message, dynamic data])
+    : super(message ?? "Invalid Request", "BadRequestException: ", data);
 }
 
 class UnauthorizedException extends AppException {
-  UnauthorizedException([String? message])
-    : super(message ?? "Unauthorized Request", "UnauthorizedException: ");
+  UnauthorizedException([String? message, dynamic data])
+    : super(message ?? "Unauthorized Request", "UnauthorizedException: ", data);
 }
 
 class InvalidInputException extends AppException {
-  InvalidInputException([String? message])
-    : super(message ?? "Invalid Input", "InvalidInputException: ");
+  InvalidInputException([String? message, dynamic data])
+    : super(message ?? "Invalid Input", "InvalidInputException: ", data);
 }

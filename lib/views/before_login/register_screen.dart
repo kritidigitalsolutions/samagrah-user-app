@@ -156,7 +156,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           CustomTextButton(
                             title: "Log in",
                             onTap: () {
-                              Navigator.pushNamed(context, AppRoutes.loginPage);
+                              Navigator.pushReplacementNamed(
+                                context,
+                                AppRoutes.loginPage,
+                              );
                             },
                           ),
                         ],

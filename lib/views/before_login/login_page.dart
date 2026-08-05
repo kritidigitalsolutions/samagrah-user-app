@@ -31,7 +31,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     ref.listen(authProvider, (previous, next) {
-      // ← Skip if state didn't actually change
+      print(
+        "🔴 LISTENER FIRED => next: ${next.value?.registerModel?.isNewUser}",
+      );
       if (previous == next) return;
 
       next.whenOrNull(
@@ -131,7 +133,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           CustomTextButton(
                             title: "Sign up",
                             onTap: () {
-                              Navigator.pop(context);
+                              Navigator.pushReplacementNamed(
+                                context,
+                                AppRoutes.register,
+                              );
                             },
                           ),
                         ],
@@ -158,16 +163,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           child: AppButton(
             title: 'Continue',
             isLoading: authState.isLoading,
-            onTap: () {
-              if (!_formKey.currentState!.validate()) return;
-
-              ref.read(phoneProvider.notifier).state = _mobileCtrl.text;
-
-              // 👉 ONLY API CALL
-              ref
-                  .read(authProvider.notifier)
-                  .login(mobile: _mobileCtrl.text.trim());
-            },
+            onTap: authState.isLoading
+                ? null // 👈 loading ke dauraan tap hi disable
+                : () {
+                    if (!_formKey.currentState!.validate()) return;
+                    ref.read(phoneProvider.notifier).state = _mobileCtrl.text;
+                    ref
+                        .read(authProvider.notifier)
+                        .login(mobile: _mobileCtrl.text.trim());
+                  },
           ),
         );
       },
