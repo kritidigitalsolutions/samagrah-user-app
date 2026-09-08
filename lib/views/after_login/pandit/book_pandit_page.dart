@@ -303,8 +303,9 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
     return source.where((p) {
       if (ritualNames.isNotEmpty) {
         final hasRitual = p.poojaOfferings.any(
-          (offering) =>
-              _ritualAliases(offering.name).intersection(ritualNames).isNotEmpty,
+          (offering) => _ritualAliases(
+            offering.name,
+          ).intersection(ritualNames).isNotEmpty,
         );
         if (!hasRitual) return false;
       }
@@ -1352,7 +1353,8 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                   _filters = _filters.copyWith(date: null);
                                 }),
                               ),
-                            if (false && _filters.time != null)
+                            if (false)
+                              // ignore: dead_code
                               _activeTag(
                                 '🕐 ${_formatTime(_filters.time!)}',
                                 onRemove: () => setState(() {
@@ -1362,7 +1364,8 @@ class _BookPanditPageState extends ConsumerState<BookPanditPage> {
                                   );
                                 }),
                               ),
-                            if (false && _filters.endTime != null)
+                            if (false)
+                              // ignore: dead_code
                               _activeTag(
                                 'End ${_formatTime(_filters.endTime!)}',
                                 onRemove: () => setState(() {
