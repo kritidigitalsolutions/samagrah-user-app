@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:samagrah/firebase_options.dart';
 import 'package:samagrah/repo/notification_repo.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_pages.dart';
@@ -21,7 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await FCMNotificationService().initialize();
   runApp(const ProviderScope(child: MyApp()));
 }
