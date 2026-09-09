@@ -23,17 +23,7 @@ class ProfilePage extends ConsumerWidget {
     final userAsync = ref.watch(userProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-        title: Text(
-          'My Profile',
-          style: text18(color: Colors.black87, fontWeight: FontWeight.w600),
-        ),
-      ),
+      appBar: const CustomAppBar(title: 'My Profile'),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),

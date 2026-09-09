@@ -40,16 +40,33 @@ class CategoryPage extends ConsumerWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        Row(
                           children: [
-                            Text(
-                              'Everything for your',
-                              style: text15(fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              'Puja',
-                              style: text15(fontWeight: FontWeight.bold),
+                            if (Navigator.canPop(context)) ...[
+                              IconButton(
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_left,
+                                  color: AppColors.black,
+                                  size: 30,
+                                ),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Everything for your',
+                                  style: text15(fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  'Puja',
+                                  style: text15(fontWeight: FontWeight.bold),
+                                ),
+                              ],
                             ),
                           ],
                         ),

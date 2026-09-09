@@ -4,6 +4,7 @@ import 'package:samagrah/model/request/checkout/address_req_model.dart';
 import 'package:samagrah/model/request/payment_req/payment_reqs_models.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
+import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/custom_textfields.dart';
@@ -92,6 +93,7 @@ class _AddressPageState extends ConsumerState<AddressPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: const CustomAppBar(title: 'Delivery Address'),
 
       // 🔥 Sticky Bottom Button
       bottomNavigationBar: SafeArea(
@@ -549,15 +551,22 @@ class _AddressPageState extends ConsumerState<AddressPage> {
   // ================= UI HELPERS =================
 
   Widget _buildStepper() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildStep(1, 'Item\nSummary', true),
-        _buildStepConnector(isActive: true),
-        _buildStep(2, 'Delivery\nAddress', true),
-        _buildStepConnector(isActive: true),
-        _buildStep(3, 'Payment\nMethod', true),
-      ],
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildStep(1, 'Item\nSummary', true),
+          _buildStepConnector(isActive: true),
+          _buildStep(2, 'Delivery\nAddress', true),
+          _buildStepConnector(isActive: false),
+          _buildStep(3, 'Payment\nMethod', false),
+        ],
+      ),
     );
   }
 

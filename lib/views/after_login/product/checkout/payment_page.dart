@@ -8,6 +8,7 @@ import 'package:samagrah/model/response/coupon_res_model.dart';
 import 'package:samagrah/repo/payment_repo.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
+import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/textstyle.dart';
@@ -115,6 +116,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: const CustomAppBar(title: 'Payment Method'),
       body: SafeArea(
         child: Column(
           children: [
@@ -637,8 +639,12 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
 
   Widget _buildStepper() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -1282,8 +1288,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                   if (items.isEmpty ||
                       effectiveTotal <= 0 ||
                       items.any(
-                        (item) =>
-                            item.productId.isEmpty || item.quantity <= 0,
+                        (item) => item.productId.isEmpty || item.quantity <= 0,
                       )) {
                     AppSnackbar.show(
                       context,
@@ -1295,61 +1300,12 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
 
                   try {
                     if (selectedPaymentMethod == 'cod') {
-                    ref.read(loadingProvider.notifier).state = true;
-                    final repo = PaymentRepo();
-
-                    final createReq = CreateOrderReqModel(
-                      deliveryFee: deliveryCharge,
-                      codCharge: codCharge,
-                      items: items,
-                      couponCode: couponState.appliedCode,
-                      panditId: panditId,
-                    );
-
-                    final orderRes = await repo.productCreateOrder(createReq);
-
-                    if (orderRes.data == null) {
-                      ref.read(loadingProvider.notifier).state = false;
-                      AppSnackbar.show(
-                        context,
-                        message: "Failed to create order",
-                        type: SnackBarType.error,
-                      );
-                      return;
-                    }
-
-                    final orderId = orderRes.data?.razorpayOrder?.id;
-                    if (orderId == null || orderId.isEmpty) {
-                      ref.read(loadingProvider.notifier).state = false;
-                      AppSnackbar.show(
-                        context,
-                        message: "Invalid Order ID",
-                        type: SnackBarType.error,
-                      );
-                      return;
-                    }
-
-                    final verifyReq = VerifyPaymentReqModel(
-                      paymentMethod: "COD",
-                      deliveryFee: deliveryCharge,
-                      codCharge: codCharge,
-                      address: address,
-                      items: items,
-                      couponCode: couponState.appliedCode,
-                      panditId: panditId,
-                      razorpayOrderId: orderId,
-                    );
-                    final success = await repo.productVerifyPayment(verifyReq);
-                    ref.read(loadingProvider.notifier).state = false;
-                    if (success && mounted) {
-                      Navigator.pushNamed(context, AppRoutes.successPage);
-                    }
-                    } else if (selectedPaymentMethod == 'wallet') {
-                    if (walletBalance >= effectiveTotal) {
                       ref.read(loadingProvider.notifier).state = true;
                       final repo = PaymentRepo();
+
                       final createReq = CreateOrderReqModel(
                         deliveryFee: deliveryCharge,
+                        codCharge: codCharge,
                         items: items,
                         couponCode: couponState.appliedCode,
                         panditId: panditId,
@@ -1379,9 +1335,9 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                       }
 
                       final verifyReq = VerifyPaymentReqModel(
-                        paymentMethod: "WALLET",
+                        paymentMethod: "COD",
                         deliveryFee: deliveryCharge,
-                        walletAmount: walletBalance,
+                        codCharge: codCharge,
                         address: address,
                         items: items,
                         couponCode: couponState.appliedCode,
@@ -1395,13 +1351,66 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                       if (success && mounted) {
                         Navigator.pushNamed(context, AppRoutes.successPage);
                       }
-                    } else {
-                      AppSnackbar.show(
-                        context,
-                        message: "Insufficient wallet balance",
-                        type: SnackBarType.error,
-                      );
-                    }
+                    } else if (selectedPaymentMethod == 'wallet') {
+                      if (walletBalance >= effectiveTotal) {
+                        ref.read(loadingProvider.notifier).state = true;
+                        final repo = PaymentRepo();
+                        final createReq = CreateOrderReqModel(
+                          deliveryFee: deliveryCharge,
+                          items: items,
+                          couponCode: couponState.appliedCode,
+                          panditId: panditId,
+                        );
+
+                        final orderRes = await repo.productCreateOrder(
+                          createReq,
+                        );
+
+                        if (orderRes.data == null) {
+                          ref.read(loadingProvider.notifier).state = false;
+                          AppSnackbar.show(
+                            context,
+                            message: "Failed to create order",
+                            type: SnackBarType.error,
+                          );
+                          return;
+                        }
+
+                        final orderId = orderRes.data?.razorpayOrder?.id;
+                        if (orderId == null || orderId.isEmpty) {
+                          ref.read(loadingProvider.notifier).state = false;
+                          AppSnackbar.show(
+                            context,
+                            message: "Invalid Order ID",
+                            type: SnackBarType.error,
+                          );
+                          return;
+                        }
+
+                        final verifyReq = VerifyPaymentReqModel(
+                          paymentMethod: "WALLET",
+                          deliveryFee: deliveryCharge,
+                          walletAmount: walletBalance,
+                          address: address,
+                          items: items,
+                          couponCode: couponState.appliedCode,
+                          panditId: panditId,
+                          razorpayOrderId: orderId,
+                        );
+                        final success = await repo.productVerifyPayment(
+                          verifyReq,
+                        );
+                        ref.read(loadingProvider.notifier).state = false;
+                        if (success && mounted) {
+                          Navigator.pushNamed(context, AppRoutes.successPage);
+                        }
+                      } else {
+                        AppSnackbar.show(
+                          context,
+                          message: "Insufficient wallet balance",
+                          type: SnackBarType.error,
+                        );
+                      }
                     } else {
                       await ref
                           .read(paymentProvider.notifier)

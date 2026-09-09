@@ -303,10 +303,23 @@ class _LocationPageState extends ConsumerState<LocationPage> {
   Widget _buildTopSection(bool isFromHome) {
     return Container(
       color: AppColors.background,
-      padding: const EdgeInsets.fromLTRB(20, 36, 20, 16),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (Navigator.canPop(context)) ...[
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: Icon(
+                  Icons.keyboard_arrow_left,
+                  size: 32,
+                  color: AppColors.grey900,
+                ),
+              ),
+            ),
+          ],
           Text(
             'Select Your City',
             style: text26(

@@ -114,6 +114,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ),
 
+            // Back button
+            if (Navigator.canPop(context))
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8, top: 4),
+                  child: IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: AppColors.textPrimary,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+
             // ✅ Main Content
             SafeArea(
               child: SingleChildScrollView(

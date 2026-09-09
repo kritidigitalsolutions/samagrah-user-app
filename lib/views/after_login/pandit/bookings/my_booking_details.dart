@@ -70,22 +70,18 @@ class MyBookingDetails extends ConsumerWidget {
     final rescheduleState = ref.watch(rescheduleBookingProvider);
 
     if (booking == null) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppColors.background,
+        appBar: CustomAppBar(title: "Booking Details"),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.error_outline, size: 48, color: AppColors.error),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Text(
                 "Booking not found",
-                style: text16(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Go Back"),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -106,6 +102,7 @@ class MyBookingDetails extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: const CustomAppBar(title: "Booking Details"),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),

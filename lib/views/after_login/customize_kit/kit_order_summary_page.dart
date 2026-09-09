@@ -24,36 +24,46 @@ class KitOrderSummaryPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: const CustomAppBar(title: 'Order Summary'),
       body: SafeArea(
         child: Column(
           children: [
-            // 🔝 Header
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildStep(1, 'Item\nSummary', true),
-                      _buildStepConnector(isActive: true),
-                      _buildStep(2, 'Delivery\nAddress', false),
-                      _buildStepConnector(isActive: false),
-                      _buildStep(3, 'Payment\nMethod', false),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      kit.name,
-                      style: text18(fontWeight: FontWeight.w700),
-                    ),
+            // 🔝 Stepper
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: const BoxDecoration(
+                color: AppColors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
                   ),
                 ],
               ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildStep(1, 'Item\nSummary', true),
+                  _buildStepConnector(isActive: true),
+                  _buildStep(2, 'Delivery\nAddress', false),
+                  _buildStepConnector(isActive: false),
+                  _buildStep(3, 'Payment\nMethod', false),
+                ],
+              ),
             ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  kit.name,
+                  style: text18(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
 
             // 📦 Items
             Expanded(

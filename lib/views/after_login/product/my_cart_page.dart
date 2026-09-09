@@ -41,17 +41,34 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
           child: Column(
             children: [
               Container(
-                padding: EdgeInsets.fromLTRB(16, 10, 16, 0),
-                decoration: BoxDecoration(color: AppColors.headerCard),
+                padding: const EdgeInsets.fromLTRB(12, 10, 16, 0),
+                decoration: const BoxDecoration(color: AppColors.headerCard),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'My Cart',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        if (Navigator.canPop(context)) ...[
+                          IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(
+                              Icons.keyboard_arrow_left,
+                              color: AppColors.black,
+                              size: 30,
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        const Text(
+                          'My Cart',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                     Image.asset(
                       'assets/nav/cart.png',
@@ -256,44 +273,45 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
                         onTap: cartItems.items.isEmpty
                             ? null
                             : () {
-                          if (hasOutOfStockItems) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  "Remove out of stock items before placing order",
-                                ),
-                              ),
-                            );
-                            return;
-                          }
+                                if (hasOutOfStockItems) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Remove out of stock items before placing order",
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
 
-                          if (!canPlaceOrder) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  "Add a valid product before placing the order",
-                                ),
-                              ),
-                            );
-                            return;
-                          }
+                                if (!canPlaceOrder) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Add a valid product before placing the order",
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
 
-                          final orderItems = cartItems.items.map((item) {
-                            return OrderItem(
-                              productId: item.productId,
-                              title: item.title,
-                              price: item.price.toInt(), // 👈 double → int
-                              quantity: item.quantity,
-                              image: item.thumbnail,
-                            );
-                          }).toList();
+                                final orderItems = cartItems.items.map((item) {
+                                  return OrderItem(
+                                    productId: item.productId,
+                                    title: item.title,
+                                    price: item.price
+                                        .toInt(), // 👈 double → int
+                                    quantity: item.quantity,
+                                    image: item.thumbnail,
+                                  );
+                                }).toList();
 
-                          Navigator.pushNamed(
-                            context,
-                            AppRoutes.orderSummary,
-                            arguments: orderItems,
-                          );
-                        },
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.orderSummary,
+                                  arguments: orderItems,
+                                );
+                              },
 
                         textStyle: text13(
                           color: AppColors.white,
