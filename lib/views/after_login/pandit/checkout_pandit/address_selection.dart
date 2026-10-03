@@ -659,15 +659,6 @@ class _AddressSelectionScreenState
                     return;
                   }
 
-                  // Print selected address for API
-                  print('Selected Address:');
-                  print('ID: ${selectedAddress.id}');
-                  print('Name: ${selectedAddress.name}');
-                  print('Phone: ${selectedAddress.phone}');
-                  print(
-                    'Full Address: ${selectedAddress.fullAddress}, ${selectedAddress.city}, ${selectedAddress.state} - ${selectedAddress.pincode}',
-                  );
-
                   // Navigate to next screen
                   Navigator.pushNamed(context, AppRoutes.bookingSummary);
                 },

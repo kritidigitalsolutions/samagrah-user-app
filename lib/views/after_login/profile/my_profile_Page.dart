@@ -304,15 +304,33 @@ class ProfilePage extends ConsumerWidget {
           ),
 
           // Profile Image
-          CircleAvatar(
-            radius: 39,
-            backgroundColor: AppColors.button,
-            child: CircleAvatar(
-              radius: 37,
-              child: CustomCachedImage(
-                imageUrl: user?['profileImage'] ?? '',
-
-                borderRadius: BorderRadius.circular(35),
+          Container(
+            width: 76,
+            height: 76,
+            padding: const EdgeInsets.all(2.5),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.button,
+            ),
+            child: Container(
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.grey200,
+              ),
+              child: ClipOval(
+                child: (user?['profileImage'] ?? '').toString().isNotEmpty
+                    ? CustomCachedImage(
+                        imageUrl: user!['profileImage'],
+                        width: 71,
+                        height: 71,
+                        fit: BoxFit.cover,
+                        shape: BoxShape.circle,
+                      )
+                    : const Icon(
+                        Icons.person,
+                        size: 38,
+                        color: AppColors.grey,
+                      ),
               ),
             ),
           ),

@@ -116,8 +116,6 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 
     try {
       debugPrint("🚀 START PAYMENT");
-      debugPrint("🚀 ${address.toJson()}");
-      debugPrint("🚀 $items");
 
       this.address = address;
       this.items = items;
@@ -126,7 +124,6 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
       this.deliveryFee = deliveryFee;
 
       final user = await AuthLocalstorageService.getUser();
-      debugPrint("👤 User: $user");
 
       final createReq = CreateOrderReqModel(
         deliveryFee: deliveryFee,
@@ -135,16 +132,11 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
         panditId: panditId,
       );
 
-      debugPrint("📤 CreateOrder Request: ${createReq.toJson()}");
-
       final orderRes = await _repo.productCreateOrder(createReq);
-
-      debugPrint("📥 CreateOrder Response: ${orderRes.data}");
 
       final data = orderRes.data;
       final order = data?.razorpayOrder;
 
-      debugPrint("📦 Order Object: $order");
       debugPrint("🆔 Order ID: ${order?.id}");
       debugPrint("💰 Amount: ${order?.amount}");
 
@@ -173,9 +165,6 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 
       final contact = user?["phone"] ?? "";
       final email = user?["email"] ?? "";
-
-      debugPrint("📞 Contact: $contact");
-      debugPrint("📧 Email: $email");
 
       debugPrint("✅ READY TO OPEN RAZORPAY");
 
@@ -267,9 +256,6 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
         razorpaySignature: res.signature!,
         panditId: panditId,
       );
-
-      debugPrint("📤 Verify Request JSON:");
-      debugPrint("${verifyReq.toJson()}");
 
       debugPrint("🌐 Calling verifyPayment API...");
 

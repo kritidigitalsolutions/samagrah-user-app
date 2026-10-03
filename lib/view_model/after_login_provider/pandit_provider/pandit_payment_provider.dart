@@ -99,13 +99,10 @@ class PanditPaymentBookingNotifier extends StateNotifier<PaymentState> {
     if (state.isLoading) return;
     try {
       debugPrint("🚀 Creating Order...");
-      debugPrint("📦 Request: ${model.toJson()}");
       state = state.copyWith(status: PaymentStatus.loading);
 
       /// ✅ CALL API WITH MODEL
       final response = await _repo.panditCreateOrder(model);
-
-      debugPrint("📥 Full Response: ${jsonEncode(response)}");
 
       /// ✅ VALIDATION
       if (response["success"] != true || response["data"] == null) {
@@ -138,7 +135,6 @@ class PanditPaymentBookingNotifier extends StateNotifier<PaymentState> {
       _currentBookingId = bookingId;
 
       final user = await AuthLocalstorageService.getUser();
-      debugPrint("👤 User: $user");
 
       final contact = user?["phone"] ?? "";
       final email = user?["email"] ?? "";
@@ -180,12 +176,9 @@ class PanditPaymentBookingNotifier extends StateNotifier<PaymentState> {
 
     try {
       debugPrint("🚀 Creating Wallet Booking...");
-      debugPrint("📦 Request: ${model.toJson()}");
       state = state.copyWith(status: PaymentStatus.loading);
 
       final response = await _repo.panditCreateOrder(model);
-
-      debugPrint("📥 Full Response: ${jsonEncode(response)}");
 
       if (response["success"] != true || response["data"] == null) {
         throw Exception("Something went wrong");

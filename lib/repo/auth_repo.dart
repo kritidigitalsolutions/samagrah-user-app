@@ -48,13 +48,10 @@ class AuthRepository {
   }
 
   Future<UserRegisterResponseModel> login(String mobile) async {
-    print("🔵 LOGIN CALLED => $mobile");
     try {
       final res = await api.postApi(AppUrls.login, {"phone": mobile});
-      print("🟢 LOGIN RESPONSE => success:${res != null}");
       return UserRegisterResponseModel.fromJson(res);
     } on AppException catch (e) {
-      print("🟡 LOGIN ERROR-DATA => ${e.data}");
       if (e.data != null && e.data is Map<String, dynamic>) {
         return UserRegisterResponseModel.fromJson(e.data);
       }

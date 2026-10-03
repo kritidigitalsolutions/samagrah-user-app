@@ -9,6 +9,7 @@ import 'package:samagrah/utils/localStogare_service/location_storage.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/checkout_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/pandit_provider/ritual_pandit_provider.dart';
+import 'package:samagrah/utils/auth_guard.dart';
 
 class PanditDetailsPage extends ConsumerWidget {
   const PanditDetailsPage({super.key});
@@ -18,8 +19,6 @@ class PanditDetailsPage extends ConsumerWidget {
     final pandit = ModalRoute.of(context)!.settings.arguments as PanditData;
 
     final selectedService = ref.read(selectedServiceProvider);
-
-    print(selectedService);
 
     // Status bar transparent so image shows through
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -539,40 +538,44 @@ class _BottomBar extends ConsumerWidget {
         children: [
           Expanded(
             child: ElevatedButton.icon(
-              onPressed: () async {
-                // ── NEW: outstation booking gate ──
-                final isOtherLocation = await _isOtherCityOrPincode(ref);
-                if (!context.mounted) return;
-                final anywhereInIndia =
-                    pandit
-                        .serviceTypes
-                        ?.outstationAvailability
-                        ?.anywhereInIndia ==
-                    true;
+              onPressed: () => AuthGuard.run(
+                context,
+                message: 'Sign in to book this pandit.',
+                onAuthed: () async {
+                  // ── NEW: outstation booking gate ──
+                  final isOtherLocation = await _isOtherCityOrPincode(ref);
+                  if (!context.mounted) return;
+                  final anywhereInIndia =
+                      pandit
+                          .serviceTypes
+                          ?.outstationAvailability
+                          ?.anywhereInIndia ==
+                      true;
 
-                if (isOtherLocation && !anywhereInIndia) {
-                  _showOutstationBlockedDialog(context);
-                  return;
-                }
+                  if (isOtherLocation && !anywhereInIndia) {
+                    _showOutstationBlockedDialog(context);
+                    return;
+                  }
 
-                ref.read(selectedPanditProvider.notifier).state = pandit;
+                  ref.read(selectedPanditProvider.notifier).state = pandit;
 
-                final selectedService = ref.read(selectedServiceProvider);
+                  final selectedService = ref.read(selectedServiceProvider);
 
-                if (selectedService == null) {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.serviceSelection,
-                    arguments: pandit,
-                  );
-                } else {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.timeSelection,
-                    arguments: pandit,
-                  );
-                }
-              },
+                  if (selectedService == null) {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.serviceSelection,
+                      arguments: pandit,
+                    );
+                  } else {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.timeSelection,
+                      arguments: pandit,
+                    );
+                  }
+                },
+              ),
               icon: const Icon(
                 Icons.check_circle_outline_rounded,
                 size: 17,

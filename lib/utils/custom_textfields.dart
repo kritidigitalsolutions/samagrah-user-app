@@ -6,6 +6,7 @@ class AppTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final TextInputType keyboardType;
+  final TextCapitalization textCapitalization;
   final String? Function(String?)? validator;
   final bool obscureText;
   final Widget? prefixIcon;
@@ -20,6 +21,7 @@ class AppTextField extends StatelessWidget {
     required this.controller,
     required this.hintText,
     this.keyboardType = TextInputType.text,
+    this.textCapitalization = TextCapitalization.none,
     this.validator,
     this.obscureText = false,
     this.prefixIcon,
@@ -35,6 +37,7 @@ class AppTextField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      textCapitalization: textCapitalization,
       obscureText: obscureText,
       validator: validator,
       inputFormatters: inputFormatters,

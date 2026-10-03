@@ -43,6 +43,21 @@ class MyApp extends StatelessWidget {
           scrolledUnderElevation: 0,
         ),
       ),
+      builder: (context, child) {
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+          child: NotificationListener<ScrollStartNotification>(
+            onNotification: (notification) {
+              if (notification.dragDetails != null) {
+                FocusManager.instance.primaryFocus?.unfocus();
+              }
+              return false;
+            },
+            child: child ?? const SizedBox.shrink(),
+          ),
+        );
+      },
       initialRoute: AppRoutes.splash,
       routes: AppPages.routes,
     );
@@ -78,14 +93,20 @@ class _MyHomeScreenState extends ConsumerState<MyHomeScreen> {
   // Case 3: City saved + GPS permission NOT granted → show popup
   // ─────────────────────────────────────────────────────────────
   void _handleLocationCheck() async {
-    // FCM token
-    final prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('fcm_token');
-    if (token == null || token.isEmpty) {
-      token = await FirebaseMessaging.instance.getToken();
-      await _repo.postFCMToken(token ?? '');
-    } else {
-      await _repo.postFCMToken(token);
+    // FCM token registration (safe fallback: failure must not crash startup or block navigation)
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('fcm_token');
+      if (token == null || token.isEmpty) {
+        token = await FirebaseMessaging.instance.getToken();
+        if (token != null && token.isNotEmpty) {
+          await _repo.postFCMToken(token);
+        }
+      } else {
+        await _repo.postFCMToken(token);
+      }
+    } catch (_) {
+      // Non-fatal: guest user (no auth token) or network failure must not crash startup
     }
 
     // Step 1 — city saved hai?

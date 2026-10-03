@@ -224,46 +224,82 @@ class ProductDetailsBottomSheet extends ConsumerWidget {
                               style: text15(fontWeight: FontWeight.w600),
                             ),
                             SizedBox(height: 10),
-                            SizedBox(
-                              height: 160,
-                              child: AnimationLimiter(
-                                key: ValueKey("${filteredProducts.length}"),
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  itemCount: filteredProducts.length,
-                                  itemBuilder: (context, index) {
-                                    final item = filteredProducts[index];
+                            Builder(
+                              builder: (context) {
+                                final screenWidth =
+                                    MediaQuery.of(context).size.width;
+                                final textScale = MediaQuery.maybeTextScalerOf(
+                                          context,
+                                        )?.scale(1.0) ??
+                                    1.0;
+                                final cardWidth = screenWidth > 600
+                                    ? (screenWidth / 4.5).clamp(145.0, 185.0)
+                                    : (screenWidth * 0.36).clamp(128.0, 155.0);
+                                final innerCardWidth = cardWidth - 8;
+                                final imageHeight = (innerCardWidth * 0.90)
+                                    .clamp(105.0, 140.0);
+                                final infoHeight =
+                                    (120.0 * textScale).clamp(115.0, 165.0);
+                                final scrollHeight =
+                                    imageHeight + infoHeight + 14.0;
 
-                                    return AnimationConfiguration.staggeredList(
-                                      position: index,
-                                      duration: const Duration(
-                                        milliseconds: 400,
+                                return SizedBox(
+                                  height: scrollHeight,
+                                  child: AnimationLimiter(
+                                    key: ValueKey("${filteredProducts.length}"),
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
                                       ),
-                                      child: SlideAnimation(
-                                        horizontalOffset: 50,
-                                        child: FadeInAnimation(
-                                          child: GestureDetector(
-                                            onTap: () {
-                                              showModalBottomSheet(
-                                                context: context,
-                                                isScrollControlled: true,
-                                                builder: (_) =>
-                                                    ProductDetailsBottomSheet(
-                                                      productId: item.id ?? '',
-                                                    ),
-                                              );
-                                            },
-                                            child: ProductCard(product: item),
+                                      itemCount: filteredProducts.length,
+                                      itemBuilder: (context, index) {
+                                        final item = filteredProducts[index];
+
+                                        return AnimationConfiguration.staggeredList(
+                                          position: index,
+                                          duration: const Duration(
+                                            milliseconds: 400,
                                           ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
+                                          child: SlideAnimation(
+                                            horizontalOffset: 50,
+                                            child: FadeInAnimation(
+                                              child: SizedBox(
+                                                width: cardWidth,
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                    right: 8,
+                                                  ),
+                                                  child: GestureDetector(
+                                                    onTap: () {
+                                                      showModalBottomSheet(
+                                                        context: context,
+                                                        isScrollControlled:
+                                                            true,
+                                                        builder: (_) =>
+                                                            ProductDetailsBottomSheet(
+                                                              productId:
+                                                                  item.id ??
+                                                                      '',
+                                                            ),
+                                                      );
+                                                    },
+                                                    child: ProductCard(
+                                                      product: item,
+                                                      imageHeight: imageHeight,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         );

@@ -6,6 +6,7 @@ import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
+import 'package:samagrah/utils/auth_guard.dart';
 
 class BottomCartBar extends ConsumerWidget {
   final double bottom;
@@ -28,9 +29,11 @@ class BottomCartBar extends ConsumerWidget {
       right: 0,
       child: Center(
         child: GestureDetector(
-          onTap: () {
-            Navigator.pushNamed(context, AppRoutes.myCart);
-          },
+          onTap: () => AuthGuard.run(
+            context,
+            message: 'Sign in to view your cart.',
+            onAuthed: () => Navigator.pushNamed(context, AppRoutes.myCart),
+          ),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(

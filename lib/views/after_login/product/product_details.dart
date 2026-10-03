@@ -16,6 +16,7 @@ import 'package:samagrah/views/after_login/product/checkout/order_summary_page.d
 import 'package:samagrah/views/custom_widget/Product_card.dart';
 import 'package:samagrah/views/custom_widget/product_image_slider.dart';
 import 'package:samagrah/views/custom_widget/rating_summary_widget.dart';
+import 'package:samagrah/utils/auth_guard.dart';
 import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
 
 class ProductDetails extends ConsumerStatefulWidget {
@@ -133,9 +134,14 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                       child: GestureDetector(
                         onTap: isWishlistLoading
                             ? null
-                            : () => ref
-                                  .read(wishlistProvider.notifier)
-                                  .toggle(product.id ?? ''),
+                            : () => AuthGuard.run(
+                                  context,
+                                  message:
+                                      'Sign in to save items to your wishlist.',
+                                  onAuthed: () => ref
+                                      .read(wishlistProvider.notifier)
+                                      .toggle(product.id ?? ''),
+                                ),
                         child: CircleAvatar(
                           backgroundColor: AppColors.white,
                           child: isWishlistLoading
@@ -481,22 +487,28 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
                           AppButton(
                             title: inStock ? 'Buy Now' : 'Out of Stock',
                             onTap: inStock
-                                ? () {
-                                    final qua = quantity == 0 ? 1 : quantity;
-                                    Navigator.pushNamed(
+                                ? () => AuthGuard.run(
                                       context,
-                                      AppRoutes.orderSummary,
-                                      arguments: [
-                                        OrderItem(
-                                          productId: product.id ?? '',
-                                          title: product.title ?? '',
-                                          price: product.price ?? 0,
-                                          quantity: qua,
-                                          image: product.thumbnail ?? '',
-                                        ),
-                                      ],
-                                    );
-                                  }
+                                      message:
+                                          'Sign in to proceed to checkout.',
+                                      onAuthed: () {
+                                        final qua =
+                                            quantity == 0 ? 1 : quantity;
+                                        Navigator.pushNamed(
+                                          context,
+                                          AppRoutes.orderSummary,
+                                          arguments: [
+                                            OrderItem(
+                                              productId: product.id ?? '',
+                                              title: product.title ?? '',
+                                              price: product.price ?? 0,
+                                              quantity: qua,
+                                              image: product.thumbnail ?? '',
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    )
                                 : null,
                             color: inStock
                                 ? AppColors.primary
@@ -574,54 +586,76 @@ class _ProductDetailsState extends ConsumerState<ProductDetails> {
 
                 // Similar Items — replace karo
                 SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 225, // imageHeight + infoHeight
-                    child: productState.when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (e, _) =>
-                          const Center(child: Text('Something went wrong')),
-                      data: (state) {
-                        final filterProduct = state.categoryProducts
-                            .where((p) => p.id != product.id)
-                            .toList();
+                  child: Builder(
+                    builder: (context) {
+                      final screenWidth = MediaQuery.of(context).size.width;
+                      final textScale =
+                          MediaQuery.maybeTextScalerOf(context)?.scale(1.0) ??
+                              1.0;
+                      final cardWidth = screenWidth > 600
+                          ? (screenWidth / 4.5).clamp(145.0, 185.0)
+                          : (screenWidth * 0.36).clamp(128.0, 155.0);
+                      final innerCardWidth = cardWidth - 8;
+                      final imageHeight =
+                          (innerCardWidth * 0.90).clamp(105.0, 140.0);
+                      final infoHeight =
+                          (120.0 * textScale).clamp(115.0, 165.0);
+                      final scrollHeight = imageHeight + infoHeight + 14.0;
 
-                        if (filterProduct.isEmpty) {
-                          return const Center(child: Text('No Products Found'));
-                        }
+                      return SizedBox(
+                        height: scrollHeight,
+                        child: productState.when(
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
+                          error: (e, _) =>
+                              const Center(child: Text('Something went wrong')),
+                          data: (state) {
+                            final filterProduct = state.categoryProducts
+                                .where((p) => p.id != product.id)
+                                .toList();
 
-                        return AnimationLimiter(
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            itemCount: filterProduct.length,
-                            itemBuilder: (context, index) {
-                              return AnimationConfiguration.staggeredList(
-                                position: index,
-                                duration: const Duration(milliseconds: 400),
-                                child: SlideAnimation(
-                                  horizontalOffset: 50,
-                                  child: FadeInAnimation(
-                                    // ── Fixed width container — ProductCard ko bounded space do
-                                    child: SizedBox(
-                                      width: 120, // cardWidth fixed
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 8,
-                                        ),
-                                        child: ProductCard(
-                                          product: filterProduct[index],
+                            if (filterProduct.isEmpty) {
+                              return const Center(
+                                child: Text('No Products Found'),
+                              );
+                            }
+
+                            return AnimationLimiter(
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                itemCount: filterProduct.length,
+                                itemBuilder: (context, index) {
+                                  return AnimationConfiguration.staggeredList(
+                                    position: index,
+                                    duration:
+                                        const Duration(milliseconds: 400),
+                                    child: SlideAnimation(
+                                      horizontalOffset: 50,
+                                      child: FadeInAnimation(
+                                        child: SizedBox(
+                                          width: cardWidth,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(
+                                              right: 8,
+                                            ),
+                                            child: ProductCard(
+                                              product: filterProduct[index],
+                                              imageHeight: imageHeight,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
                   ),
                 ),
 
@@ -768,17 +802,21 @@ class _QuantityControl extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
               title: 'Add to Cart',
-              onTap: () {
-                cartNotifier.addItem(
-                  CartItem(
-                    productId: product.id ?? '',
-                    title: product.title ?? '',
-                    thumbnail: product.thumbnail ?? '',
-                    price: product.price?.toDouble() ?? 0.0,
-                    inStock: product.inStock == true,
-                  ),
-                );
-              },
+              onTap: () => AuthGuard.run(
+                context,
+                message: 'Sign in to add items to your cart.',
+                onAuthed: () {
+                  cartNotifier.addItem(
+                    CartItem(
+                      productId: product.id ?? '',
+                      title: product.title ?? '',
+                      thumbnail: product.thumbnail ?? '',
+                      price: product.price?.toDouble() ?? 0.0,
+                      inStock: product.inStock == true,
+                    ),
+                  );
+                },
+              ),
             )
           : Container(
               key: ValueKey('qty_${product.id}'),

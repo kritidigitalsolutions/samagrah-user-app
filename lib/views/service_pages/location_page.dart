@@ -868,38 +868,49 @@ class _LocationPageState extends ConsumerState<LocationPage> {
     });
 
     try {
-      final permission = await Permission.location.request();
-
-      if (permission.isDenied) {
+      // ── 1. Check if GPS/Location Services hardware is enabled ──
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
         setState(() {
-          _gpsError = 'Location permission denied. Enable it in settings.';
+          _gpsError = 'Location services disabled. Please enable GPS in your device settings.';
           _isGpsLoading = false;
         });
         return;
       }
 
-      if (permission.isPermanentlyDenied) {
+      // ── 2. Check current permission using Geolocator (works natively on iOS) ──
+      LocationPermission permission = await Geolocator.checkPermission();
+
+      // ── 3. Request permission if not yet determined ──
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      // ── 4. Still denied after request ──
+      if (permission == LocationPermission.denied) {
         setState(() {
-          _gpsError =
-              'Permission permanently denied. Open app settings to enable.';
+          _gpsError = 'Location permission denied. Please allow location access.';
+          _isGpsLoading = false;
+        });
+        return;
+      }
+
+      // ── 5. Permanently denied (iOS "Don't Allow" / Android "Never") ──
+      if (permission == LocationPermission.deniedForever) {
+        setState(() {
+          _gpsError = 'Location permission is permanently denied. Please enable it in app settings.';
           _isGpsLoading = false;
         });
         await openAppSettings();
         return;
       }
 
-      if (!await Geolocator.isLocationServiceEnabled()) {
-        setState(() {
-          _gpsError = 'Location services disabled. Please enable them.';
-          _isGpsLoading = false;
-        });
-        return;
-      }
-
+      // ── 6. Permission granted → get current position ──
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
+      // ── 7. Reverse geocode to get city, state, pincode ──
       final placemarks = await placemarkFromCoordinates(
         position.latitude,
         position.longitude,
@@ -907,7 +918,7 @@ class _LocationPageState extends ConsumerState<LocationPage> {
 
       if (placemarks.isNotEmpty) {
         final place = placemarks.first;
-        final city = place.locality ?? '';
+        final city = place.locality ?? place.subAdministrativeArea ?? '';
         final state = place.administrativeArea ?? '';
         final pincode = place.postalCode ?? '';
         final addr = [
@@ -918,6 +929,14 @@ class _LocationPageState extends ConsumerState<LocationPage> {
           place.country,
           if (pincode.isNotEmpty) pincode,
         ].where((e) => e != null && e.isNotEmpty).join(', ');
+
+        if (city.isEmpty) {
+          setState(() {
+            _gpsError = 'Could not determine your city. Please search manually.';
+            _isGpsLoading = false;
+          });
+          return;
+        }
 
         await _saveAndNavigate(
           city: city,
@@ -933,8 +952,9 @@ class _LocationPageState extends ConsumerState<LocationPage> {
         });
       }
     } catch (e) {
+      debugPrint('GPS detection error: $e');
       setState(() {
-        _gpsError = 'Could not detect location. Please try again.';
+        _gpsError = 'Could not detect location. Please check your internet and try again.';
         _isGpsLoading = false;
       });
     }

@@ -13,6 +13,7 @@ import 'package:samagrah/view_model/after_login_provider/home_provider/category_
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/views/after_login/customize_kit/kit_order_summary_page.dart';
 import 'package:samagrah/views/global_widgets/product_details_bottom_sheet.dart';
+import 'package:samagrah/utils/auth_guard.dart';
 
 class FestivalKitDetails extends ConsumerStatefulWidget {
   const FestivalKitDetails({super.key});
@@ -456,11 +457,16 @@ class _FestivalKitDetailsState extends ConsumerState<FestivalKitDetails> {
                 title: isLoading ? "Creating Kit..." : "Buy Now",
                 onTap: isLoading
                     ? null
-                    : () => Navigator.pushNamed(
-                        context,
-                        AppRoutes.kitOrderSummary,
-                        arguments: KitOrderArgs(kit: kit, isCustomized: false),
-                      ),
+                    : () => AuthGuard.run(
+                          context,
+                          message: 'Sign in to purchase this puja kit.',
+                          onAuthed: () => Navigator.pushNamed(
+                            context,
+                            AppRoutes.kitOrderSummary,
+                            arguments:
+                                KitOrderArgs(kit: kit, isCustomized: false),
+                          ),
+                        ),
               ),
               const SizedBox(height: 10),
               if (!isSpecialKit && _isCustomizable)
@@ -1477,7 +1483,12 @@ class _CustomizeSheetState extends ConsumerState<_CustomizeSheet> {
                   Expanded(
                     child: AppButton(
                       title: 'Proceed to Checkout →',
-                      onTap: () => widget.onProceed(_localItems, _localTotal),
+                      onTap: () => AuthGuard.run(
+                        context,
+                        message: 'Sign in to purchase this customized kit.',
+                        onAuthed: () =>
+                            widget.onProceed(_localItems, _localTotal),
+                      ),
                     ),
                   ),
                 ],

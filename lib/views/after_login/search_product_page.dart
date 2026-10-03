@@ -156,12 +156,17 @@ class _SearchProductPageState extends ConsumerState<SearchProductPage> {
                             key: ValueKey("search_${results.length}"),
                             child: LayoutBuilder(
                               builder: (context, constraints) {
+                                final textScale =
+                                    MediaQuery.maybeTextScalerOf(context)
+                                            ?.scale(1.0) ??
+                                        1.0;
                                 final cardWidth =
                                     (constraints.maxWidth - 16 - 12) / 3;
                                 final imageHeight = cardWidth;
-                                const infoHeight = 100.0;
-                                final ratio =
-                                    cardWidth / (imageHeight + infoHeight);
+                                final dynamicInfoHeight =
+                                    (120.0 * textScale).clamp(115.0, 160.0);
+                                final ratio = cardWidth /
+                                    (imageHeight + dynamicInfoHeight);
 
                                 return GridView.builder(
                                   padding: const EdgeInsets.fromLTRB(

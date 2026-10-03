@@ -346,8 +346,6 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
         isLoading: authState.isLoading,
         onTap: () {
           final phone = ref.read(phoneProvider.notifier).state;
-          print(otp);
-          print(phone);
           ref.read(authProvider.notifier).verifyOtp(mobile: phone, otp: otp);
         },
       ),

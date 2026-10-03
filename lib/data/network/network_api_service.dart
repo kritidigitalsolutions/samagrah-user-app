@@ -25,11 +25,10 @@ class NetworkApiService extends BaseApiService {
             safeHeaders["Authorization"] = "Bearer ***";
           }
           debugPrint("Headers: $safeHeaders");
-          debugPrint("Data: ${options.data}");
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          debugPrint("✅ RESPONSE [${response.statusCode}] => ${response.data}");
+          debugPrint("✅ RESPONSE [${response.statusCode}]");
           return handler.next(response);
         },
         onError: (DioException e, handler) {
@@ -42,8 +41,13 @@ class NetworkApiService extends BaseApiService {
 
   /// 🔑 Set Authorization Token
   void setToken(String token) {
-    _dio.options.headers["Authorization"] = "Bearer $token";
-    debugPrint("🔐 Authorization token set");
+    if (token.trim().isNotEmpty) {
+      _dio.options.headers["Authorization"] = "Bearer $token";
+      debugPrint("🔐 Authorization token set");
+    } else {
+      _dio.options.headers.remove("Authorization");
+      debugPrint("🔓 Token Cleared / Unauthenticated access");
+    }
   }
 
   /// ❌ Remove Token (Logout)
@@ -68,7 +72,6 @@ class NetworkApiService extends BaseApiService {
   Future<dynamic> postApi(String url, dynamic data) async {
     try {
       debugPrint("POST API CALL => $url");
-      debugPrint("POST DATA => $data");
 
       final response = await _dio.post(url, data: data);
       return returnResponse(response);
@@ -82,7 +85,6 @@ class NetworkApiService extends BaseApiService {
   Future<dynamic> pacthApi(String url, dynamic data) async {
     try {
       debugPrint("POST API CALL => $url");
-      debugPrint("POST DATA => $data");
 
       final response = await _dio.patch(url, data: data);
       return returnResponse(response);
@@ -96,7 +98,6 @@ class NetworkApiService extends BaseApiService {
   Future<dynamic> putApi(String url, dynamic data) async {
     try {
       debugPrint("PUT API CALL => $url");
-      debugPrint("PUT DATA => $data");
 
       final response = await _dio.put(url, data: data);
       return returnResponse(response);
@@ -120,7 +121,6 @@ class NetworkApiService extends BaseApiService {
   }
 
   AppException _handleDioError(DioException error) {
-    debugPrint("HANDLE ERROR => ${error.response?.data}");
     final rawData = error.response?.data; // 👈 add this
 
     switch (error.type) {

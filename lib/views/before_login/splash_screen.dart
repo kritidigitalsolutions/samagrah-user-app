@@ -31,13 +31,18 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    final token = await AuthLocalstorageService.getToken(); // 👈 GET TOKEN
+    final token = await AuthLocalstorageService.getToken();
+    final isGuest = await AuthLocalstorageService.isGuestMode();
 
-    if (token != null && token.isNotEmpty) {
-      // ✅ USER LOGGED IN
+    // ── Apple 5.1.1(v):
+    // 1. Logged in users -> Home
+    // 2. Returning guest users -> Home directly (restart handling)
+    // 3. First time users -> Register/Login (initial auth flow) with Skip/Guest option
+    if (token != null && token.trim().isNotEmpty) {
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } else if (isGuest) {
       Navigator.pushReplacementNamed(context, AppRoutes.home);
     } else {
-      // ❌ NEW USER
       Navigator.pushReplacementNamed(context, AppRoutes.register);
     }
   }

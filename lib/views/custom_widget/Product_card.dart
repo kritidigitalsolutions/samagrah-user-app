@@ -12,18 +12,22 @@ import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/cart_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/wishlist_provider.dart';
+import 'package:samagrah/utils/auth_guard.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class ProductCard extends ConsumerWidget {
   final Product product;
+  final double? imageHeight;
 
-  const ProductCard({super.key, required this.product});
+  const ProductCard({
+    super.key,
+    required this.product,
+    this.imageHeight,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = (screenWidth - 28) / 3;
-    final imageHeight = cardWidth;
 
     final cartState = ref.watch(cartProvider);
     final quantity = ref.watch(cartQuantityProvider(product.id ?? ''));
@@ -53,14 +57,23 @@ class ProductCard extends ConsumerWidget {
           color: AppColors.white,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── IMAGE SECTION ──────────────────────────────────────
-            SizedBox(
-              height: imageHeight,
-              child: Stack(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isBounded = constraints.hasBoundedHeight;
+            final cardWidth = constraints.maxWidth;
+            final defaultImageHeight = cardWidth.isFinite && cardWidth > 0
+                ? (cardWidth * 0.90).clamp(90.0, 150.0)
+                : ((screenWidth - 28) / 3).clamp(90.0, 130.0);
+            final effectiveImageHeight = imageHeight ?? defaultImageHeight;
+
+            return Column(
+              mainAxisSize: isBounded ? MainAxisSize.max : MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── IMAGE SECTION ──────────────────────────────────────
+                SizedBox(
+                  height: effectiveImageHeight,
+                  child: Stack(
                 children: [
                   // Image / Carousel
                   Positioned.fill(
@@ -69,7 +82,8 @@ class ProductCard extends ConsumerWidget {
                         top: Radius.circular(10),
                       ),
                       child: product.images.length > 1
-                          ? CarouselSlider(
+                          ? CarouselSlider.builder(
+                              itemCount: product.images.length,
                               options: CarouselOptions(
                                 autoPlay: false,
                                 viewportFraction: 1,
@@ -85,24 +99,25 @@ class ProductCard extends ConsumerWidget {
                                       index;
                                 },
                               ),
-                              items: product.images.map((img) {
+                              itemBuilder: (context, index, realIndex) {
                                 return CustomCachedImage(
                                   borderRadius: BorderRadius.zero,
-                                  imageUrl: img.replaceAll("\\", "/"),
+                                  imageUrl: product.images[index],
                                   fit: BoxFit.cover,
                                   width: double.infinity,
+                                  memCacheWidth: 400,
                                 );
-                              }).toList(),
+                              },
                             )
                           : CustomCachedImage(
                               borderRadius: BorderRadius.zero,
                               imageUrl:
                                   (product.images.isNotEmpty
                                           ? product.images.first
-                                          : product.thumbnail ?? '')
-                                      .replaceAll("\\", "/"),
+                                          : product.thumbnail ?? ''),
                               fit: BoxFit.cover,
                               width: double.infinity,
+                              memCacheWidth: 400,
                             ),
                     ),
                   ),
@@ -112,11 +127,17 @@ class ProductCard extends ConsumerWidget {
                     top: 4,
                     right: 4,
                     child: GestureDetector(
+                      // ── Apple 5.1.1(v): wishlist is account-based → auth gate
                       onTap: isWishlistLoading
                           ? null
-                          : () => ref
-                                .read(wishlistProvider.notifier)
-                                .toggle(product.id ?? ''),
+                          : () => AuthGuard.run(
+                                context,
+                                message:
+                                    'Sign in to save items to your wishlist.',
+                                onAuthed: () => ref
+                                    .read(wishlistProvider.notifier)
+                                    .toggle(product.id ?? ''),
+                              ),
                       child: Container(
                         padding: const EdgeInsets.all(3),
                         decoration: BoxDecoration(
@@ -199,98 +220,195 @@ class ProductCard extends ConsumerWidget {
               ),
             ),
 
-            // ── INFO SECTION ───────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(7, 5, 7, 7),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (brandName.isNotEmpty) ...[
-                    Text(
-                      capitalizeWords(brandName),
-                      style: text10(
-                        color: AppColors.grey,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                  ],
+                // ── INFO SECTION ───────────────────────────────────────
+                if (isBounded)
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const NeverScrollableScrollPhysics(),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(7, 5, 7, 7),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (brandName.isNotEmpty) ...[
+                              Text(
+                                capitalizeWords(brandName),
+                                style: text10(
+                                  color: AppColors.grey,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                            ],
 
-                  // Unit
-                  if (product.details?.unit != null &&
-                      product.details!.unit!.isNotEmpty)
-                    Text(
-                      product.details!.unit!,
-                      style: text10(
-                        color: AppColors.grey,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                            // Unit
+                            if (product.details?.unit != null &&
+                                product.details!.unit!.isNotEmpty) ...[
+                              Text(
+                                product.details!.unit!,
+                                style: text10(
+                                  color: AppColors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                            ],
 
-                  const SizedBox(height: 2),
+                            // Current price
+                            Text(
+                              'Rs. ${product.price}',
+                              style: text13(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
 
-                  // Current price
-                  Text(
-                    'Rs. ${product.price}',
-                    style: text13(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                            // Old price + discount
+                            if (hasDiscount) ...[
+                              const SizedBox(height: 1),
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      'Rs.${product.oldPrice}',
+                                      style: text11(
+                                        color: AppColors.textSecondary,
+                                        fontWeight: FontWeight.bold,
+                                      ).copyWith(decoration: TextDecoration.lineThrough),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Flexible(
+                                    child: Text(
+                                      '${product.discountPercent}% off',
+                                      style: text10(
+                                        color: Colors.green.shade700,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
 
-                  // Old price + discount
-                  if (hasDiscount) ...[
-                    const SizedBox(height: 1),
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            'Rs.${product.oldPrice}',
-                            style: text11(
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.bold,
-                            ).copyWith(decoration: TextDecoration.lineThrough),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                            const SizedBox(height: 3),
+
+                            // Title
+                            Text(
+                              capitalizeWords(product.title ?? ''),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: text11(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 3),
-                        Flexible(
-                          child: Text(
-                            '${product.discountPercent}% off',
+                      ),
+                    ),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(7, 5, 7, 7),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (brandName.isNotEmpty) ...[
+                          Text(
+                            capitalizeWords(brandName),
                             style: text10(
-                              color: Colors.green.shade700,
+                              color: AppColors.grey,
                               fontWeight: FontWeight.w600,
                             ),
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                        ],
+
+                        // Unit
+                        if (product.details?.unit != null &&
+                            product.details!.unit!.isNotEmpty) ...[
+                          Text(
+                            product.details!.unit!,
+                            style: text10(
+                              color: AppColors.grey,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                        ],
+
+                        // Current price
+                        Text(
+                          'Rs. ${product.price}',
+                          style: text13(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+
+                        // Old price + discount
+                        if (hasDiscount) ...[
+                          const SizedBox(height: 1),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  'Rs.${product.oldPrice}',
+                                  style: text11(
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.bold,
+                                  ).copyWith(decoration: TextDecoration.lineThrough),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 3),
+                              Flexible(
+                                child: Text(
+                                  '${product.discountPercent}% off',
+                                  style: text10(
+                                    color: Colors.green.shade700,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+
+                        const SizedBox(height: 3),
+
+                        // Title
+                        Text(
+                          capitalizeWords(product.title ?? ''),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: text11(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ],
                     ),
-                  ],
-
-                  const SizedBox(height: 3),
-
-                  // Title
-                  Text(
-                    capitalizeWords(product.title ?? ''),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: text11(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
                   ),
-                  // ✅ "Out of Stock" yahan se hata diya — image overlay pe hai ab
-                ],
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
       ),
     );
@@ -343,13 +461,18 @@ class _QuantityControl extends StatelessWidget {
       child: quantity <= 0
           ? GestureDetector(
               key: ValueKey('add_$productId'),
-              onTap: () => cartNotifier.addItem(
-                CartItem(
-                  productId: productId,
-                  title: product.title ?? '',
-                  thumbnail: product.thumbnail ?? '',
-                  price: product.price?.toDouble() ?? 0.0,
-                  inStock: product.inStock == true,
+              // ── Apple 5.1.1(v): Add to cart is account-based → auth gate
+              onTap: () => AuthGuard.run(
+                context,
+                message: 'Sign in to add items to your cart.',
+                onAuthed: () => cartNotifier.addItem(
+                  CartItem(
+                    productId: productId,
+                    title: product.title ?? '',
+                    thumbnail: product.thumbnail ?? '',
+                    price: product.price?.toDouble() ?? 0.0,
+                    inStock: product.inStock == true,
+                  ),
                 ),
               ),
               child: Container(

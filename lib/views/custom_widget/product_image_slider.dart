@@ -33,7 +33,8 @@ class _ProductImageSliderState extends State<ProductImageSlider> {
       },
       child: Column(
         children: [
-          CarouselSlider(
+          CarouselSlider.builder(
+            itemCount: widget.images.length,
             options: CarouselOptions(
               autoPlay: true,
               viewportFraction: 1,
@@ -44,17 +45,15 @@ class _ProductImageSliderState extends State<ProductImageSlider> {
                 });
               },
             ),
-            items: widget.images.map((image) {
-              final cleanImage = image.replaceAll("\\", "/");
-
+            itemBuilder: (context, index, realIndex) {
               return ClipRRect(
                 child: CustomCachedImage(
-                  imageUrl: cleanImage,
+                  imageUrl: widget.images[index],
                   fit: BoxFit.cover,
-                  //  width: double.infinity,
+                  memCacheWidth: 800,
                 ),
               );
-            }).toList(),
+            },
           ),
 
           const SizedBox(height: 10),

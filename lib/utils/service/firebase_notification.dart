@@ -83,8 +83,6 @@ class FCMNotificationService {
 
         // Get APNs token
         _apnsToken = await _firebaseMessaging.getAPNSToken();
-
-        print('APNs Token: $_apnsToken');
       }
 
       // Background message handler
@@ -101,7 +99,6 @@ class FCMNotificationService {
 
       if (savedToken != null) {
         _fcmToken = savedToken;
-        print('Saved FCM Token: $savedToken');
       } else {
         await getToken();
       }
@@ -116,8 +113,6 @@ class FCMNotificationService {
         _tokenController.add(newToken);
 
         _saveTokenToPrefs(newToken);
-
-        print('FCM Token refreshed: $newToken');
       });
 
       _isInitialized = true;
@@ -203,8 +198,6 @@ class FCMNotificationService {
 
       // Refresh APNs token after permission
       _apnsToken = await _firebaseMessaging.getAPNSToken();
-
-      print('APNs Token after permission: $_apnsToken');
     }
 
     return settings;
@@ -227,8 +220,6 @@ class FCMNotificationService {
       _fcmToken = token;
 
       if (token != null) {
-        print('FCM Token: $token');
-
         _tokenController.add(token);
 
         await _saveTokenToPrefs(token);
@@ -252,8 +243,6 @@ class FCMNotificationService {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print('Got a message whilst in the foreground!');
 
-      print('Message data: ${message.data}');
-
       if (message.notification != null) {
         print('Message notification: ${message.notification}');
 
@@ -270,8 +259,6 @@ class FCMNotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       print('Notification opened from background');
 
-      print('Message data: ${message.data}');
-
       _handleNotificationClick(message);
     });
 
@@ -282,8 +269,6 @@ class FCMNotificationService {
     _firebaseMessaging.getInitialMessage().then((RemoteMessage? message) {
       if (message != null) {
         print('App opened from terminated state');
-
-        print('Message data: ${message.data}');
 
         _handleNotificationClick(message);
       }

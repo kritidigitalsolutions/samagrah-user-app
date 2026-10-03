@@ -88,6 +88,12 @@ class CustomCachedImage extends StatelessWidget {
   // Tap
   final VoidCallback? onTap;
 
+  // Cache limits
+  final int? memCacheWidth;
+  final int? memCacheHeight;
+  final int? maxWidthDiskCache;
+  final int? maxHeightDiskCache;
+
   const CustomCachedImage({
     super.key,
     required this.imageUrl,
@@ -101,12 +107,17 @@ class CustomCachedImage extends StatelessWidget {
     this.loaderColor = AppColors.grey,
     this.overlay,
     this.onTap,
+    this.memCacheWidth,
+    this.memCacheHeight,
+    this.maxWidthDiskCache,
+    this.maxHeightDiskCache,
   });
 
   @override
   Widget build(BuildContext context) {
+    final cleanUrl = imageUrl.trim().replaceAll(r'\', '/');
     final bool isValidUrl =
-        imageUrl.isNotEmpty && Uri.tryParse(imageUrl)?.hasAbsolutePath == true;
+        cleanUrl.isNotEmpty && Uri.tryParse(cleanUrl)?.hasAbsolutePath == true;
 
     Widget image;
 
@@ -116,34 +127,71 @@ class CustomCachedImage extends StatelessWidget {
           Container(
             height: height,
             width: width,
-            color: Colors.grey.shade200,
-            child: const Icon(Icons.person, size: 40),
+            color: Colors.grey.shade100,
+            child: Center(
+              child: Icon(
+                Icons.image_not_supported_outlined,
+                size: (height != null && height! < 50) ? 16 : 28,
+                color: Colors.grey.shade400,
+              ),
+            ),
           );
     } else {
+      // Calculate smart downsampling so massive PNGs/JPEGs don't saturate memory & decoding threads
+      int? calcMemWidth = memCacheWidth;
+      int? calcMemHeight = memCacheHeight;
+
+      if (calcMemWidth == null && calcMemHeight == null) {
+        if (width != null && width! > 0 && width!.isFinite) {
+          calcMemWidth = (width! * 2.5).round();
+        } else if (height != null && height! > 0 && height!.isFinite) {
+          calcMemHeight = (height! * 2.5).round();
+        } else {
+          calcMemWidth = 600;
+        }
+      }
+
       image = CachedNetworkImage(
-        imageUrl: imageUrl,
+        imageUrl: cleanUrl,
         height: height,
         width: width,
         fit: fit,
-
+        memCacheWidth: calcMemWidth,
+        memCacheHeight: calcMemHeight,
+        maxWidthDiskCache: maxWidthDiskCache ?? 800,
+        maxHeightDiskCache: maxHeightDiskCache ?? 800,
+        fadeInDuration: const Duration(milliseconds: 200),
+        fadeOutDuration: const Duration(milliseconds: 100),
         placeholder: (context, url) =>
             placeholder ??
-            Center(
-              child: SizedBox(
-                height: 25,
-                width: 25,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: loaderColor,
+            Container(
+              height: height,
+              width: width,
+              color: Colors.grey.shade100,
+              child: Center(
+                child: SizedBox(
+                  height: (height != null && height! < 50) ? 14 : 22,
+                  width: (height != null && height! < 50) ? 14 : 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: loaderColor,
+                  ),
                 ),
               ),
             ),
-
         errorWidget: (context, url, error) =>
             errorWidget ??
             Container(
-              color: Colors.grey.shade200,
-              child: const Icon(Icons.person, size: 40),
+              height: height,
+              width: width,
+              color: Colors.grey.shade100,
+              child: Center(
+                child: Icon(
+                  Icons.image_not_supported_outlined,
+                  size: (height != null && height! < 50) ? 16 : 28,
+                  color: Colors.grey.shade400,
+                ),
+              ),
             ),
       );
     }

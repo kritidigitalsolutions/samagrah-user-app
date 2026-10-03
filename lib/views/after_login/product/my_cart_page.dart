@@ -10,6 +10,7 @@ import 'package:samagrah/view_model/after_login_provider/home_provider/cart_prov
 import 'package:samagrah/views/after_login/product/checkout/order_summary_page.dart';
 import 'package:samagrah/views/custom_widget/empty_data_widget.dart';
 import 'package:samagrah/views/global_widgets/product_details_bottom_sheet.dart';
+import 'package:samagrah/utils/auth_guard.dart';
 
 class MyCartPage extends ConsumerStatefulWidget {
   const MyCartPage({super.key});
@@ -272,46 +273,50 @@ class _MyCartPageState extends ConsumerState<MyCartPage> {
                             : "Add Products to Continue",
                         onTap: cartItems.items.isEmpty
                             ? null
-                            : () {
-                                if (hasOutOfStockItems) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        "Remove out of stock items before placing order",
-                                      ),
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                if (!canPlaceOrder) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        "Add a valid product before placing the order",
-                                      ),
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                final orderItems = cartItems.items.map((item) {
-                                  return OrderItem(
-                                    productId: item.productId,
-                                    title: item.title,
-                                    price: item.price
-                                        .toInt(), // 👈 double → int
-                                    quantity: item.quantity,
-                                    image: item.thumbnail,
-                                  );
-                                }).toList();
-
-                                Navigator.pushNamed(
+                            : () => AuthGuard.run(
                                   context,
-                                  AppRoutes.orderSummary,
-                                  arguments: orderItems,
-                                );
-                              },
+                                  message: 'Sign in to place your order.',
+                                  onAuthed: () {
+                                    if (hasOutOfStockItems) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "Remove out of stock items before placing order",
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    if (!canPlaceOrder) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "Add a valid product before placing the order",
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    final orderItems = cartItems.items.map((item) {
+                                      return OrderItem(
+                                        productId: item.productId,
+                                        title: item.title,
+                                        price: item.price
+                                            .toInt(), // 👈 double → int
+                                        quantity: item.quantity,
+                                        image: item.thumbnail,
+                                      );
+                                    }).toList();
+
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.orderSummary,
+                                      arguments: orderItems,
+                                    );
+                                  },
+                                ),
 
                         textStyle: text13(
                           color: AppColors.white,

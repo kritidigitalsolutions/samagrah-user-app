@@ -366,6 +366,7 @@ class _AddressPageState extends ConsumerState<AddressPage> {
                       AppTextField(
                         controller: _fullNameController,
                         hintText: 'Full Name',
+                        textCapitalization: TextCapitalization.words,
                       ),
                       const SizedBox(height: 12),
                       NumberTextField(

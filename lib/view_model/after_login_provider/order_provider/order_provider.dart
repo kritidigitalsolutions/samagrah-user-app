@@ -266,7 +266,6 @@ class InvoiceNotifier extends StateNotifier<InvoiceState> {
       final token = await AuthLocalstorageService.getToken() ?? '';
       final url = '${AppUrls.baseUrl}/order/$orderId/invoice';
       debugPrint('Invoice URL: $url');
-      debugPrint('Token: $token');
 
       final dir = await getTemporaryDirectory();
       final filePath = '${dir.path}/invoice_$orderId.pdf';

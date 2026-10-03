@@ -12,6 +12,7 @@ import 'package:samagrah/model/response/product_res/product_response_model.dart'
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/components.dart';
+import 'package:samagrah/utils/auth_guard.dart';
 import 'package:samagrah/utils/localStogare_service/auth_localStorage_service.dart';
 import 'package:samagrah/utils/service/helper_methods.dart';
 import 'package:samagrah/utils/textstyle.dart';
@@ -45,13 +46,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _checkTokenValidity() async {
-    try {
-      final token = await AuthLocalstorageService.getToken();
-      if (token == null || token.isEmpty) {
-        _maybeShowAuthPopup(UnauthorizedException("No token found"));
-        return;
-      }
+    // ── Apple 5.1.1(v): guests (no token) skip all token-validity checks.
+    // The session-expired dialog is only shown to users who were previously
+    // logged in and whose token has since expired.
+    final token = await AuthLocalstorageService.getToken();
+    if (token == null || token.trim().isEmpty) return; // guest → no popup
 
+    try {
       final dio = Dio();
       final response = await dio.get(
         AppUrls.verifyToken,
@@ -79,7 +80,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }
       }
     } catch (e) {
-      debugPrint("Error checking token: $e");
+      debugPrint("Error validating session: $e");
     }
   }
 
@@ -88,9 +89,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return error is UnauthorizedException;
   }
 
-  void _maybeShowAuthPopup(Object? error) {
+  Future<void> _maybeShowAuthPopup(Object? error) async {
     if (!_isAuthError(error)) return;
     if (_authErrorShown) return;
+    final token = await AuthLocalstorageService.getToken();
+    if (token == null || token.trim().isEmpty) return; // Guests never show session expired dialog
     _authErrorShown = true;
     // Use addPostFrameCallback so dialog is shown after build
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -189,19 +192,63 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ],
                       ),
                       userAsync.when(
-                        data: (user) => GestureDetector(
-                          onTap: () =>
-                              Navigator.pushNamed(context, AppRoutes.profile),
-                          child: CircleAvatar(
-                            radius: 30,
-                            child: CustomCachedImage(
-                              imageUrl: user?['profileImage'] ?? '',
-                              borderRadius: BorderRadius.circular(35),
+                        data: (user) {
+                          final imgUrl = (user?['profileImage'] ?? '').toString();
+                          // ── Apple 5.1.1(v): profile is account-based → auth gate
+                          return GestureDetector(
+                            onTap: () => AuthGuard.run(
+                              context,
+                              message:
+                                  'Sign in to view and manage your profile.',
+                              onAuthed: () => Navigator.pushNamed(
+                                context,
+                                AppRoutes.profile,
+                              ),
                             ),
+                            child: Container(
+                              width: 50,
+                              height: 50,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.grey200,
+                              ),
+                              child: ClipOval(
+                                child: imgUrl.isNotEmpty
+                                    ? CustomCachedImage(
+                                        imageUrl: imgUrl,
+                                        width: 50,
+                                        height: 50,
+                                        fit: BoxFit.cover,
+                                        shape: BoxShape.circle,
+                                      )
+                                    : const Icon(
+                                        Icons.person,
+                                        size: 30,
+                                        color: AppColors.grey,
+                                      ),
+                              ),
+                            ),
+                          );
+                        },
+                        loading: () => const SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                         ),
-                        loading: () => const CircularProgressIndicator(),
-                        error: (e, _) => const Text("Error loading user"),
+                        error: (e, _) => GestureDetector(
+                          onTap: () => AuthGuard.run(
+                            context,
+                            message:
+                                'Sign in to view and manage your profile.',
+                            onAuthed: () => Navigator.pushNamed(
+                              context,
+                              AppRoutes.profile,
+                            ),
+                          ),
+                          child: const Icon(Icons.person, size: 30),
+                        ),
                       ),
                     ],
                   ),
@@ -252,23 +299,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
+                    // ── Apple 5.1.1(v): Wallet is account-based → auth gate
                     _buildFeature(
                       "assets/icon/purse.png",
                       AppColors.infoLight.withAlpha(50),
                       "Wallet",
-                      () => Navigator.pushNamed(context, AppRoutes.myWallet),
+                      () => AuthGuard.run(
+                        context,
+                        message: 'Sign in to access your wallet.',
+                        onAuthed: () =>
+                            Navigator.pushNamed(context, AppRoutes.myWallet),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
+                        // ── Apple 5.1.1(v): Notifications are account-based → auth gate
                         _buildFeature(
                           "assets/icon/notification.png",
                           AppColors.warningLighter,
                           "Notification",
-                          () => Navigator.pushNamed(
+                          () => AuthGuard.run(
                             context,
-                            AppRoutes.notification,
+                            message: 'Sign in to view your notifications.',
+                            onAuthed: () => Navigator.pushNamed(
+                              context,
+                              AppRoutes.notification,
+                            ),
                           ),
                         ),
                         Consumer(
@@ -548,17 +606,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   // ── Horizontal Scroll Row ──────────────────────────────────────────────────
   Widget _buildHorizontalScroll(List<Product> products) {
     final visibleProducts = products.take(6).toList();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final textScale = MediaQuery.maybeTextScalerOf(context)?.scale(1.0) ?? 1.0;
+
+    // Responsive card width: ~36% on phones, ~22% on tablets
+    final cardWidth = screenWidth > 600
+        ? (screenWidth / 4.5).clamp(145.0, 185.0)
+        : (screenWidth * 0.36).clamp(128.0, 155.0);
+
+    // Dynamic image height proportional to card width
+    final innerCardWidth = cardWidth - 8;
+    final imageHeight = (innerCardWidth * 0.90).clamp(105.0, 140.0);
+
+    // Dynamic info section height scaling with font scale
+    final infoHeight = (120.0 * textScale).clamp(115.0, 165.0);
+    final scrollHeight = imageHeight + infoHeight + 14.0;
+
     return SizedBox(
-      height: 228,
+      height: scrollHeight,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         itemCount: visibleProducts.length,
         itemBuilder: (context, index) => SizedBox(
-          width: 140,
+          width: cardWidth,
           child: Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: ProductCard(product: visibleProducts[index]),
+            child: ProductCard(
+              product: visibleProducts[index],
+              imageHeight: imageHeight,
+            ),
           ),
         ),
       ),
@@ -567,14 +644,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ── 3-col Animated Grid ────────────────────────────────────────────────────
   Widget _buildProductGrid(List<Product> products, WidgetRef ref) {
+    final textScale = MediaQuery.maybeTextScalerOf(context)?.scale(1.0) ?? 1.0;
     return AnimationLimiter(
       key: ValueKey("grid_${products.length}_${products.hashCode}"),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final cardWidth = (constraints.maxWidth - 16 - 12) / 3;
           final imageHeight = cardWidth;
-          const infoHeight = 105.0;
-          final ratio = cardWidth / (imageHeight + infoHeight);
+          final dynamicInfoHeight = (120.0 * textScale).clamp(115.0, 160.0);
+          final ratio = cardWidth / (imageHeight + dynamicInfoHeight);
 
           return GridView.builder(
             shrinkWrap: true,

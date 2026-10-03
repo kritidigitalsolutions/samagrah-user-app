@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:samagrah/res/app_urls.dart';
 import 'package:samagrah/utils/components.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/custom_snackbar.dart';
@@ -51,15 +52,51 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     });
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImage(ImageSource source) async {
     final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
+      source: source,
+      imageQuality: 70,
     );
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
       });
     }
+  }
+
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Take Photo'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Choose from Gallery'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -127,7 +164,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                       bottom: 0,
                       right: 0,
                       child: GestureDetector(
-                        onTap: _pickImage,
+                        onTap: _showImagePickerOptions,
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: const BoxDecoration(
@@ -153,6 +190,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                 prefixIcon: Icon(Icons.person),
                 controller: _nameController,
                 hintText: 'Full Name',
+                textCapitalization: TextCapitalization.words,
               ),
 
               const SizedBox(height: 16),
@@ -163,6 +201,8 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                 prefixIcon: Icon(Icons.email),
                 controller: _emailController,
                 hintText: 'enter email',
+                keyboardType: TextInputType.emailAddress,
+                textCapitalization: TextCapitalization.none,
               ),
               const SizedBox(height: 16),
 
@@ -252,6 +292,9 @@ String getFullImageUrl(String? url) {
     return url;
   }
 
-  // ✅ Else attach base URL
-  return "http://192.168.1.40:8000/$url";
+  // ✅ Else attach production base URL
+  if (url.startsWith('/')) {
+    return "${AppUrls.baseUrl}$url";
+  }
+  return "${AppUrls.baseUrl}/$url";
 }

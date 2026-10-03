@@ -11,6 +11,7 @@ import 'package:samagrah/utils/textstyle.dart';
 import 'package:samagrah/view_model/after_login_provider/account_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/category_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/home_provider.dart';
+import 'package:samagrah/utils/auth_guard.dart';
 import 'package:samagrah/views/after_login/product/daliy_pooja_essential_page.dart';
 import 'package:samagrah/views/custom_widget/Product_card.dart';
 import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
@@ -71,19 +72,63 @@ class CategoryPage extends ConsumerWidget {
                           ],
                         ),
                         userAsync.when(
-                          data: (user) => GestureDetector(
-                            onTap: () =>
-                                Navigator.pushNamed(context, AppRoutes.profile),
-                            child: CircleAvatar(
-                              radius: 30,
-                              child: CustomCachedImage(
-                                imageUrl: user?['profileImage'] ?? '',
-                                borderRadius: BorderRadius.circular(35),
+                          data: (user) {
+                            final imgUrl = (user?['profileImage'] ?? '').toString();
+                            // ── Apple 5.1.1(v): profile is account-based → auth gate
+                            return GestureDetector(
+                              onTap: () => AuthGuard.run(
+                                context,
+                                message:
+                                    'Sign in to view and manage your profile.',
+                                onAuthed: () => Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.profile,
+                                ),
                               ),
+                              child: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.grey200,
+                                ),
+                                child: ClipOval(
+                                  child: imgUrl.isNotEmpty
+                                      ? CustomCachedImage(
+                                          imageUrl: imgUrl,
+                                          width: 50,
+                                          height: 50,
+                                          fit: BoxFit.cover,
+                                          shape: BoxShape.circle,
+                                        )
+                                      : const Icon(
+                                          Icons.person,
+                                          size: 30,
+                                          color: AppColors.grey,
+                                        ),
+                                ),
+                              ),
+                            );
+                          },
+                          loading: () => const SizedBox(
+                            width: 50,
+                            height: 50,
+                            child: Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                           ),
-                          loading: () => const CircularProgressIndicator(),
-                          error: (e, _) => const Text("Error loading user"),
+                          error: (e, _) => GestureDetector(
+                            onTap: () => AuthGuard.run(
+                              context,
+                              message:
+                                  'Sign in to view and manage your profile.',
+                              onAuthed: () => Navigator.pushNamed(
+                                context,
+                                AppRoutes.profile,
+                              ),
+                            ),
+                            child: const Icon(Icons.person, size: 30),
+                          ),
                         ),
                       ],
                     ),
@@ -265,10 +310,13 @@ class CategoryPage extends ConsumerWidget {
           key: ValueKey('cat_${s.category.id}_${preview.length}'),
           child: LayoutBuilder(
             builder: (context, constraints) {
+              final textScale =
+                  MediaQuery.maybeTextScalerOf(context)?.scale(1.0) ?? 1.0;
               final cardWidth = (constraints.maxWidth - 16 - 12) / 3;
               final imageHeight = cardWidth;
-              const infoHeight = 100.0;
-              final ratio = cardWidth / (imageHeight + infoHeight);
+              final dynamicInfoHeight =
+                  (120.0 * textScale).clamp(115.0, 160.0);
+              final ratio = cardWidth / (imageHeight + dynamicInfoHeight);
 
               return GridView.builder(
                 shrinkWrap: true,

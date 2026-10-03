@@ -1,13 +1,16 @@
 import 'dart:io';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:samagrah/res/app_colors.dart';
 import 'package:samagrah/routes/app_routes.dart';
 import 'package:samagrah/utils/custom_button.dart';
 import 'package:samagrah/utils/custom_snackbar.dart';
 import 'package:samagrah/utils/custom_textfields.dart';
 import 'package:samagrah/utils/textstyle.dart';
+import 'package:samagrah/utils/auth_guard.dart';
 import 'package:samagrah/view_model/before_login_provider/auth_provider.dart';
 import 'package:samagrah/view_model/before_login_provider/profile_provider.dart';
 
@@ -22,8 +25,34 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _mobileCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  late final TapGestureRecognizer _termsRecognizer;
+  late final TapGestureRecognizer _privacyRecognizer;
+
+  static const String _privacyPolicyUrl =
+      'https://www.samagran.com/privacy-policy.html';
+  static const String _termsUrl =
+      'https://www.samagran.com/terms-and-conditions.html';
+
+  @override
+  void initState() {
+    super.initState();
+    _termsRecognizer = TapGestureRecognizer()
+      ..onTap = () => _openLegalUrl(_termsUrl);
+    _privacyRecognizer = TapGestureRecognizer()
+      ..onTap = () => _openLegalUrl(_privacyPolicyUrl);
+  }
+
+  Future<void> _openLegalUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.inAppBrowserView)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   void dispose() {
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
     _mobileCtrl.dispose();
     super.dispose();
   }
@@ -31,9 +60,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     ref.listen(authProvider, (previous, next) {
-      print(
-        "🔴 LISTENER FIRED => next: ${next.value?.registerModel?.isNewUser}",
-      );
       if (previous == next) return;
 
       next.whenOrNull(
@@ -99,6 +125,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ),
             ),
 
+
+
             // ✅ Main Content
             SafeArea(
               child: Form(
@@ -128,8 +156,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text("Don't have an account?"),
-                          SizedBox(width: 2),
+                          Text(
+                            "Don't have an account?",
+                            style: text14(color: AppColors.textPrimary),
+                          ),
+                          const SizedBox(width: 4),
                           CustomTextButton(
                             title: "Sign up",
                             onTap: () {
@@ -140,6 +171,124 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             },
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 16),
+                      OutlinedButton(
+                        onPressed: () => AuthGuard.continueAsGuest(context),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(
+                            color: AppColors.button,
+                            width: 1.5,
+                          ),
+                          backgroundColor: AppColors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "Continue as Guest",
+                              style: text14(
+                                color: AppColors.button,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 16,
+                              color: AppColors.button,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text.rich(
+                          TextSpan(
+                            text: "By continuing, you agree to our\n",
+                            style: text12(color: AppColors.grey700),
+                            children: [
+                              TextSpan(
+                                text: "Terms & Conditions",
+                                style: text12(
+                                  color: AppColors.button,
+                                  fontWeight: FontWeight.w600,
+                                ).copyWith(
+                                  decoration: TextDecoration.underline,
+                                ),
+                                recognizer: _termsRecognizer,
+                              ),
+                              TextSpan(
+                                text: " and ",
+                                style: text12(color: AppColors.grey700),
+                              ),
+                              TextSpan(
+                                text: "Privacy Policy",
+                                style: text12(
+                                  color: AppColors.button,
+                                  fontWeight: FontWeight.w600,
+                                ).copyWith(
+                                  decoration: TextDecoration.underline,
+                                ),
+                                recognizer: _privacyRecognizer,
+                              ),
+                              TextSpan(
+                                text: ".",
+                                style: text12(color: AppColors.grey700),
+                              ),
+                            ],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // ── Apple 5.1.1(v): Top Header Controls (Rendered on top of form) ──
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Back button
+                      if (Navigator.canPop(context))
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: AppColors.textPrimary,
+                            size: 20,
+                          ),
+                        )
+                      else
+                        const SizedBox.shrink(),
+
+                      // Skip / Guest button
+                      TextButton(
+                        onPressed: () => AuthGuard.continueAsGuest(context),
+                        child: Text(
+                          "Skip",
+                          style: text14(
+                            color: AppColors.button,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -214,7 +363,8 @@ class ProfileImagePicker extends ConsumerWidget {
           bottom: 0,
           right: 4,
           child: GestureDetector(
-            onTap: () => ProfileImageController.pickImage(ref),
+            onTap: () =>
+                ProfileImageController.showImagePickerOptions(context, ref),
             child: Container(
               width: 26,
               height: 26,

@@ -13,6 +13,7 @@ import 'package:samagrah/view_model/after_login_provider/home_provider/home_prov
 import 'package:samagrah/view_model/after_login_provider/home_provider/sub_category_provider.dart';
 import 'package:samagrah/view_model/after_login_provider/home_provider/wishlist_provider.dart';
 import 'package:samagrah/views/global_widgets/bottom_cart_bar.dart';
+import 'package:samagrah/utils/auth_guard.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class TypeOfCategoryPage extends ConsumerStatefulWidget {
@@ -365,9 +366,13 @@ class _BlinkitCard extends ConsumerWidget {
                   top: 6,
                   right: 6,
                   child: GestureDetector(
-                    onTap: () => ref
-                        .read(wishlistProvider.notifier)
-                        .toggle(product.id ?? ''),
+                    onTap: () => AuthGuard.run(
+                      context,
+                      message: 'Sign in to save items to your wishlist.',
+                      onAuthed: () => ref
+                          .read(wishlistProvider.notifier)
+                          .toggle(product.id ?? ''),
+                    ),
                     child: Container(
                       padding: const EdgeInsets.all(3),
                       decoration: BoxDecoration(
@@ -540,13 +545,17 @@ class _QuantityWidget extends StatelessWidget {
       child: quantity <= 0
           ? GestureDetector(
               key: ValueKey('add_${product.id}'),
-              onTap: () => cartNotifier.addItem(
-                CartItem(
-                  productId: product.id ?? '',
-                  title: product.title ?? '',
-                  thumbnail: product.thumbnail ?? '',
-                  price: product.price?.toDouble() ?? 0.0,
-                  inStock: product.inStock == true,
+              onTap: () => AuthGuard.run(
+                context,
+                message: 'Sign in to add items to your cart.',
+                onAuthed: () => cartNotifier.addItem(
+                  CartItem(
+                    productId: product.id ?? '',
+                    title: product.title ?? '',
+                    thumbnail: product.thumbnail ?? '',
+                    price: product.price?.toDouble() ?? 0.0,
+                    inStock: product.inStock == true,
+                  ),
                 ),
               ),
               child: Container(
