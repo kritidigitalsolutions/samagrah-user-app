@@ -85,9 +85,17 @@ enum _InputMode {
   pincodeResults, // geocoded pincode results list
 }
 
+
+
+
+
 // ---------------------------------------------------------------------------
 // LocationPage
 // ---------------------------------------------------------------------------
+
+
+
+
 class LocationPage extends ConsumerStatefulWidget {
   const LocationPage({super.key});
 
@@ -96,7 +104,15 @@ class LocationPage extends ConsumerStatefulWidget {
 }
 
 class _LocationPageState extends ConsumerState<LocationPage> {
+
+
+
   // ── Search field ──────────────────────────────────────────────────────────
+
+
+
+
+
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 
